@@ -179,6 +179,10 @@ uint8_t call_thread(char *name, char *input){
   return 0; 
 }
 
+void get_thread(char *name){
+
+}
+
 void thread_kill(thread *f, uint8_t index){
   f->pt.lc = PT_KILL;
 }

@@ -97,6 +97,15 @@ uint8_t cmd_qv(pthread *pt, char *input){
   return PT_ENDED;
 }
 
+uint8_t cmd_kill(pthread *pt, char *input){
+  char *word = get_word(input);
+  iferr_log_return(PT_ENDED);
+  
+  Serial.print("Killed:");
+  Serial.println(word);
+  return PT_ENDED;
+}
+
 struct ui_buffer{
   char buffer[MAX_STR_LEN + 2];
   uint8_t i;
@@ -169,22 +178,7 @@ uint8_t print_variable(char *name){
   uint8_t i;
   uint8_t name_len = strlen(name);
   debug(String("pv name: ") + String(name));
-  for(i = 0; i < TH__variables.index; i++){
-    var = &TH__variables.array[i];
-    debug(var->el.name);
-    //if(__cmp_str_elptr_v(name, name_len, var)){
-    if(cmp_str_elptr(name, name_len, var)){
-      debug("matched");
-      Serial.print(F("v=x"));
-      for(n = var->size - 1; n >= 0; n--){
-        uint8_t *chptr = (uint8_t*)(var->vptr);  // works
-        if(chptr[n] < 0x10) Serial.write('0');
-        Serial.print(chptr[n], HEX);
-      }
-      Serial.println();
-      return true;
-    }
-  }
+  
   return false; 
 }
 
@@ -229,9 +223,11 @@ error:
   
 
 void UI__setup_std(uint8_t V, uint8_t F){
-  start_thread("*M", system_monitor); 
-  start_thread("*UI", user_interface); 
-  ui_expose_function("mon", monswitch); 
+  start_thread("*M", system_monitor);
+  start_thread("*UI", user_interface);
+  
+  ui_expose_function("mon", monswitch);
+  ui_expose_function("?v", cmd_qv);
 }
 
 
