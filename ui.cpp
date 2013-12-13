@@ -245,13 +245,6 @@ error:
   // may want to do final stuff in the future (reset timeout)
   return;
 }
-
-void ui_setup_std(){
-  log_info("Std UI Setup");
-  thread_setup_std();
-  start_thread("*M", system_monitor);
-  ui_expose_function("mon", monswitch);
-}
   
 
 

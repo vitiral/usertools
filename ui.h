@@ -11,6 +11,8 @@
 #define get_word(C) _get_word(&(C))
 #define get_int(C) _get_int(&(C))
 
+#define ui_setup_std(...) do{thread_setup(__VA_ARGS__); start_thread("*M", system_monitor); ui_expose_function("mon", monswitch);}while(0)
+
 extern char UI_CMD_END_CHAR;
 extern char UI_CMD_PEND_CHAR;  // may be right before the end.
 extern char *UI_TABLE_SEP;
@@ -22,8 +24,10 @@ long int _get_int(char **c);
 // ### Functions
 uint8_t print_variable(char *name);
 uint8_t call_function(char *name, char *input);
-void ui_setup_std();
 #define ui_loop() thread_loop()
+
+uint8_t system_monitor(pthread *pt, char *input);
+uint8_t monswitch(pthread *pt, char *input);
 
 
 // #####################################################

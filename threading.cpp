@@ -190,18 +190,6 @@ uint8_t restart_thread(thread *th){
 
 #define UI_STD_VARLEN 20
 #define UI_STD_FUNLEN 20
-void thread_setup_std(){
-  static unsigned short run = false;
-  assert_return(run == false);
-  run = true;
-  static TH_variable UI__variable_array[UI_STD_VARLEN]; 
-  static uint8_t UI__variable_len = UI_STD_VARLEN;
-  ui_setup_variables();
-
-  static thread UI__function_array[UI_STD_FUNLEN];
-  static uint8_t UI__function_len = UI_STD_FUNLEN;
-  ui_setup_functions();
-}
 
 uint8_t thread_loop(){
   static int16_t i = 0;

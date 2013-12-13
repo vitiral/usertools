@@ -8,11 +8,16 @@
 // ### Intended Exported Functions
 
 // Setup Macros
-void thread_setup_std();
-#define ui_declare_variables(len) TH_variable UI__variable_array[len]; uint8_t UI__variable_len = len
-#define ui_setup_variables()      UI__set_variable_array(UI__variable_array, UI__variable_len)
-#define ui_declare_functions(len) thread UI__function_array[len]; uint8_t UI__function_len = len
-#define ui_setup_functions()      UI__set_function_array(UI__function_array, UI__function_len)
+
+#define thread_setup(V, T) do{static TH_variable UI__variable_array[V]; \
+      static uint8_t UI__variable_len = V;                              \
+      UI__set_variable_array(UI__variable_array, UI__variable_len);     \
+                                                                        \
+      static thread UI__function_array[T];                              \
+      static uint8_t UI__function_len = T;                              \
+      UI__set_function_array(UI__function_array, UI__function_len);     \
+    }while(0)
+                                       
 //#define thread_function(name, func)  do{static thread name; schedule_function(name, func)}while(0) 
 
 // Expose Macros
