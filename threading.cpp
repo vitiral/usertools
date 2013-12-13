@@ -1,4 +1,6 @@
 
+#include "usertools.h"
+
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +9,6 @@
 #include "LinkedList.h"
 #include "pt.h"
 
-#define DEBUG
 #include <SoftwareSerial.h>
 #include "errorhandling.h"
 

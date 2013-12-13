@@ -1,4 +1,4 @@
-#define DEBUG
+#include "usertools.h"
 
 #include <Arduino.h>
 #include <stdlib.h>

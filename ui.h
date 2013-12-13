@@ -2,6 +2,7 @@
 #ifndef ui_h
 #define ui_h
 
+#include "usertools.h"
 #include <Arduino.h>
 #include "pt.h"
 #include "threading.h"

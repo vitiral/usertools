@@ -1,6 +1,8 @@
 #ifndef usertools_h
 #define usertools_h
-#include "errorhandling.h"
-#include "logging.h"
+
+#define DEBUG
+//#define LOGLEVEL 40
+//#define LOGLEVEL 30
 
 #endif

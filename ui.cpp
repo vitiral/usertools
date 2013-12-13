@@ -1,4 +1,6 @@
 
+#include "usertools.h"
+
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +8,6 @@
 
 #include "LinkedList.h"
 
-#define DEBUG
 #include <SoftwareSerial.h>
 #include "errorhandling.h"
 
@@ -142,14 +143,18 @@ void _print_monitor(uint32_t execution_time){
     f = TH__threads.get(i).function;
     Serial.print(f->el.name);
     Serial.print(UI_TABLE_SEP);
-    Serial.print(f->time * 100);
+    Serial.print(f->time / 100);
     Serial.write('.');
     Serial.print(f->time % 100);
     Serial.print(UI_TABLE_SEP);
     Serial.print((unsigned int)f->pt.lc);
     Serial.print(UI_TABLE_SEP);
     Serial.println(f->pt.error);
+    
+    f->time = 0; // reset time
+    i++;
   }
+  
 }
 
 uint8_t print_periodically = false; 
