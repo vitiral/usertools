@@ -62,7 +62,7 @@ struct pt{
   unsigned short error;
 };
 
-typedef struct pt pthread;
+typedef struct pt (pthread);
 
 #define PT_WAITING 0
 #define PT_YIELDED 1

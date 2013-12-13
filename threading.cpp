@@ -205,7 +205,7 @@ uint8_t thread_loop(){
     i = 0;
     while(i < TH__threads.size()){
       th = TH__threads.get(i).th;
-      kill = th->pt.le;
+      kill = th->pt.lc;
       
       time = millis();
       timeus = micros();
@@ -231,7 +231,8 @@ uint8_t thread_loop(){
       
       if(fout >= PT_EXITED or kill == PT_KILL){
         if(fout < PT_EXITED){
-          seterr(ERR_THREAD); logerr(R("BadThread");
+          seterr(ERR_THREAD);
+          log_err(F("NoDie"));
         }  
         th_set_innactive(th);
         TH__threads.remove(i);

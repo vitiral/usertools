@@ -79,41 +79,22 @@ void ui_process_command(char *c){
   char *c2;
   char *word;
   debug("Parse CMD");
-  debug(*c);
+  //debug(*c);
   c = pass_ws(c);
-  debug(*c);
+  //debug(*c);
+  c2 = get_word(c);
+  iferr_log_return();
+  debug(String("Calling Function:") + String(c2) + String(":") + c);
+  call_thread(c2, c);
+}
 
-  if(*c == '?'){
-    c++;
-    switch(*c){
-    case 'p':
-      //return value at pin #
-      break;
-    case 'v':
-      debug("cmd 'v'");
-      word = get_word(c); // skip first word, it is just 'v'
-      iferr_log_catch();
-      word = get_word(c);
-      debug(String("var:") + word);
-      print_variable(word);
-      break;
-    case 'f':
-      // print out all exposed functions
-      break;
-    case 't':
-      // print out running threads
-      break;
-    }
-  }
-  else{
-    c2 = get_word(c);
-    debug("Calling Function:");
-    debug(c2);
-    debug(c);
-    call_thread(c2, c);
-  }
-error:
-  return;
+uint8_t cmd_qv(pthread *pt, char *input){
+  debug("cmd 'v'");
+  char *word = get_word(input);
+  iferr_log_return(PT_ENDED);
+  debug(String("var:") + word);
+  print_variable(word);
+  return PT_ENDED;
 }
 
 struct ui_buffer{
@@ -176,7 +157,6 @@ uint8_t system_monitor(pthread *pt, char *input){
   execution_time = millis();
   while(true){
     PT_WAIT_MS(pt, 5000);
-    debug(String("mon:") + print_periodically);
     if(print_periodically) _print_monitor((uint32_t)millis() - execution_time);
     execution_time = millis();
   }
@@ -208,7 +188,7 @@ uint8_t print_variable(char *name){
   return false; 
 }
 
-void user_interface(){
+uint8_t user_interface(pthread *pt, char *input){
   uint8_t v;
   char c;
   Serial.setTimeout(0);
@@ -227,8 +207,9 @@ void user_interface(){
         ui_buffer.buffer[ui_buffer.i + 1] = 0;
         debug(String("Command:") + ui_buffer.buffer);
         ui_process_command(ui_buffer.buffer);
-        if(Serial.available())
+        if(Serial.available()) {
           debug(Serial.peek(), HEX);
+        }
         clr_ui_buff();
         goto done;
       }
@@ -243,11 +224,15 @@ void user_interface(){
 done:
 error:
   // may want to do final stuff in the future (reset timeout)
-  return;
+  return PT_YIELDED;
 }
   
 
-
+void UI__setup_std(uint8_t V, uint8_t F){
+  start_thread("*M", system_monitor); 
+  start_thread("*UI", user_interface); 
+  ui_expose_function("mon", monswitch); 
+}
 
 
 
