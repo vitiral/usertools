@@ -208,7 +208,7 @@ uint8_t print_variable(char *name){
   return false; 
 }
 
-void UI__interface(){
+void user_interface(){
   uint8_t v;
   char c;
   Serial.setTimeout(0);

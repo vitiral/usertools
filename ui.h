@@ -11,7 +11,11 @@
 #define get_word(C) _get_word(&(C))
 #define get_int(C) _get_int(&(C))
 
-#define ui_setup_std(...) do{thread_setup(__VA_ARGS__); start_thread("*M", system_monitor); ui_expose_function("mon", monswitch);}while(0)
+#define ui_setup_std(...) do{thread_setup(__VA_ARGS__); \
+                              start_thread("*M", system_monitor); \
+                              start_thread("*UI", user_interface); \
+                              ui_expose_function("mon", monswitch); \
+                              }while(0)
 
 extern char UI_CMD_END_CHAR;
 extern char UI_CMD_PEND_CHAR;  // may be right before the end.
@@ -33,7 +37,7 @@ uint8_t monswitch(pthread *pt, char *input);
 // #####################################################
 // ### Other Module Functions
 //void ui_process_command(char *c);
-void UI__interface();
+void ui_interface();
 
 #endif
 

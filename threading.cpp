@@ -179,7 +179,7 @@ uint8_t call_thread(char *name, char *input){
   return 0; 
 }
 
-void thread_kill(thread *f){
+void thread_kill(thread *f, uint8_t index){
   f->pt.lc = PT_KILL;
 }
 
@@ -196,15 +196,16 @@ uint8_t thread_loop(){
   uint64_t time;
   uint16_t timeus;
   uint8_t fout;
+  uint16_t kill;
   
   thread *th;
   PT_LOCAL_BEGIN(pt);
   while(true){
-    UI__interface();
     PT_YIELD(pt);
     i = 0;
     while(i < TH__threads.size()){
       th = TH__threads.get(i).th;
+      kill = th->pt.le;
       
       time = millis();
       timeus = micros();
@@ -228,7 +229,10 @@ uint8_t thread_loop(){
       if(time > (uint16_t)-1) th->time = -1;
       else th->time = time;
       
-      if(fout >= PT_EXITED){
+      if(fout >= PT_EXITED or kill == PT_KILL){
+        if(fout < PT_EXITED){
+          seterr(ERR_THREAD); logerr(R("BadThread");
+        }  
         th_set_innactive(th);
         TH__threads.remove(i);
         log_thread_exit(th);
