@@ -10,16 +10,17 @@
 void thread_setup_std();
 #define ui_declare_variables(len) TH_variable UI__variable_array[len]; uint8_t UI__variable_len = len
 #define ui_setup_variables()      UI__set_variable_array(UI__variable_array, UI__variable_len)
-#define ui_declare_functions(len) TH_function UI__function_array[len]; uint8_t UI__function_len = len
+#define ui_declare_functions(len) thread UI__function_array[len]; uint8_t UI__function_len = len
 #define ui_setup_functions()      UI__set_function_array(UI__function_array, UI__function_len)
-//#define thread_function(name, func)  do{static TH_function name; schedule_function(name, func)}while(0) 
+//#define thread_function(name, func)  do{static thread name; schedule_function(name, func)}while(0) 
 
 // Expose Macros
 #define ui_expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
 #define ui_expose_function(name, FUN)         UI__expose_function(F(name), FUN)
 
-#define start_thread(name, func, ...)
-#define restart_thread(th, ...)
+#define start_thread(name, func) schedule_function(R(name), func)
+
+uint8_t thread_loop();
 
 // #####################################################
 // ### Struct Declaration
@@ -32,15 +33,16 @@ typedef struct TH_element {
 };
 
 typedef struct TH_variable {
-  TH_element                  el;
-  void                        *vptr;
-  uint8_t                     size;
+  TH_element  el;
+  void        *vptr;
+  uint8_t     size;
 };
 
-typedef struct TH_function{
-  TH_element                  el;
-  TH_funptr                   fptr;
-  struct pt                   pt;
+typedef struct thread{
+  TH_element     el;
+  TH_funptr      fptr;
+  struct pt      pt;
+  uint16_t time;  // stores execution time in 64us increments
 };
 
 typedef struct TH_Variables{
@@ -49,8 +51,8 @@ typedef struct TH_Variables{
   uint16_t index;
 };
 
-typedef struct TH_Functions{
-  struct TH_function *array;
+typedef struct TH_ThreadArray{
+  struct thread *array;
   uint8_t len;
   uint16_t index;
 };
@@ -58,8 +60,8 @@ typedef struct TH_Functions{
 class TH_thread_instance
 {
 public:
-  TH_function             *function;
-  TH_thread_instance(TH_function *func){
+  thread             *function;
+  TH_thread_instance(thread *func){
     function = func;
   }
   TH_thread_instance(){
@@ -74,21 +76,26 @@ public:
 void UI__set_variable_array(TH_variable *vray, uint16_t len);
 void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
 
-void UI__set_function_array(TH_function *fray, uint16_t len);
-TH_function *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
+void UI__set_function_array(thread *fray, uint16_t len);
+thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 
 
-TH_function *schedule_function(const __FlashStringHelper *name, TH_funptr fun);
+
+// #####################################################
+// ### User Functions
+
+thread *schedule_function(const __FlashStringHelper *name, TH_funptr fun);
 uint8_t call_function(char *name, char *input);
 uint8_t ui_loop();
+uint8_t restart_thread(thread *th);
 
 
 // #####################################################
 // ### Package Access
 
-void TH__set_innactive(TH_function *f);
+void TH__set_innactive(thread *f);
 extern TH_Variables TH__variables;
-extern TH_Functions TH__functions;
+extern TH_ThreadArray TH__th_array;
 
 //extern LinkedList<TH_thread_instance> TH__threads;
 

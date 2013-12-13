@@ -21,12 +21,14 @@ long int _get_int(char **c);
 // ### Functions
 uint8_t print_variable(char *name);
 uint8_t call_function(char *name, char *input);
-uint8_t ui_loop();
+void ui_setup_std();
+#define ui_loop() thread_loop()
 
 
 // #####################################################
 // ### Other Module Functions
 //void ui_process_command(char *c);
+void UI__interface();
 
 #endif
 

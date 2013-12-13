@@ -23,7 +23,7 @@
 // #####################################################
 // ### Globals
 TH_Variables TH__variables = {0, 0, 0};
-TH_Functions TH__functions = {0, 0, 0};
+TH_ThreadArray TH__th_array = {0, 0, 0};
 LinkedList<TH_thread_instance> TH__threads = LinkedList<TH_thread_instance>();
 
 
@@ -31,7 +31,7 @@ LinkedList<TH_thread_instance> TH__threads = LinkedList<TH_thread_instance>();
 // ### Macro Helpers
 /*_
 void UI__init_threads(thr){
- //LinkedList<TH_function> *TH__threads = new LinkedList<TH_function>();
+ //LinkedList<thread> *TH__threads = new LinkedList<thread>();
  //LinkedList<int> *TH__threads = new LinkedList<int>();
  TH__threads = thr;
  }
@@ -61,44 +61,44 @@ void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t 
   TH__variables.index++;
 }
 
-void UI__set_function_array(struct TH_function *fray, uint16_t len){
+void UI__set_function_array(thread *fray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
-  TH__functions.array = fray;
-  TH__functions.len = len;
+  TH__th_array.array = fray;
+  TH__th_array.len = len;
 }
 
-TH_function *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
+thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   debug("ExpFun");
-  assert_return(TH__functions.index <= TH__functions.len, NULL);
+  assert_return(TH__th_array.index <= TH__th_array.len, NULL);
   assert_return(fstr_len(name) <= MAX_STR_LEN, NULL);
-  assert_raise_return(TH__functions.array, ERR_PTR, NULL); // assert not null
+  assert_raise_return(TH__th_array.array, ERR_PTR, NULL); // assert not null
 
   uint8_t len = fstr_len(name);
   assert_raise_return(len > 0, ERR_SIZE, NULL);
 
-  TH__functions.array[TH__functions.index].el.name = name;
-  TH__functions.array[TH__functions.index].el.name_len = len;
-  TH__functions.array[TH__functions.index].fptr = fptr;
+  TH__th_array.array[TH__th_array.index].el.name = name;
+  TH__th_array.array[TH__th_array.index].el.name_len = len;
+  TH__th_array.array[TH__th_array.index].fptr = fptr;
 
   pthread pt;
   pt.lc = -1;
   pt.error = 0;
   pt.time = 0;
-  TH__functions.array[TH__functions.index].pt = pt;
+  TH__th_array.array[TH__th_array.index].pt = pt;
   debug("Added F");
   debug(name);
   debug(String("len:") + String(len));
-  debug(TH__functions.array[TH__functions.index].pt.lc);
-  TH__functions.index++;
-  return &(TH__functions.array[TH__functions.index - 1]);
+  debug(TH__th_array.array[TH__th_array.index].pt.lc);
+  TH__th_array.index++;
+  return &(TH__th_array.array[TH__th_array.index - 1]);
 }
 
 // #####################################################
 // ### Internal Functions
 
 unsigned short function_exists(TH_funptr fun){
-  for(uint8_t i = 0; i < TH__functions.index; i++){
-    assert_raise_return(TH__functions.array[i].fptr != fun, 
+  for(uint8_t i = 0; i < TH__th_array.index; i++){
+    assert_raise_return(TH__th_array.array[i].fptr != fun, 
     ERR_VALUE, true);
   }
   return false;
@@ -106,7 +106,7 @@ unsigned short function_exists(TH_funptr fun){
 
 // schedule an initialized function
 // returns 0 on error
-uint8_t schedule_function(TH_function *fun, char *input) {
+uint8_t schedule_function(thread *fun, char *input) {
   uint8_t out;
   debug("Calling");
   debug(fun->pt.lc);
@@ -127,11 +127,11 @@ uint8_t schedule_function(TH_function *fun, char *input) {
 // ### Exported Functions
 
 // scehdule an uninitilized function
-TH_function *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
+thread *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
   debug("Scheduling raw");
   debug(name);
   clrerr();
-  TH_function *uifun = UI__expose_function(name, fun);
+  thread *uifun = UI__expose_function(name, fun);
   iferr_log_return(NULL);
   debug("Check name:");
   debug(uifun->el.name);
@@ -141,14 +141,14 @@ TH_function *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
 }
 
 uint8_t call_function(char *name, char *input){
-  struct TH_function *var;
+  thread *var;
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
 
   debug(String("cf name: ") + String(name));
   for(i = 0; i < TH__variables.index; i++){
-    var = &TH__functions.array[i];
+    var = &TH__th_array.array[i];
     debug(var->el.name);
     if(cmp_str_elptr(name, name_len, var)){
       debug("matched");
@@ -158,12 +158,17 @@ uint8_t call_function(char *name, char *input){
   return 0; 
 }
 
-void TH__set_innactive(TH_function *f){
+void TH__set_innactive(thread *f){
   f->pt.lc = PT_INNACTIVE;
 }
 
-void thread_kill(TH_function *f){
+void thread_kill(thread *f){
   f->pt.lc = PT_KILL;
+}
+
+uint8_t restart_thread(thread *th){
+  assert_raisem_return(th->pt.lc == PT_INNACTIVE, ERR_THREAD, th->el.name, 0);
+  schedule_function(th, EH_EMPTY_STR);
 }
 
 #define UI_STD_VARLEN 20
@@ -176,11 +181,60 @@ void thread_setup_std(){
   static uint8_t UI__variable_len = UI_STD_VARLEN;
   ui_setup_variables();
 
-  static TH_function UI__function_array[UI_STD_FUNLEN];
+  static thread UI__function_array[UI_STD_FUNLEN];
   static uint8_t UI__function_len = UI_STD_FUNLEN;
   ui_setup_functions();
 }
 
+uint8_t thread_loop(){
+  static int16_t i = 0;
+  uint64_t time;
+  uint16_t timeus;
+  uint8_t fout;
+  
+  thread *th;
+  PT_LOCAL_BEGIN(pt);
+  while(true){
+    UI__interface();
+    PT_YIELD(pt);
+    i = 0;
+    while(i < TH__threads.size()){
+      th = TH__threads.get(i).function;
+      
+      time = millis();
+      timeus = micros();
+      fout = th->fptr(&(th->pt), EH_EMPTY_STR);
+      timeus = (uint16_t)micros() - timeus;
+      time = (uint64_t)millis() - time;
+
+      if(time > 10){ // too long, disregard microseconds
+        time = th->time + time * 100;
+      }
+      else{
+        if(timeus > 1000){
+          time = th->time + time * 100 + (timeus / 10);
+        }
+        else{
+          // time too short for millis
+          time = th->time + (timeus / 10);
+        }
+      }
+      
+      if(time > (uint16_t)-1) th->time = -1;
+      else th->time = time;
+      
+      if(fout >= PT_EXITED){
+        TH__set_innactive(th);
+        TH__threads.remove(i);
+        i -= 1;
+      }
+      clrerr();
+      i += 1;
+      PT_YIELD(pt);
+    }
+  }
+  PT_END(pt);
+}
 
 
 

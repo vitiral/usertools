@@ -102,9 +102,15 @@ void ui_process_command(char *c){
     case 't':
       // print out running threads
       break;
-    }   
+    }
   }
-
+  else{
+    c2 = get_word(c);
+    debug("Calling Function:");
+    debug(c2);
+    debug(c);
+    call_function(c2, c);
+  }
 error:
   return;
 }
@@ -125,15 +131,20 @@ void UI__setup_ui(){
   ui_buffer.buffer[0] = 0;
 }
 
-void _print_threads(){
+void _print_monitor(uint32_t execution_time){
   debug("printing Threads");
-  Serial.println(F("Running Threads:"));
-  Serial.println(F("Name\t\tLine\t\tError"));
+  Serial.print(F("Total Time Running Threads: "));
+  Serial.println(execution_time);
+  Serial.println(F("Name\t\tExTime\t\tLine\t\tError"));
   uint8_t i = 0;
-  TH_function *f;
+  thread *f;
   while(i < TH__threads.size()){
     f = TH__threads.get(i).function;
     Serial.print(f->el.name);
+    Serial.print(UI_TABLE_SEP);
+    Serial.print(f->time * 100);
+    Serial.write('.');
+    Serial.print(f->time % 100);
     Serial.print(UI_TABLE_SEP);
     Serial.print((unsigned int)f->pt.lc);
     Serial.print(UI_TABLE_SEP);
@@ -142,20 +153,24 @@ void _print_threads(){
 }
 
 
-uint8_t print_threads(pthread *pt, char *input){
-  static uint8_t print_periodically = false;
-  if(input) _print_threads();
 
+uint8_t system_monitor(pthread *pt, char *input){
+  static uint8_t print_periodically = false;
+  static uint32_t execution_time; // execution time in ms
   char *word = get_word(input);
+  if(*word == 0) goto error;
   iferr_log_catch();
   if(cmp_str_flash(word, F("on"))) print_periodically = true;
   if(cmp_str_flash(word, F("off"))) print_periodically = false;
+  return 0;
 
 error:
   PT_BEGIN(pt);
+  execution_time = millis();
   while(true){
-    if(print_periodically) _print_threads();
     PT_WAIT_MS(pt, 5000);
+    if(print_periodically) _print_monitor((uint32_t)millis() - execution_time);
+    execution_time = millis();
   }
   PT_END(pt);
 }
@@ -185,7 +200,7 @@ uint8_t print_variable(char *name){
   return false; 
 }
 
-void ui_interface(){
+void UI__interface(){
   uint8_t v;
   char c;
   Serial.setTimeout(0);
@@ -208,16 +223,14 @@ void ui_interface(){
           debug(Serial.peek(), HEX);
         clr_ui_buff();
         goto done;
-      } 
+      }
       ui_buffer.i += 1;
       ui_buffer.buffer[ui_buffer.i] = 0;
     }
-
     debug(String("buff size:") + String(ui_buffer.i));
     debug(ui_buffer.buffer[ui_buffer.i-2], HEX);
     debug(ui_buffer.buffer[ui_buffer.i-1], HEX);
     debug(ui_buffer.buffer[ui_buffer.i], HEX);
-
   }
 done:
 error:
@@ -225,29 +238,11 @@ error:
   return;
 }
 
-uint8_t ui_loop(){
-  static int16_t i = 0;
-  TH_function *f;
-  PT_LOCAL_BEGIN(pt);
-  while(true){
-    ui_interface();
-    PT_YIELD(pt);
-    i = 0;
-    while(i < TH__threads.size()){
-      f = TH__threads.get(i).function;
-      if(f->fptr(&(f->pt), EH_EMPTY_STR) >= PT_EXITED){
-        TH__set_innactive(f);
-        TH__threads.remove(i);
-        i -= 1;
-      }
-      clrerr();
-      i += 1;
-      PT_YIELD(pt);
-    }
-  }
-  PT_END(pt);
+void ui_setup_std(){
+  thread_setup_std();
+  ui_expose_function("mon", system_monitor);
 }
-
+  
 
 
 
