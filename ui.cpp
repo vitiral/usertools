@@ -88,7 +88,7 @@ void ui_process_command(char *c){
   call_thread(c2, c);
 }
 
-uint8_t cmd_qv(pthread *pt, char *input){
+uint8_t cmd_v(pthread *pt, char *input){
   debug("cmd 'v'");
   char *word = get_word(input);
   iferr_log_return(PT_ENDED);
@@ -100,7 +100,11 @@ uint8_t cmd_qv(pthread *pt, char *input){
 uint8_t cmd_kill(pthread *pt, char *input){
   char *word = get_word(input);
   iferr_log_return(PT_ENDED);
-  
+  debug(String("killing:") + word);
+  thread *th = TH_get_thread(word);
+  debug(th->el.name);
+  assert_raise_return(th, ERR_INPUT, PT_ENDED);
+  kill_thread(th);
   Serial.print("Killed:");
   Serial.println(word);
   return PT_ENDED;
@@ -234,7 +238,9 @@ void UI__setup_std(uint8_t V, uint8_t F){
   start_thread("*UI", user_interface);
   
   ui_expose_function("mon", monswitch);
-  ui_expose_function("?v", cmd_qv);
+  ui_expose_function("v", cmd_v);
+  ui_expose_function("kill", cmd_kill);
+  
 }
 
 

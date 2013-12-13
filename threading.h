@@ -5,30 +5,6 @@
 #include "pt.h"
 
 // #####################################################
-// ### Intended Exported Functions
-
-// Setup Macros
-
-#define thread_setup(V, T) do{static TH_variable UI__variable_array[V]; \
-      static uint8_t UI__variable_len = V;                              \
-      UI__set_variable_array(UI__variable_array, UI__variable_len);     \
-                                                                        \
-      static thread UI__function_array[T];                              \
-      static uint8_t UI__function_len = T;                              \
-      UI__set_function_array(UI__function_array, UI__function_len);     \
-    }while(0)
-                                       
-//#define thread_function(name, func)  do{static thread name; schedule_function(name, func)}while(0) 
-
-// Expose Macros
-#define ui_expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
-#define ui_expose_function(name, FUN)         UI__expose_function(F(name), FUN)
-
-#define start_thread(name, func) schedule_function(F(name), func)
-
-uint8_t thread_loop();
-
-// #####################################################
 // ### Struct Declaration
 
 typedef uint8_t (*TH_funptr)(struct pt *pt, char *input);
@@ -75,6 +51,31 @@ public:
   }
 };
 
+// #####################################################
+// ### Intended Exported Functions
+
+// Setup Macros
+
+#define thread_setup(V, T) do{static TH_variable UI__variable_array[V]; \
+      static uint8_t UI__variable_len = V;                              \
+      UI__set_variable_array(UI__variable_array, UI__variable_len);     \
+                                                                        \
+      static thread UI__function_array[T];                              \
+      static uint8_t UI__function_len = T;                              \
+      UI__set_function_array(UI__function_array, UI__function_len);     \
+    }while(0)
+                                       
+//#define thread_function(name, func)  do{static thread name; schedule_function(name, func)}while(0) 
+
+// Expose Macros
+#define ui_expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
+#define ui_expose_function(name, FUN)         UI__expose_function(F(name), FUN)
+
+#define start_thread(name, func) schedule_function(F(name), func)
+
+uint8_t thread_loop();
+
+void kill_thread(thread *th);
 
 
 // #####################################################
@@ -104,7 +105,7 @@ void TH__set_innactive(thread *f);
 extern TH_Variables TH__variables;
 extern TH_ThreadArray TH__th_array;
 TH_variable *TH_get_variable(char *name);
-
+thread *TH_get_thread(char *name);
 //extern LinkedList<TH_thread_instance> TH__threads;
 
 #endif

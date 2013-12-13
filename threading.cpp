@@ -184,10 +184,9 @@ TH_variable *TH_get_variable(char *name){
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
-  debug(String("gt: ") + String(name));
+  debug(String("gv: ") + String(name));
   for(i = 0; i < TH__variables.index; i++){
     var = &TH__variables.array[i];
-    //if(__cmp_str_elptr_v(name, name_len, var)){
     if(cmp_str_elptr(name, name_len, var)){
       return var;
     }
@@ -195,8 +194,23 @@ TH_variable *TH_get_variable(char *name){
   return NULL;
 }
 
-void thread_kill(thread *f, uint8_t index){
-  f->pt.lc = PT_KILL;
+thread *TH_get_thread(char *name){
+  thread *th;
+  int8_t n;
+  uint8_t i;
+  uint8_t name_len = strlen(name);
+  debug(String("gt: ") + String(name));
+  for(i = 0; i < TH__th_array.index; i++){
+    th = &TH__th_array.array[i];
+    if(cmp_str_elptr(name, name_len, th)){
+      return th;
+    }
+  }
+  return NULL;
+}
+
+void kill_thread(thread *th){
+  th->pt.lc = PT_KILL;
 }
 
 uint8_t restart_thread(thread *th){
