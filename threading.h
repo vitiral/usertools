@@ -22,7 +22,7 @@ void ui_setup_std();
 // #####################################################
 // ### Struct Declaration
 
-typedef uint8_t (*ui_funptr)(struct pt *pt, char *input);
+typedef uint8_t (*TH_funptr)(struct pt *pt, char *input);
 
 typedef struct ui_element {
   const __FlashStringHelper   *name;
@@ -37,9 +37,34 @@ typedef struct ui_variable {
 
 typedef struct ui_function{
   ui_element                  el;
-  ui_funptr                   fptr;
+  TH_funptr                   fptr;
   struct pt                   pt;
 };
+
+typedef struct TH_Variables{
+  ui_variable *array;
+  uint8_t len;
+  uint16_t index;
+};
+
+typedef struct TH_Functions{
+  struct ui_function *array;
+  uint8_t len;
+  uint16_t index;
+};
+  
+class TH_thread_instance
+{
+public:
+  ui_function             *function;
+  TH_thread_instance(ui_function *func){
+    function = func;
+  }
+  TH_thread_instance(){
+    function = NULL;
+  }
+};
+
 
 // #####################################################
 // ### Macro Helpers
@@ -48,11 +73,21 @@ void UI__set_variable_array(ui_variable *vray, uint16_t len);
 void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
 
 void UI__set_function_array(ui_function *fray, uint16_t len);
-ui_function *UI__expose_function(const __FlashStringHelper *name, ui_funptr fptr);
+ui_function *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 
 
-ui_function *schedule_function(const __FlashStringHelper *name, ui_funptr fun);
+ui_function *schedule_function(const __FlashStringHelper *name, TH_funptr fun);
 uint8_t call_function(char *name, char *input);
 uint8_t ui_loop();
+
+
+// #####################################################
+// ### Package Access
+
+void TH__set_innactive(ui_function *f);
+extern TH_Variables TH__variables;
+extern TH_Functions TH__functions;
+
+//extern LinkedList<TH_thread_instance> TH__threads;
 
 #endif

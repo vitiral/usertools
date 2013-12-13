@@ -26,7 +26,7 @@ uint8_t ui_loop();
 
 // #####################################################
 // ### Other Module Functions
-void ui_process_command(char *c);
+//void ui_process_command(char *c);
 
 #endif
 
