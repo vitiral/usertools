@@ -2,32 +2,33 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "logging.h"
+#include "errorhandling.h"
 
-EH_Serial_class::EH_Serial_class()
+Logging::Logging()
 {
   _mode = EH_STD_SERIAL;
   _soft = 0;
 }
 
-EH_Serial_class::~EH_Serial_class()
+Logging::~Logging()
 {
 }
 
-void EH_Serial_class::config_std(){
+void Logging::config_std(){
   _mode = EH_STD_SERIAL;
 }
 
 // I can't get this working
-void EH_Serial_class::config_soft(SoftwareSerial *soft){
+void Logging::config_soft(SoftwareSerial *soft){
   _mode = EH_SOFT_SERIAL;
   _soft = soft;
 }
 
-int EH_Serial_class::peek(){
+int Logging::peek(){
   assert_return(0, -1);
 }
 
-size_t EH_Serial_class::write(uint8_t byte){
+size_t Logging::write(uint8_t byte){
   switch(_mode){
   case EH_STD_SERIAL:
     return Serial.write(byte);
@@ -39,15 +40,15 @@ size_t EH_Serial_class::write(uint8_t byte){
   return 0;
 }
 
-int EH_Serial_class::read(){
+int Logging::read(){
   assert_return(0, -1);
 }
 
-int EH_Serial_class::available(){
+int Logging::available(){
   assert_return(0, -1);
 }
 
-void EH_Serial_class::flush(){
+void Logging::flush(){
   switch(_mode){
   case EH_STD_SERIAL:
     return Serial.flush();
@@ -59,4 +60,4 @@ void EH_Serial_class::flush(){
   assert_return(0);
 }
 
-EH_Serial_class EH_Serial;
+Logging Logger;

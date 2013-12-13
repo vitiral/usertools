@@ -1,4 +1,10 @@
 
+#ifndef logging_h
+#define logging_h
+#include <SoftwareSerial.h>
+#include <string.h>
+#include <inttypes.h>
+#include <Stream.h>
 
 #define LOGV_DEBUG 50
 #define LOGV_INFO 40
@@ -14,12 +20,10 @@
 class Logging : public Stream
 {
 private:
-  // per object data
   uint8_t _mode;
   SoftwareSerial *_soft;
  
 public:
-  // public methods
   Logging();
   //Logging(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic = false);
   ~Logging();
@@ -42,3 +46,5 @@ public:
 };
 
 extern Logging Logger;
+
+#endif
