@@ -19,7 +19,6 @@ void ui_setup_std();
 #define ui_expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
 #define ui_expose_function(name, FUN)         UI__expose_function(F(name), FUN)
 
-
 // #####################################################
 // ### Struct Declaration
 
@@ -46,15 +45,14 @@ typedef struct ui_function{
 // ### Macro Helpers
 
 void UI__set_variable_array(ui_variable *vray, uint16_t len);
-//void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
 void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
 
 void UI__set_function_array(ui_function *fray, uint16_t len);
 ui_function *UI__expose_function(const __FlashStringHelper *name, ui_funptr fptr);
 
-// #####################################################
-// ### Functions
-ui_function *schedule_function(const __FlashStringHelper *name, ui_funptr fun);
 
+ui_function *schedule_function(const __FlashStringHelper *name, ui_funptr fun);
+uint8_t call_function(char *name, char *input);
+uint8_t ui_loop();
 
 #endif
