@@ -69,6 +69,7 @@ typedef struct pt pthread;
 #define PT_ERROR   2
 #define PT_EXITED  3
 #define PT_ENDED   4
+#define PT_END     4
 
 /**
  * \name Initialization

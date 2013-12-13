@@ -61,7 +61,7 @@ char *_get_word(char **c){
   *c = pass_ws(*c);
   char *word = *c;
   char *ce = get_word_end(*c);
-  debug(ce - 1);
+  //debug(ce);
   *ce = 0;
   *c = ce + 1; // sets c to next word
   if(*word == 0) seterr(ERR_INPUT);
@@ -152,23 +152,26 @@ void _print_monitor(uint32_t execution_time){
   }
 }
 
+uint8_t print_periodically = false; 
 
-
-uint8_t system_monitor(pthread *pt, char *input){
-  static uint8_t print_periodically = false;
-  static uint32_t execution_time; // execution time in ms
+uint8_t monswitch(pthread *pt, char *input){
   char *word = get_word(input);
-  if(*word == 0) goto error;
-  iferr_log_catch();
+  if(*word == 0) return PT_ENDED;
+  iferr_log_return(PT_ENDED);
   if(cmp_str_flash(word, F("on"))) print_periodically = true;
   if(cmp_str_flash(word, F("off"))) print_periodically = false;
-  return 0;
+  raisem_return(ERR_INPUT, input, PT_ENDED);
+  return PT_ENDED;
+}
 
-error:
+uint8_t system_monitor(pthread *pt, char *input){
+  static uint32_t execution_time; // execution time in ms
+  
   PT_BEGIN(pt);
   execution_time = millis();
   while(true){
     PT_WAIT_MS(pt, 5000);
+    debug(String("mon:") + print_periodically);
     if(print_periodically) _print_monitor((uint32_t)millis() - execution_time);
     execution_time = millis();
   }
@@ -239,8 +242,10 @@ error:
 }
 
 void ui_setup_std(){
+  log_info("Std UI Setup");
   thread_setup_std();
-  ui_expose_function("mon", system_monitor);
+  start_thread("*M", system_monitor);
+  ui_expose_function("mon", monswitch);
 }
   
 

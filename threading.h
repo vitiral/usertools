@@ -18,7 +18,7 @@ void thread_setup_std();
 #define ui_expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
 #define ui_expose_function(name, FUN)         UI__expose_function(F(name), FUN)
 
-#define start_thread(name, func) schedule_function(R(name), func)
+#define start_thread(name, func) schedule_function(F(name), func)
 
 uint8_t thread_loop();
 

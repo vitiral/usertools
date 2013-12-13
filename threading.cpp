@@ -90,11 +90,23 @@ thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   debug(String("len:") + String(len));
   debug(TH__th_array.array[TH__th_array.index].pt.lc);
   TH__th_array.index++;
+  debug(String("Index:") + String(TH__th_array.index));
   return &(TH__th_array.array[TH__th_array.index - 1]);
 }
 
 // #####################################################
 // ### Internal Functions
+
+void log_thread_exit(thread *th){
+  Serial.print("[Th Exit]:");
+  Serial.println(th->el.name);
+}
+
+void log_thread_start(thread *th){
+  Serial.print("[Th Start]:");
+  Serial.println(th->el.name);
+}
+
 
 unsigned short function_exists(TH_funptr fun){
   for(uint8_t i = 0; i < TH__th_array.index; i++){
@@ -104,20 +116,28 @@ unsigned short function_exists(TH_funptr fun){
   return false;
 }
 
+void th_set_innactive(thread *f){
+  debug("Th InA:");
+  debug(f->el.name);
+  f->pt.lc = PT_INNACTIVE;
+}
+
 // schedule an initialized function
 // returns 0 on error
 uint8_t schedule_function(thread *fun, char *input) {
   uint8_t out;
   debug("Calling");
-  debug(fun->pt.lc);
-  assert_raise_return(fun->pt.lc == -1, ERR_THREAD, 0);
+  debug(fun->el.name);
+  assert_raise_return(fun->pt.lc == PT_INNACTIVE, ERR_THREAD, 0);
   PT_INIT(&(fun->pt));
   out = fun->fptr(&(fun->pt), input);
   if(out >= PT_EXITED){
+    th_set_innactive(fun);
     return 1;
   }
   else{
     TH__threads.add(TH_thread_instance(fun));
+    log_thread_start(fun);
     return 1;
   }
 }
@@ -146,8 +166,8 @@ uint8_t call_function(char *name, char *input){
   uint8_t i;
   uint8_t name_len = strlen(name);
 
-  debug(String("cf name: ") + String(name));
-  for(i = 0; i < TH__variables.index; i++){
+  debug(String("cf name:") + String(name) + String(" index=") + String(TH__th_array.index));
+  for(i = 0; i < TH__th_array.index; i++){
     var = &TH__th_array.array[i];
     debug(var->el.name);
     if(cmp_str_elptr(name, name_len, var)){
@@ -156,10 +176,6 @@ uint8_t call_function(char *name, char *input){
     }
   }
   return 0; 
-}
-
-void TH__set_innactive(thread *f){
-  f->pt.lc = PT_INNACTIVE;
 }
 
 void thread_kill(thread *f){
@@ -224,8 +240,9 @@ uint8_t thread_loop(){
       else th->time = time;
       
       if(fout >= PT_EXITED){
-        TH__set_innactive(th);
+        th_set_innactive(th);
         TH__threads.remove(i);
+        log_thread_exit(th);
         i -= 1;
       }
       clrerr();
@@ -235,8 +252,6 @@ uint8_t thread_loop(){
   }
   PT_END(pt);
 }
-
-
 
 
 

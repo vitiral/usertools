@@ -1,3 +1,5 @@
+#define DEBUG
+
 #include <Arduino.h>
 #include <stdlib.h>
 #include "errorhandling.h"
@@ -19,23 +21,25 @@ uint16_t fstr_len(const __FlashStringHelper *ifsh){
 
 uint8_t cmp_str_flash(char *str, const __FlashStringHelper *flsh){
   const char PROGMEM *p = (const char PROGMEM *)flsh;
-  char *c;
   size_t n = 0;
+  char c = 1;
   while (c != 0) {
-    unsigned char c = pgm_read_byte(p++);
-    if (c != str[n]) return false;
-    n++;
+    c = pgm_read_byte(p++);
+    if (c != *(str++)) return false;
+    //Serial.write(c);
+    //Serial.write(*(str-1));
+    //Serial.println();
   }
   return true;
 }
 
 uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHelper *flsh2){
-  char *c1, *c2;
+ unsigned char c1 = 1, c2;
   const char PROGMEM *p1 = (const char PROGMEM *)flsh1;
   const char PROGMEM *p2 = (const char PROGMEM *)flsh2;
   while (c1 != 0) {
-    unsigned char c1 = pgm_read_byte(p1++);
-    unsigned char c2 = pgm_read_byte(p2++);
+    c1 = pgm_read_byte(p1++);
+    c2 = pgm_read_byte(p2++);
     if (c1 != c2) return false;
   }
   return true;
