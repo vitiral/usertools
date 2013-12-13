@@ -6,6 +6,9 @@
  http://c.learncodethehardway.org/book/ex20.html
 */
 
+#ifndef __errorhandling_h__
+#define __errorhandling_h__
+
 #define ERR_NOERR         0 // NoErr -- no error has occured
 #define ERR_BASE          1 // BaseErr -- general error
 #define ERR_TIMEOUT       2 // TimeoutErr
@@ -31,53 +34,15 @@
 #define ERR_EMPTY         254 // nothing printed, still an error
 #define ERR_UNKNOWN       255 // unknown error
 
-#define LOGV_DEBUG 50
-#define LOGV_INFO 40
-#define LOGV_ERROR 30
-#define LOGV_SILENT 0
-
-#ifndef __errorhandling_h__
-#define __errorhandling_h__
-
 #include <SoftwareSerial.h>
 #include <string.h>
 #include <inttypes.h>
 #include <Stream.h>
+#include "logging.h"
 
 #define EH_STD_SERIAL 0
 #define EH_SOFT_SERIAL 1
 
-class EH_Serial_class : public Stream
-{
-private:
-  // per object data
-  uint8_t _mode;
-  SoftwareSerial *_soft;
- 
-public:
-  // public methods
-  EH_Serial_class();
-  //EH_Serial_class(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic = false);
-  ~EH_Serial_class();
-//  void begin(long speed);
-//  bool listen();
-//  void end();
-//  bool isListening() { return this == active_object; }
-//  bool overflow() { bool ret = _buffer_overflow; _buffer_overflow = false; return ret; }
-//  bool overflow();
-
-  void config_std();
-  void config_soft(SoftwareSerial *soft);
-  int peek();
-  virtual size_t write(uint8_t byte);
-  virtual int read();
-  virtual int available();
-  virtual void flush();
-  
-  using Print::write;
-};
-
-extern EH_Serial_class EH_Serial;
 #define EH_config_std            EH_Serial.config_std()
 #define EH_config_soft(soft)     EH_Serial.config_soft(&soft)
 
@@ -111,12 +76,6 @@ void seterr(uint8_t error);
 #define iferr_log_return(...)    EH_DW(if(derr) {log_err(); return __VA_ARGS__;})
 #define iferr_catch()            EH_DW(if(derr) goto error;)
 #define iferr_log_catch()        EH_DW(if(derr) {log_err(); goto error;})
-
-#ifdef DEBUG
-  #ifndef LOGLEVEL
-  #define LOGLEVEL LOGV_DEBUG
-  #endif
-#endif
 
 #ifdef LOGLEVEL
   #if LOGLEVEL >= LOGV_ERROR
