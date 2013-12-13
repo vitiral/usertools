@@ -80,7 +80,7 @@ TH_function *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr
   TH__functions.array[TH__functions.index].el.name_len = len;
   TH__functions.array[TH__functions.index].fptr = fptr;
 
-  thread pt;
+  pthread pt;
   pt.lc = -1;
   pt.error = 0;
   pt.time = 0;
@@ -159,12 +159,16 @@ uint8_t call_function(char *name, char *input){
 }
 
 void TH__set_innactive(TH_function *f){
-  f->pt.lc = -1;
+  f->pt.lc = PT_INNACTIVE;
+}
+
+void thread_kill(TH_function *f){
+  f->pt.lc = PT_KILL;
 }
 
 #define UI_STD_VARLEN 20
 #define UI_STD_FUNLEN 20
-void ui_setup_std(){
+void thread_setup_std(){
   static unsigned short run = false;
   assert_return(run == false);
   run = true;

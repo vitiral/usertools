@@ -142,7 +142,7 @@ void _print_threads(){
 }
 
 
-uint8_t print_threads(struct pt *pt, char *input){
+uint8_t print_threads(pthread *pt, char *input){
   static uint8_t print_periodically = false;
   if(input) _print_threads();
 

@@ -5,10 +5,9 @@
 
 // #####################################################
 // ### Intended Exported Functions
-typedef struct pt thread;
 
 // Setup Macros
-void ui_setup_std();
+void thread_setup_std();
 #define ui_declare_variables(len) TH_variable UI__variable_array[len]; uint8_t UI__variable_len = len
 #define ui_setup_variables()      UI__set_variable_array(UI__variable_array, UI__variable_len)
 #define ui_declare_functions(len) TH_function UI__function_array[len]; uint8_t UI__function_len = len

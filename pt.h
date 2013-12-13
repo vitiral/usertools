@@ -53,11 +53,16 @@ extern const struct pt PT_std_pt;
 
 #include "lc.h"
 
-struct pt {
+#define PT_INNACTIVE  -1
+#define PT_KILL       -2
+
+struct pt{
   lc_t lc;
   unsigned int time;
   unsigned short error;
 };
+
+typedef struct pt pthread;
 
 #define PT_WAITING 0
 #define PT_YIELDED 1
