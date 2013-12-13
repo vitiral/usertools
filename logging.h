@@ -37,17 +37,13 @@ class Logging : public Stream
 private:
   uint8_t _mode;
   SoftwareSerial *_soft;
- 
+  
 public:
   Logging();
-  //Logging(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic = false);
   ~Logging();
-//  void begin(long speed);
-//  bool listen();
-//  void end();
-//  bool isListening() { return this == active_object; }
-//  bool overflow() { bool ret = _buffer_overflow; _buffer_overflow = false; return ret; }
-//  bool overflow();
+  uint8_t silent;   // silent = true prevents Logger from sending any data.
+                    // NOTE: No data is even added to buffer!!!
+  uint8_t wrote;    // sets to true if any data was written
 
   void config_std();
   void config_soft(SoftwareSerial *soft);

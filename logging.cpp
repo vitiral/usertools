@@ -10,6 +10,8 @@ Logging::Logging()
 {
   _mode = EH_STD_SERIAL;
   _soft = 0;
+  silent = false;
+  wrote = false;
 }
 
 Logging::~Logging()
@@ -27,10 +29,20 @@ void Logging::config_soft(SoftwareSerial *soft){
 }
 
 int Logging::peek(){
-  assert_return(0, -1);
+  switch(_mode){
+  case EH_STD_SERIAL:
+    return Serial.peek();
+  case EH_SOFT_SERIAL:
+    return _soft->peek();
+  default:
+    return 0;
+  }
+  return 0;
 }
 
 size_t Logging::write(uint8_t byte){
+  if(silent) return 0;
+  wrote = true;
   switch(_mode){
   case EH_STD_SERIAL:
     return Serial.write(byte);
@@ -43,11 +55,27 @@ size_t Logging::write(uint8_t byte){
 }
 
 int Logging::read(){
-  assert_return(0, -1);
+  switch(_mode){
+  case EH_STD_SERIAL:
+    return Serial.read();
+  case EH_SOFT_SERIAL:
+    return _soft->read();
+  default:
+    return 0;
+  }
+  return 0;
 }
 
 int Logging::available(){
-  assert_return(0, -1);
+  switch(_mode){
+  case EH_STD_SERIAL:
+    return Serial.available();
+  case EH_SOFT_SERIAL:
+    return _soft->available();
+  default:
+    return 0;
+  }
+  return 0;
 }
 
 void Logging::flush(){
