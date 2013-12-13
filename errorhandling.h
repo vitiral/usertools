@@ -76,28 +76,26 @@ void seterr(uint8_t error);
 #define iferr_catch()            EH_DW(if(derr) goto error;)
 #define iferr_log_catch()        EH_DW(if(derr) {log_err(); goto error;})
 
-
-
 // Only log at the proper level.
-#if LOGLEVEL >= LOGV_DEBUG
+#if LOGLEVEL >= LOG_DEBUG
   void EH_start_debug(char *file, unsigned int line);
-  #define debug(...) EH_DW(LOG_IFLL(LOGV_DEBUG, EH_start_debug(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
+  #define debug(...) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
 #else
   #define debug(...) 
 #endif
 
-#if LOGLEVEL >= LOGV_INFO
+#if LOGLEVEL >= LOG_INFO
 void EH_start_info(char *file, unsigned int line);
-  #define log_info(...) EH_DW(LOG_IFLL(LOGV_INFO, EH_start_info(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
+  #define log_info(...) EH_DW(LOG_IFLL(LOG_INFO, EH_start_info(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
 #else
   #define log_info(...) 
 #endif
 
-#if LOGLEVEL >= LOGV_ERROR
+#if LOGLEVEL >= LOG_ERROR
   void EH_log_err(char *file, unsigned int line);
-  #define EH_ST_raisem(E, ...) seterr(E); EH_DW(LOG_IFLL(LOGV_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
-  #define log_err(...)              EH_DW(LOG_IFLL(LOGV_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
-  #define clrerr_log()              EH_DW(LOG_IFLL(LOGV_ERROR, seterr(ERR_CLEARED); log_err(); clrerr();))
+  #define EH_ST_raisem(E, ...) seterr(E); EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
+  #define log_err(...)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
+  #define clrerr_log()              EH_DW(LOG_IFLL(LOG_ERROR, seterr(ERR_CLEARED); log_err(); clrerr();))
   void EH_printerrno();
   void EH_printinfo(char *file, unsigned int line);
 #else

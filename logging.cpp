@@ -4,7 +4,7 @@
 #include "logging.h"
 #include "errorhandling.h"
 
-uint8_t LOG_loglevel = 0;
+uint8_t LOG_loglevel = LOG_DEBUG;
 
 Logging::Logging()
 {

@@ -6,19 +6,19 @@
 #include <inttypes.h>
 #include <Stream.h>
 
-#define LOGV_DEBUG 50
-#define LOGV_INFO 40
-#define LOGV_ERROR 30
-#define LOGV_SILENT 0
+#define LOG_DEBUG 50
+#define LOG_INFO 40
+#define LOG_ERROR 30
+#define LOG_SILENT 0
 
 #ifdef DEBUG
   #ifndef LOGLEVEL
-  #define LOGLEVEL LOGV_DEBUG
+  #define LOGLEVEL LOG_DEBUG
   #endif
 #endif
 
 #ifdef LOGLEVEL
-  #if LOGLEVEL >= LOGV_ERROR
+  #if LOGLEVEL >= LOG_ERROR
     extern uint8_t LOG_loglevel;
     #define set_loglevel(LL) LOG_loglevel = LL
     // used in errorhandling
@@ -27,7 +27,8 @@
     #define set_loglevel(LL)
   #endif
 #else
-  #define LOGLEVEL LOGV_SILENT
+  #define set_loglevel(LL)
+  #define LOGLEVEL LOG_SILENT
 #endif
 
 
