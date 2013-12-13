@@ -5,13 +5,14 @@
 #include <inttypes.h>
 
 #include "LinkedList.h"
-#include <pt.h>
 
 #define DEBUG
 #include <SoftwareSerial.h>
 #include "errorhandling.h"
 
 #include "serialui.h"
+#include "threading.h"
+#include "strtools.h"
 
 #define MAX_STR_LEN 100
 #define MAX_ARRAY_LEN 256
@@ -20,108 +21,6 @@
 char UI_CMD_END_CHAR = 0x0A;
 char UI_CMD_PEND_CHAR = 0x0D;  // may be right before the end.
 
-// #####################################################
-// ### Struct Declaration
-
-typedef uint8_t (*ui_funptr)(struct pt *pt, char *input);
-
-class ui_thread
-{
-public:
-  ui_thread(ui_function *func);
-  ui_thread();
-  ui_function             *function;
-};
-
-ui_thread::ui_thread(ui_function *func){
-  function = func;
-}
-
-ui_thread::ui_thread(){
-  function = NULL;
-}
-
-typedef struct Variables{
-  ui_variable *array;
-  uint8_t len;
-  uint16_t index;
-};
-
-typedef struct Functions{
-  struct ui_function *array;
-  uint8_t len;
-  uint16_t index;
-};
-
-
-// #####################################################
-// ### Globals
-Variables variables = {
-  0, 0, 0};
-Functions functions = {
-  0, 0, 0};
-LinkedList<ui_thread> threads = LinkedList<ui_thread>();
-
-
-// #####################################################
-// ### Useful Functions
-uint16_t fstr_len(const __FlashStringHelper *ifsh){
-  const char PROGMEM *p = (const char PROGMEM *)ifsh;
-  size_t n = 0;
-  while (1) {
-    unsigned char c = pgm_read_byte(p++);
-    if (c == 0) break;
-    n++;
-  }
-  return n;
-}
-
-uint8_t cmp_str_flash(char *str, const __FlashStringHelper *flsh){
-  const char PROGMEM *p = (const char PROGMEM *)flsh;
-  char *c;
-  size_t n = 0;
-  while (c != 0) {
-    unsigned char c = pgm_read_byte(p++);
-    if (c != str[n]) return false;
-    n++;
-  }
-  return true;
-}
-
-uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHelper *flsh2){
-  char *c1, *c2;
-  const char PROGMEM *p1 = (const char PROGMEM *)flsh1;
-  const char PROGMEM *p2 = (const char PROGMEM *)flsh2;
-  while (c1 != 0) {
-    unsigned char c1 = pgm_read_byte(p1++);
-    unsigned char c2 = pgm_read_byte(p2++);
-    if (c1 != c2) return false;
-  }
-  return true;
-}
-
-// cmp_str_el(string, len, element) -- compares the string with length len to the element
-#define cmp_str_elptr(N, L, E) __cmp_str_elptr(N, L, (ui_element *)(E))
-uint8_t __cmp_str_elptr(char *name, uint16_t name_len, ui_element *el){
-  debug(String("cmp:") + name);
-  debug(el->name);
-  debug(String(name_len) + String(" ") + String(el->name_len));
-  if(el->name_len != name_len) return false;
-  debug("len same");
-  if(cmp_str_flash(name, el->name)) return true; 
-  else return false;
-}
-
-//compare flash helper with element pointer
-uint8_t cmp_flhp_elptr(const __FlashStringHelper *flph, uint8_t len, ui_element *el){
-  debug("cmp flhp");
-  debug(flph);
-  debug(el->name);
-  if(el->name_len != len) return false;
-  if(!cmp_flash_flash(flph, el->name)) return false;
-  debug("equal");
-  return true;
-}
 
 unsigned short function_exists(ui_funptr fun){
   for(uint8_t i = 0; i < functions.index; i++){
@@ -130,88 +29,6 @@ unsigned short function_exists(ui_funptr fun){
   }
   return false;
 }
-
-// #####################################################
-// ### Macro Helpers
-/*
-void UI__init_threads(thr){
- //LinkedList<ui_function> *threads = new LinkedList<ui_function>();
- //LinkedList<int> *threads = new LinkedList<int>();
- threads = thr;
- }
- */
-
-void UI__set_variable_array(ui_variable *vray, uint16_t len){
-  assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
-  variables.array = vray;
-  variables.len = len;
-  variables.index = 0;
-}
-
-void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize){
-  assert_return(variables.index <= variables.len);
-  assert_return(fstr_len(name) <= MAX_STR_LEN);
-  assert_raise_return(variables.array, ERR_PTR); // assert not null
-  uint8_t len = fstr_len(name);
-  assert_raise_return(len > 0, ERR_SIZE);
-
-  variables.array[variables.index].el.name = name;
-  variables.array[variables.index].el.name_len = len;
-  variables.array[variables.index].vptr = varptr;
-  variables.array[variables.index].size = varsize;
-  debug("Added V");
-  debug(name);
-  debug(String("len:") + String(variables.array[variables.index].el.name_len));
-  variables.index++;
-}
-
-void UI__set_function_array(struct ui_function *fray, uint16_t len){
-  assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
-  functions.array = fray;
-  functions.len = len;
-}
-
-ui_function *UI__expose_function(const __FlashStringHelper *name, ui_funptr fptr){
-  debug("ExpFun");
-  assert_return(functions.index <= functions.len, NULL);
-  assert_return(fstr_len(name) <= MAX_STR_LEN, NULL);
-  assert_raise_return(functions.array, ERR_PTR, NULL); // assert not null
-
-  uint8_t len = fstr_len(name);
-  assert_raise_return(len > 0, ERR_SIZE, NULL);
-
-  functions.array[functions.index].el.name = name;
-  functions.array[functions.index].el.name_len = len;
-  functions.array[functions.index].fptr = fptr;
-
-  struct pt pt;
-  pt.lc = -1;
-  pt.error = 0;
-  pt.time = 0;
-  functions.array[functions.index].pt = pt;
-  debug("Added F");
-  debug(name);
-  debug(String("len:") + String(len));
-  debug(functions.array[functions.index].pt.lc);
-  functions.index++;
-  return &(functions.array[functions.index - 1]);
-}
-
-#define UI_STD_VARLEN 20
-#define UI_STD_FUNLEN 20
-void ui_setup_std(){
-  static unsigned short run = false;
-  assert_return(run == false);
-  run = true;
-  static ui_variable UI__variable_array[UI_STD_VARLEN]; 
-  static uint8_t UI__variable_len = UI_STD_VARLEN;
-  ui_setup_variables();
-
-  static ui_function UI__function_array[UI_STD_FUNLEN];
-  static uint8_t UI__function_len = UI_STD_FUNLEN;
-  ui_setup_functions();
-}
-
 
 // #####################################################
 // ### Functions
