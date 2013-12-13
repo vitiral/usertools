@@ -42,7 +42,7 @@ uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHel
 }
 
 // cmp_str_el(string, len, element) -- compares the string with length len to the element
-uint8_t __cmp_str_elptr(char *name, uint16_t name_len, ui_element *el){
+uint8_t __cmp_str_elptr(char *name, uint16_t name_len, TH_element *el){
   debug(String("cmp:") + name);
   debug(el->name);
   debug(String(name_len) + String(" ") + String(el->name_len));
@@ -53,7 +53,7 @@ uint8_t __cmp_str_elptr(char *name, uint16_t name_len, ui_element *el){
 }
 
 //compare flash helper with element pointer
-uint8_t cmp_flhp_elptr(const __FlashStringHelper *flph, uint8_t len, ui_element *el){
+uint8_t cmp_flhp_elptr(const __FlashStringHelper *flph, uint8_t len, TH_element *el){
   debug("cmp flhp");
   debug(flph);
   debug(el->name);

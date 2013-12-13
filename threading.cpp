@@ -31,13 +31,13 @@ LinkedList<TH_thread_instance> TH__threads = LinkedList<TH_thread_instance>();
 // ### Macro Helpers
 /*_
 void UI__init_threads(thr){
- //LinkedList<ui_function> *TH__threads = new LinkedList<ui_function>();
+ //LinkedList<TH_function> *TH__threads = new LinkedList<TH_function>();
  //LinkedList<int> *TH__threads = new LinkedList<int>();
  TH__threads = thr;
  }
  */
 
-void UI__set_variable_array(ui_variable *vray, uint16_t len){
+void UI__set_variable_array(TH_variable *vray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
   TH__variables.array = vray;
   TH__variables.len = len;
@@ -61,13 +61,13 @@ void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t 
   TH__variables.index++;
 }
 
-void UI__set_function_array(struct ui_function *fray, uint16_t len){
+void UI__set_function_array(struct TH_function *fray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
   TH__functions.array = fray;
   TH__functions.len = len;
 }
 
-ui_function *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
+TH_function *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   debug("ExpFun");
   assert_return(TH__functions.index <= TH__functions.len, NULL);
   assert_return(fstr_len(name) <= MAX_STR_LEN, NULL);
@@ -106,7 +106,7 @@ unsigned short function_exists(TH_funptr fun){
 
 // schedule an initialized function
 // returns 0 on error
-uint8_t schedule_function(ui_function *fun, char *input) {
+uint8_t schedule_function(TH_function *fun, char *input) {
   uint8_t out;
   debug("Calling");
   debug(fun->pt.lc);
@@ -127,11 +127,11 @@ uint8_t schedule_function(ui_function *fun, char *input) {
 // ### Exported Functions
 
 // scehdule an uninitilized function
-ui_function *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
+TH_function *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
   debug("Scheduling raw");
   debug(name);
   clrerr();
-  ui_function *uifun = UI__expose_function(name, fun);
+  TH_function *uifun = UI__expose_function(name, fun);
   iferr_log_return(NULL);
   debug("Check name:");
   debug(uifun->el.name);
@@ -141,7 +141,7 @@ ui_function *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
 }
 
 uint8_t call_function(char *name, char *input){
-  struct ui_function *var;
+  struct TH_function *var;
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
@@ -158,7 +158,7 @@ uint8_t call_function(char *name, char *input){
   return 0; 
 }
 
-void TH__set_innactive(ui_function *f){
+void TH__set_innactive(TH_function *f){
   f->pt.lc = -1;
 }
 
@@ -168,11 +168,11 @@ void ui_setup_std(){
   static unsigned short run = false;
   assert_return(run == false);
   run = true;
-  static ui_variable UI__variable_array[UI_STD_VARLEN]; 
+  static TH_variable UI__variable_array[UI_STD_VARLEN]; 
   static uint8_t UI__variable_len = UI_STD_VARLEN;
   ui_setup_variables();
 
-  static ui_function UI__function_array[UI_STD_FUNLEN];
+  static TH_function UI__function_array[UI_STD_FUNLEN];
   static uint8_t UI__function_len = UI_STD_FUNLEN;
   ui_setup_functions();
 }

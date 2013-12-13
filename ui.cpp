@@ -130,7 +130,7 @@ void _print_threads(){
   Serial.println(F("Running Threads:"));
   Serial.println(F("Name\t\tLine\t\tError"));
   uint8_t i = 0;
-  ui_function *f;
+  TH_function *f;
   while(i < TH__threads.size()){
     f = TH__threads.get(i).function;
     Serial.print(f->el.name);
@@ -161,7 +161,7 @@ error:
 }
 
 uint8_t print_variable(char *name){
-  ui_variable *var;
+  TH_variable *var;
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
@@ -227,7 +227,7 @@ error:
 
 uint8_t ui_loop(){
   static int16_t i = 0;
-  ui_function *f;
+  TH_function *f;
   PT_LOCAL_BEGIN(pt);
   while(true){
     ui_interface();
