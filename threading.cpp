@@ -179,8 +179,20 @@ uint8_t call_thread(char *name, char *input){
   return 0; 
 }
 
-void get_thread(char *name){
-
+TH_variable *TH_get_variable(char *name){
+  TH_variable *var;
+  int8_t n;
+  uint8_t i;
+  uint8_t name_len = strlen(name);
+  debug(String("gt: ") + String(name));
+  for(i = 0; i < TH__variables.index; i++){
+    var = &TH__variables.array[i];
+    //if(__cmp_str_elptr_v(name, name_len, var)){
+    if(cmp_str_elptr(name, name_len, var)){
+      return var;
+    }
+  }
+  return NULL;
 }
 
 void thread_kill(thread *f, uint8_t index){

@@ -103,6 +103,7 @@ uint8_t restart_thread(thread *th);
 void TH__set_innactive(thread *f);
 extern TH_Variables TH__variables;
 extern TH_ThreadArray TH__th_array;
+TH_variable *TH_get_variable(char *name);
 
 //extern LinkedList<TH_thread_instance> TH__threads;
 

@@ -177,9 +177,16 @@ uint8_t print_variable(char *name){
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
-  debug(String("pv name: ") + String(name));
-  
-  return false; 
+  var = TH_get_variable(name);
+  assert_raise_return(var, ERR_INPUT, false);
+  Serial.print(F("v=x"));
+  for(n = var->size - 1; n >= 0; n--){
+    uint8_t *chptr = (uint8_t*)(var->vptr);  // works
+    if(chptr[n] < 0x10) Serial.write('0');
+    Serial.print(chptr[n], HEX);
+  }
+  Serial.println();
+  return true;
 }
 
 uint8_t user_interface(pthread *pt, char *input){
