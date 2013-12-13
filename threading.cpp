@@ -152,16 +152,16 @@ thread *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
   debug("Scheduling raw");
   debug(name);
   clrerr();
-  thread *uifun = UI__expose_function(name, fun);
+  thread *th = UI__expose_function(name, fun);
   iferr_log_return(NULL);
   debug("Check name:");
-  debug(uifun->el.name);
-  debug(uifun->pt.lc);
-  schedule_function(uifun, EH_EMPTY_STR);
-  return uifun;
+  debug(th->el.name);
+  debug(th->pt.lc);
+  schedule_function(th, EH_EMPTY_STR);
+  return th;
 }
 
-uint8_t call_function(char *name, char *input){
+uint8_t call_thread(char *name, char *input){
   thread *var;
   int8_t n;
   uint8_t i;
@@ -216,7 +216,7 @@ uint8_t thread_loop(){
     PT_YIELD(pt);
     i = 0;
     while(i < TH__threads.size()){
-      th = TH__threads.get(i).function;
+      th = TH__threads.get(i).th;
       
       time = millis();
       timeus = micros();

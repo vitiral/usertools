@@ -110,7 +110,7 @@ void ui_process_command(char *c){
     debug("Calling Function:");
     debug(c2);
     debug(c);
-    call_function(c2, c);
+    call_thread(c2, c);
   }
 error:
   return;
@@ -138,20 +138,20 @@ void _print_monitor(uint32_t execution_time){
   Serial.println(execution_time);
   Serial.println(F("Name\t\tExTime\t\tLine\t\tError"));
   uint8_t i = 0;
-  thread *f;
+  thread *th;
   while(i < TH__threads.size()){
-    f = TH__threads.get(i).function;
-    Serial.print(f->el.name);
+    th = TH__threads.get(i).th;
+    Serial.print(th->el.name);
     Serial.print(UI_TABLE_SEP);
-    Serial.print(f->time / 100);
+    Serial.print(th->time / 100);
     Serial.write('.');
-    Serial.print(f->time % 100);
+    Serial.print(th->time % 100);
     Serial.print(UI_TABLE_SEP);
-    Serial.print((unsigned int)f->pt.lc);
+    Serial.print((unsigned int)th->pt.lc);
     Serial.print(UI_TABLE_SEP);
-    Serial.println(f->pt.error);
+    Serial.println(th->pt.error);
     
-    f->time = 0; // reset time
+    th->time = 0; // reset time
     i++;
   }
   

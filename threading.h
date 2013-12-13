@@ -61,12 +61,12 @@ typedef struct TH_ThreadArray{
 class TH_thread_instance
 {
 public:
-  thread             *function;
-  TH_thread_instance(thread *func){
-    function = func;
+  thread             *th;
+  TH_thread_instance(thread *th_in){
+    th = th_in;
   }
   TH_thread_instance(){
-    function = NULL;
+    th = NULL;
   }
 };
 
@@ -86,7 +86,7 @@ thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 // ### User Functions
 
 thread *schedule_function(const __FlashStringHelper *name, TH_funptr fun);
-uint8_t call_function(char *name, char *input);
+uint8_t call_thread(char *name, char *input);
 uint8_t ui_loop();
 uint8_t restart_thread(thread *th);
 
