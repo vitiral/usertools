@@ -17,6 +17,20 @@
   #endif
 #endif
 
+#ifdef LOGLEVEL
+  #if LOGLEVEL >= LOGV_ERROR
+    extern uint8_t LOG_loglevel;
+    #define set_loglevel(LL) LOG_loglevel = LL
+    // used in errorhandling
+    #define LOG_IFLL(LL,code) if(LOG_loglevel >= LL){code} 
+  #else
+    #define set_loglevel(LL)
+  #endif
+#else
+  #define LOGLEVEL LOGV_SILENT
+#endif
+
+
 class Logging : public Stream
 {
 private:

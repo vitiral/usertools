@@ -4,6 +4,8 @@
 #include "logging.h"
 #include "errorhandling.h"
 
+uint8_t LOG_loglevel = 0;
+
 Logging::Logging()
 {
   _mode = EH_STD_SERIAL;
