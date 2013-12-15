@@ -17,6 +17,7 @@ void UI__setup_std(uint8_t V, uint8_t F);
 extern char UI_CMD_END_CHAR;
 extern char UI_CMD_PEND_CHAR;  // may be right before the end.
 extern char *UI_TABLE_SEP;
+//extern const __FlashStringHelper *UI_TABLE_SEP;
 
 char *_get_word(char **c);
 long int _get_int(char **c);

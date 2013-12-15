@@ -54,7 +54,7 @@ extern const struct pt PT_std_pt;
 #include "lc.h"
 
 #define PT_INNACTIVE  -1
-#define PT_KILL       -2
+#define PT_KILL       LC_KILL_VALUE
 
 struct pt{
   lc_t lc;
@@ -69,7 +69,8 @@ typedef struct pt (pthread);
 #define PT_ERROR   2
 #define PT_EXITED  3
 #define PT_ENDED   4
-#define PT_END     4
+#define PT_KILLED  5
+
 
 /**
  * \name Initialization
@@ -366,6 +367,21 @@ typedef struct pt (pthread);
       return PT_YIELDED;			\
     }						\
   } while(0)
+
+/**
+ * Mark where to go if the thread is "killed" by an outside process
+ *
+ * This allows the thread to do final closing operation if killed.
+ * Note: the thread will always enounter this if it does not exit
+ *  before hand.
+ * Note: it is proper to return PT_KILLED
+ *
+ * \hideinitializer 
+ */
+
+#define PT_KILL_ST(s) LC_KILL
+
+#define PT_KILLED(s) do{PT_INIT(s); return PT_KILLED;} while(0) 
 
 /** @} */
 

@@ -107,6 +107,19 @@
  */
 #define LC_END(lc)
 
+
+/**
+ * Mark where to go if the thread is "killed" by an outside process
+ *
+ * This allows the thread to do final closing operation if killed.
+ * Note: the thread will always enounter this if it does not exit
+ *  before hand.
+ * Note: it is proper to return 
+ *
+ * \hideinitializer 
+ */
+#define LC_KILL(lc)
+
 /**
  * \var typedef lc_t;
  *

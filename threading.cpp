@@ -56,9 +56,8 @@ void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t 
   TH__variables.array[TH__variables.index].el.name_len = len;
   TH__variables.array[TH__variables.index].vptr = varptr;
   TH__variables.array[TH__variables.index].size = varsize;
-  debug("Added V");
-  debug(name);
-  debug(String("len:") + String(TH__variables.array[TH__variables.index].el.name_len));
+  sdebug(F("Added V:")); cdebug(name); cdebug(F(" len:"));
+  edebug(TH__variables.array[TH__variables.index].el.name_len);
   TH__variables.index++;
 }
 
@@ -69,7 +68,7 @@ void UI__set_function_array(thread *fray, uint16_t len){
 }
 
 thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
-  debug("ExpFun");
+  debug(F("ExpFun"));
   assert_return(TH__th_array.index <= TH__th_array.len, NULL);
   assert_return(fstr_len(name) <= MAX_STR_LEN, NULL);
   assert_raise_return(TH__th_array.array, ERR_PTR, NULL); // assert not null
@@ -86,12 +85,10 @@ thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   pt.error = 0;
   pt.time = 0;
   TH__th_array.array[TH__th_array.index].pt = pt;
-  debug("Added F");
-  debug(name);
-  debug(String("len:") + String(len));
-  debug(TH__th_array.array[TH__th_array.index].pt.lc);
+  sdebug(F("Added F:")); cdebug(name); cdebug(F(" len:"));
+  cdebug(TH__th_array.array[TH__th_array.index].el.name_len);
   TH__th_array.index++;
-  debug(String("Index:") + String(TH__th_array.index));
+  cdebug(F(" Index:")); edebug(TH__th_array.index);
   return &(TH__th_array.array[TH__th_array.index - 1]);
 }
 
@@ -99,13 +96,13 @@ thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
 // ### Internal Functions
 
 void log_thread_exit(thread *th){
-  Serial.print("[Th Exit]:");
+  Serial.print(F("[Th Exit]:"));
   Serial.println(th->el.name);
 }
 
 void log_thread_start(thread *th){
-  Serial.print("[Th Start]:");
-  Serial.println(th->el.name);
+  Serial.print(F("[Th Start]:"));
+  debug();
 }
 
 
@@ -118,8 +115,8 @@ unsigned short function_exists(TH_funptr fun){
 }
 
 void th_set_innactive(thread *f){
-  debug("Th InA:");
-  debug(f->el.name);
+  sdebug(F("Set Th InA:"));
+  edebug(f->el.name);
   f->pt.lc = PT_INNACTIVE;
 }
 
@@ -127,8 +124,8 @@ void th_set_innactive(thread *f){
 // returns 0 on error
 uint8_t schedule_function(thread *fun, char *input) {
   uint8_t out;
-  debug("Calling");
-  debug(fun->el.name);
+  sdebug(F("Calling:"));
+  edebug(fun->el.name);
   assert_raise_return(fun->pt.lc == PT_INNACTIVE, ERR_THREAD, 0);
   PT_INIT(&(fun->pt));
   out = fun->fptr(&(fun->pt), input);
@@ -149,14 +146,14 @@ uint8_t schedule_function(thread *fun, char *input) {
 
 // scehdule an uninitilized function
 thread *schedule_function(const __FlashStringHelper *name, TH_funptr fun){
-  debug("Scheduling raw");
-  debug(name);
+  sdebug(F("Sch Raw:"));
+  edebug(name);
   clrerr();
   thread *th = UI__expose_function(name, fun);
   iferr_log_return(NULL);
-  debug("Check name:");
-  debug(th->el.name);
-  debug(th->pt.lc);
+  sdebug(F("Check name:"));
+  cdebug(th->el.name);
+  edebug(th->pt.lc);
   schedule_function(th, EH_EMPTY_STR);
   return th;
 }
@@ -167,12 +164,11 @@ uint8_t call_thread(char *name, char *input){
   uint8_t i;
   uint8_t name_len = strlen(name);
 
-  debug(String("cf name:") + String(name) + String(" index=") + String(TH__th_array.index));
+  sdebug(F("cf name:")); cdebug(name); cdebug(F(" index=")); 
+  edebug(TH__th_array.index);
   for(i = 0; i < TH__th_array.index; i++){
     var = &TH__th_array.array[i];
-    debug(var->el.name);
     if(cmp_str_elptr(name, name_len, var)){
-      debug("matched");
       return schedule_function(var, input);
     }
   }
@@ -184,7 +180,8 @@ TH_variable *TH_get_variable(char *name){
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
-  debug(String("gv: ") + String(name));
+  sdebug(F("gv: "));
+  edebug(name);
   for(i = 0; i < TH__variables.index; i++){
     var = &TH__variables.array[i];
     if(cmp_str_elptr(name, name_len, var)){
@@ -199,7 +196,8 @@ thread *TH_get_thread(char *name){
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
-  debug(String("gt: ") + String(name));
+  sdebug(F("gt: "));
+  edebug(name);
   for(i = 0; i < TH__th_array.index; i++){
     th = &TH__th_array.array[i];
     if(cmp_str_elptr(name, name_len, th)){
@@ -222,7 +220,7 @@ uint8_t restart_thread(thread *th){
 #define UI_STD_FUNLEN 20
 
 uint8_t thread_loop(){
-  static int16_t i = 0;
+  static int8_t i = 0;
   uint64_t time;
   uint16_t timeus;
   uint8_t fout;

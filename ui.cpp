@@ -25,6 +25,7 @@ extern LinkedList<TH_thread_instance> TH__threads;
 char UI_CMD_END_CHAR = 0x0A;
 char UI_CMD_PEND_CHAR = 0x0D;  // may be right before the end.
 char *UI_TABLE_SEP = " \t ";
+//const __FlashStringHelper *UI_TABLE_SEP = PROGMEM(" \t ");
 
 // #####################################################
 // ### Functions
@@ -64,9 +65,9 @@ char *_get_word(char **c){
   char *word = *c;
   char *ce = get_word_end(*c);
   //debug(ce);
-  *ce = 0;
   if(*ce != 0) *c = ce + 1; // sets c to next word
   else *c = ce;
+  *ce = 0;
   if(*word == 0) seterr(ERR_INPUT);
   return word;
 }
@@ -80,22 +81,22 @@ long int _get_int(char **c){
 void ui_process_command(char *c){
   char *c2;
   char *word;
-  debug("Parse CMD");
+  debug(F("Parse CMD"));
   //debug(*c);
   c = pass_ws(c);
   //debug(*c);
   c2 = get_word(c);
   iferr_log_return();
   assert_return(c); assert_return(c2);
-  debug(String("Calling Function:") + String(c2) + String(":") + c);
+  sdebug(F("Calling Function:"));
+  cdebug(c2); cdebug(':');
+  edebug(c);
   call_thread(c2, c);
 }
 
 uint8_t cmd_v(pthread *pt, char *input){
-  debug("cmd 'v'");
   char *word = get_word(input);
   iferr_log_return(PT_ENDED);
-  debug(String("var:") + word);
   print_variable(word);
   return PT_ENDED;
 }
@@ -103,12 +104,12 @@ uint8_t cmd_v(pthread *pt, char *input){
 uint8_t cmd_kill(pthread *pt, char *input){
   char *word = get_word(input);
   iferr_log_return(PT_ENDED);
-  debug(String("killing:") + word);
+  sdebug(F("killing:")); edebug(word);
   thread *th = TH_get_thread(word);
   debug(th->el.name);
   assert_raise_return(th, ERR_INPUT, PT_ENDED);
   kill_thread(th);
-  Serial.print("Killed:");
+  Serial.print(F("Killed:"));
   Serial.println(word);
   return PT_ENDED;
 }
@@ -130,9 +131,11 @@ void UI__setup_ui(){
 }
 
 void _print_monitor(uint32_t execution_time){
-  debug("printing Threads");
-  Serial.print(F("Total Time Running Threads: "));
-  Serial.println(execution_time);
+  Serial.print(F("Total Time: "));
+  Serial.print(execution_time);
+  Serial.print(F("Free Memory:"));
+  Serial.println(freeMemory());
+
   Serial.println(F("Name\t\tExTime\t\tLine\t\tError"));
   uint8_t i = 0;
   thread *th;
@@ -158,11 +161,21 @@ uint8_t print_periodically = false;
 
 uint8_t monswitch(pthread *pt, char *input){
   char *word = get_word(input);
-  if(*word == 0) return PT_ENDED;
+  assert_raise(word, ERR_INPUT);
   iferr_log_return(PT_ENDED);
-  if(cmp_str_flash(word, F("on"))) print_periodically = true;
-  if(cmp_str_flash(word, F("off"))) print_periodically = false;
-  raisem_return(ERR_INPUT, input, PT_ENDED);
+  
+  if(cmp_str_flash(word, F("on"))) {
+    debug(F("=on"));
+    print_periodically = true;
+  }
+  else if(cmp_str_flash(word, F("off"))){
+    debug(F("=off"));
+    print_periodically = false;
+  }
+  else goto error;
+  return PT_ENDED;
+error:
+  debug(F("VI:on,off"));
   return PT_ENDED;
 }
 
@@ -201,23 +214,19 @@ uint8_t user_interface(pthread *pt, char *input){
   char c;
   Serial.setTimeout(0);
   if(Serial.available()){
-    debug("got in");
     while(Serial.available()){
       c = Serial.read();
       ui_buffer.buffer[ui_buffer.i] = c;
       if(ui_buffer.i > MAX_STR_LEN){
-        debug("Max Len, clearing buffer");
         while(Serial.available()) Serial.read();
         clr_ui_buff();
         raise(ERR_COMMUNICATION, String(MAX_STR_LEN) + "ch MAX");
       }
       else if(ui_buffer.buffer[ui_buffer.i] == UI_CMD_END_CHAR){
         ui_buffer.buffer[ui_buffer.i + 1] = 0;
-        debug(String("Command:") + ui_buffer.buffer);
+        sdebug(F("Command:"));
+        edebug(ui_buffer.buffer);
         ui_process_command(ui_buffer.buffer);
-        if(Serial.available()) {
-          debug(Serial.peek(), HEX);
-        }
         clr_ui_buff();
         goto done;
       }
