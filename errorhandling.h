@@ -58,7 +58,7 @@ void seterr(uint8_t error);
 #define EH_DW(code) do{code}while(0) //wraps in a do while(0) so that the syntax is correct.
 
 #define raise(E, ...)                       EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
-#define assert(A)                           EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(); EH_FLUSH(); goto error;})
+#define assert(A, ...)                           EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})
 #define assert_raise(A, E, ...)             EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
 
 // These functions make the error label unnecessary

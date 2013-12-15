@@ -53,8 +53,9 @@ extern const struct pt PT_std_pt;
 
 #include "lc.h"
 
-#define PT_INNACTIVE  LC_KILL_VALUE + 1
 #define PT_KILL       LC_KILL_VALUE
+#define PT_INNACTIVE  LC_KILL_VALUE + 1
+
 
 // 5 bytes
 struct pt{

@@ -19,7 +19,7 @@
 #define MAX_STR_LEN 100
 #define MAX_ARRAY_LEN 256
 
-extern LinkedList<TH_thread_instance> TH__threads;
+//extern LinkedList<TH_thread_instance> TH__threads;
 
 //char *LINE_FEED = "\x0D\x0A";
 char UI_CMD_END_CHAR = 0x0A;
@@ -139,8 +139,9 @@ void _print_monitor(uint32_t execution_time){
   Serial.println(F("Name\t\tExTime\t\tLine\t\tError"));
   uint8_t i = 0;
   thread *th;
-  while(i < TH__threads.size()){
-    th = TH__threads.get(i).th;
+  while(i < TH__th_array.len){
+    th = &TH__th_array.array[i];
+    if(th->pt.lc >= PT_KILL) continue;
     Serial.print(th->el.name);
     Serial.print(UI_TABLE_SEP);
     Serial.print(th->time / 100);
@@ -242,6 +243,7 @@ error:
   
 
 void UI__setup_std(uint8_t V, uint8_t F){
+  debug(F("UiStdSetup:"));
   start_thread("*M", system_monitor);
   start_thread("*UI", user_interface);
   

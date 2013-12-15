@@ -25,7 +25,7 @@
 // ### Globals
 TH_Variables TH__variables = {0, 0, 0};
 TH_ThreadArray TH__th_array = {0, 0, 0};
-LinkedList<TH_thread_instance> TH__threads = LinkedList<TH_thread_instance>();
+//LinkedList<TH_thread_instance> TH__threads = LinkedList<TH_thread_instance>();
 
 // #####################################################
 // ### Macro Helpers
@@ -64,6 +64,10 @@ void UI__set_function_array(thread *fray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
   TH__th_array.array = fray;
   TH__th_array.len = len;
+  for(uint8_t i = 0; i < len; i++){
+    TH__th_array.array[i].fptr = NULL;
+    TH__th_array.array[i].pt.lc = PT_INNACTIVE;
+  }
 }
 
 thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
@@ -80,7 +84,7 @@ thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   TH__th_array.array[TH__th_array.index].fptr = fptr;
 
   pthread pt;
-  pt.lc = -1;
+  pt.lc = PT_INNACTIVE;
   pt.error = 0;
   pt.time = 0;
   TH__th_array.array[TH__th_array.index].pt = pt;
@@ -101,9 +105,9 @@ void log_thread_exit(thread *th){
 
 void log_thread_start(thread *th){
   Serial.print(F("[Th Start]:"));
-  debug();
+  Serial.println(th->el.name);
+  debug(th->pt.lc);
 }
-
 
 unsigned short function_exists(TH_funptr fun){
   for(uint8_t i = 0; i < TH__th_array.index; i++){
@@ -127,13 +131,13 @@ uint8_t schedule_function(thread *fun, char *input) {
   edebug(fun->el.name);
   assert_raise_return(fun->pt.lc == PT_INNACTIVE, ERR_THREAD, 0);
   PT_INIT(&(fun->pt));
+  assert_return(fun->fptr, 0);
   out = fun->fptr(&(fun->pt), input);
   if(out >= PT_EXITED){
     th_set_innactive(fun);
     return 1;
   }
   else{
-    TH__threads.add(TH_thread_instance(fun));
     log_thread_start(fun);
     return 1;
   }
@@ -223,19 +227,19 @@ uint8_t thread_loop(){
   uint64_t time;
   uint16_t timeus;
   uint8_t fout;
-  uint16_t kill;
-  
+  uint16_t init_lc;
   thread *th;
+  
   PT_LOCAL_BEGIN(pt);
   while(true){
     PT_YIELD(pt);
-    i = 0;
-    while(i < TH__threads.size()){
-      th = TH__threads.get(i).th;
-      kill = th->pt.lc;
-      
+    for(i = 0; i < TH__th_array.len; i++){
+      th = &TH__th_array.array[i];
+      init_lc = th->pt.lc;
+      if(init_lc == PT_INNACTIVE) continue;
       time = millis();
       timeus = micros();
+      assert(th->fptr, i);    // NOT NULL PTR
       fout = th->fptr(&(th->pt), EH_EMPTY_STR);
       timeus = (uint16_t)micros() - timeus;
       time = (uint64_t)millis() - time;
@@ -253,21 +257,20 @@ uint8_t thread_loop(){
         }
       }
       
-      if(time > (uint16_t)-1) th->time = -1;
+      if(time > 65535) th->time = 65535;
       else th->time = time;
       
-      if(fout >= PT_EXITED or kill == PT_KILL){
+      if(fout >= PT_EXITED or init_lc == PT_KILL){
         if(fout < PT_EXITED){
           seterr(ERR_THREAD);
           log_err(F("NoDie"));
         }  
         th_set_innactive(th);
-        TH__threads.remove(i);
         log_thread_exit(th);
         i -= 1;
       }
+error:
       clrerr();
-      i += 1;
       PT_YIELD(pt);
     }
   }

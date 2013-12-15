@@ -109,6 +109,5 @@ extern TH_Variables TH__variables;
 extern TH_ThreadArray TH__th_array;
 TH_variable *TH_get_variable(char *name);
 thread *TH_get_thread(char *name);
-//extern LinkedList<TH_thread_instance> TH__threads;
 
 #endif
