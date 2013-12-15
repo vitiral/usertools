@@ -106,7 +106,7 @@ uint8_t restart_thread(thread *th);
 
 void TH__set_innactive(thread *f);
 extern TH_Variables TH__variables;
-extern TH_ThreadArray TH__th_array;
+extern TH_ThreadArray TH__threads;
 TH_variable *TH_get_variable(char *name);
 thread *TH_get_thread(char *name);
 

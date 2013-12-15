@@ -6,7 +6,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "LinkedList.h"
 #include "pt.h"
 
 #include <SoftwareSerial.h>
@@ -24,18 +23,10 @@
 // #####################################################
 // ### Globals
 TH_Variables TH__variables = {0, 0, 0};
-TH_ThreadArray TH__th_array = {0, 0, 0};
-//LinkedList<TH_thread_instance> TH__threads = LinkedList<TH_thread_instance>();
+TH_ThreadArray TH__threads = {0, 0, 0};
 
 // #####################################################
 // ### Macro Helpers
-/*_
-void UI__init_threads(thr){
- //LinkedList<thread> *TH__threads = new LinkedList<thread>();
- //LinkedList<int> *TH__threads = new LinkedList<int>();
- TH__threads = thr;
- }
- */
 
 void UI__set_variable_array(TH_variable *vray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
@@ -62,37 +53,37 @@ void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t 
 
 void UI__set_function_array(thread *fray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
-  TH__th_array.array = fray;
-  TH__th_array.len = len;
+  TH__threads.array = fray;
+  TH__threads.len = len;
   for(uint8_t i = 0; i < len; i++){
-    TH__th_array.array[i].fptr = NULL;
-    TH__th_array.array[i].pt.lc = PT_INNACTIVE;
+    TH__threads.array[i].fptr = NULL;
+    TH__threads.array[i].pt.lc = PT_INNACTIVE;
   }
 }
 
 thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   debug(F("ExpFun"));
-  assert_return(TH__th_array.index <= TH__th_array.len, NULL);
+  assert_return(TH__threads.index <= TH__threads.len, NULL);
   assert_return(fstr_len(name) <= MAX_STR_LEN, NULL);
-  assert_raise_return(TH__th_array.array, ERR_PTR, NULL); // assert not null
+  assert_raise_return(TH__threads.array, ERR_PTR, NULL); // assert not null
 
   uint8_t len = fstr_len(name);
   assert_raise_return(len > 0, ERR_SIZE, NULL);
 
-  TH__th_array.array[TH__th_array.index].el.name = name;
-  TH__th_array.array[TH__th_array.index].el.name_len = len;
-  TH__th_array.array[TH__th_array.index].fptr = fptr;
+  TH__threads.array[TH__threads.index].el.name = name;
+  TH__threads.array[TH__threads.index].el.name_len = len;
+  TH__threads.array[TH__threads.index].fptr = fptr;
 
   pthread pt;
   pt.lc = PT_INNACTIVE;
   pt.error = 0;
   pt.time = 0;
-  TH__th_array.array[TH__th_array.index].pt = pt;
+  TH__threads.array[TH__threads.index].pt = pt;
   sdebug(F("Added F:")); cdebug(name); cdebug(F(" len:"));
-  cdebug(TH__th_array.array[TH__th_array.index].el.name_len);
-  TH__th_array.index++;
-  cdebug(F(" Index:")); edebug(TH__th_array.index);
-  return &(TH__th_array.array[TH__th_array.index - 1]);
+  cdebug(TH__threads.array[TH__threads.index].el.name_len);
+  TH__threads.index++;
+  cdebug(F(" Index:")); edebug(TH__threads.index);
+  return &(TH__threads.array[TH__threads.index - 1]);
 }
 
 // #####################################################
@@ -110,8 +101,8 @@ void log_thread_start(thread *th){
 }
 
 unsigned short function_exists(TH_funptr fun){
-  for(uint8_t i = 0; i < TH__th_array.index; i++){
-    assert_raise_return(TH__th_array.array[i].fptr != fun, 
+  for(uint8_t i = 0; i < TH__threads.index; i++){
+    assert_raise_return(TH__threads.array[i].fptr != fun, 
     ERR_VALUE, true);
   }
   return false;
@@ -168,9 +159,9 @@ uint8_t call_thread(char *name, char *input){
   uint8_t name_len = strlen(name);
 
   sdebug(F("cf name:")); cdebug(name); cdebug(F(" index=")); 
-  edebug(TH__th_array.index);
-  for(i = 0; i < TH__th_array.index; i++){
-    var = &TH__th_array.array[i];
+  edebug(TH__threads.index);
+  for(i = 0; i < TH__threads.index; i++){
+    var = &TH__threads.array[i];
     if(cmp_str_elptr(name, name_len, var)){
       return schedule_function(var, input);
     }
@@ -201,8 +192,8 @@ thread *TH_get_thread(char *name){
   uint8_t name_len = strlen(name);
   sdebug(F("gt: "));
   edebug(name);
-  for(i = 0; i < TH__th_array.index; i++){
-    th = &TH__th_array.array[i];
+  for(i = 0; i < TH__threads.index; i++){
+    th = &TH__threads.array[i];
     if(cmp_str_elptr(name, name_len, th)){
       return th;
     }
@@ -233,8 +224,8 @@ uint8_t thread_loop(){
   PT_LOCAL_BEGIN(pt);
   while(true){
     PT_YIELD(pt);
-    for(i = 0; i < TH__th_array.len; i++){
-      th = &TH__th_array.array[i];
+    for(i = 0; i < TH__threads.len; i++){
+      th = &TH__threads.array[i];
       init_lc = th->pt.lc;
       if(init_lc == PT_INNACTIVE) continue;
       time = millis();

@@ -6,8 +6,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "LinkedList.h"
-
 #include <SoftwareSerial.h>
 #include "errorhandling.h"
 
@@ -18,8 +16,6 @@
 
 #define MAX_STR_LEN 100
 #define MAX_ARRAY_LEN 256
-
-//extern LinkedList<TH_thread_instance> TH__threads;
 
 //char *LINE_FEED = "\x0D\x0A";
 char UI_CMD_END_CHAR = 0x0A;
@@ -139,8 +135,8 @@ void _print_monitor(uint32_t execution_time){
   Serial.println(F("Name\t\tExTime\t\tLine\t\tError"));
   uint8_t i = 0;
   thread *th;
-  while(i < TH__th_array.len){
-    th = &TH__th_array.array[i];
+  while(i < TH__threads.len){
+    th = &TH__threads.array[i];
     if(th->pt.lc >= PT_KILL) continue;
     Serial.print(th->el.name);
     Serial.print(UI_TABLE_SEP);
