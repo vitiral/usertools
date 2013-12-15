@@ -27,7 +27,6 @@ TH_Variables TH__variables = {0, 0, 0};
 TH_ThreadArray TH__th_array = {0, 0, 0};
 LinkedList<TH_thread_instance> TH__threads = LinkedList<TH_thread_instance>();
 
-
 // #####################################################
 // ### Macro Helpers
 /*_

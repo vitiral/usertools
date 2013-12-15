@@ -9,22 +9,25 @@
 
 typedef uint8_t (*TH_funptr)(struct pt *pt, char *input);
 
+// 3 bytes
 typedef struct TH_element {
   const __FlashStringHelper   *name;
   uint8_t                     name_len;
 };
 
+// 6 bytes
 typedef struct TH_variable {
   TH_element  el;
   void        *vptr;
   uint8_t     size;
 };
 
+// 12 bytes 
 typedef struct thread{
   TH_element     el;
   TH_funptr      fptr;
   struct pt      pt;
-  uint16_t time;  // stores execution time in 64us increments
+  uint16_t time;  // stores execution time in 10us increments
 };
 
 typedef struct TH_Variables{
