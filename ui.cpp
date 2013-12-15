@@ -80,8 +80,8 @@ long int _get_int(char **c){
 void ui_process_command(char *c){
   char *c2;
   char *word;
-  debug(F("Parse CMD"));
-  //debug(*c);
+  sdebug(F("Parse CMD:"));
+  edebug(*c);
   c = pass_ws(c);
   //debug(*c);
   c2 = get_word(c);
@@ -188,10 +188,16 @@ uint8_t print_variable(char *name){
 }
 
 uint8_t user_interface(pthread *pt, char *input){
-  uint8_t v, i = 0;
+  // Note: this is actually a protothread
+  uint8_t v;
+  static uint8_t i = 0;
   char c;
-  char buffer[MAX_STR_LEN];
-  buffer[0] = 0;
+  static char *buffer;
+  
+  if(buffer == NULL){
+    buffer = (char *)malloc(MAX_STR_LEN);
+    buffer[0] = 0;
+  }
   
   if(Serial.available()){
     while(Serial.available()){
@@ -199,7 +205,7 @@ uint8_t user_interface(pthread *pt, char *input){
       buffer[i] = c;
       if(i > MAX_STR_LEN){
         while(Serial.available()) Serial.read();
-        raise(ERR_COMMUNICATION, String(MAX_STR_LEN) + "ch MAX");
+        raise(ERR_COMMUNICATION, F("Size"));
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
         buffer[i + 1] = 0;
@@ -209,11 +215,13 @@ uint8_t user_interface(pthread *pt, char *input){
         goto done;
       }
       i += 1;
-      buffer[i] = 0;
     }
   }
+  return PT_YIELDED;
 done:
 error:
+  free(buffer);
+  i = 0;
   return PT_YIELDED;
 }
   

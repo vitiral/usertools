@@ -72,7 +72,6 @@ typedef struct pt (pthread);
 #define PT_ENDED   4
 #define PT_KILLED  5
 
-
 /**
  * \name Initialization
  * @{
