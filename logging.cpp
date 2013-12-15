@@ -42,7 +42,7 @@ int Logging::peek(){
 
 size_t Logging::write(uint8_t byte){
   if(silent) return 0;
-  wrote = true;
+  wrote += 1;
   switch(_mode){
   case EH_STD_SERIAL:
     return Serial.write(byte);
@@ -51,7 +51,6 @@ size_t Logging::write(uint8_t byte){
   default:
     return 0;
   }
-  return 0;
 }
 
 int Logging::read(){

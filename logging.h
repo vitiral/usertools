@@ -43,7 +43,7 @@ public:
   ~Logging();
   uint8_t silent;   // silent = true prevents Logger from sending any data.
                     // NOTE: No data is even added to buffer!!!
-  uint8_t wrote;    // sets to true if any data was written
+  uint16_t wrote;    // sets to true if any data was written
 
   void config_std();
   void config_soft(SoftwareSerial *soft);

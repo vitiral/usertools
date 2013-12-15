@@ -14,6 +14,7 @@
 #include "ui.h"
 #include "threading.h"
 #include "strtools.h"
+#include "MemoryFree.h"
 
 #define MAX_STR_LEN 100
 #define MAX_ARRAY_LEN 256

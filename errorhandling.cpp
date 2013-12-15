@@ -3,6 +3,7 @@
 #include <SoftwareSerial.h>
 #include "errorhandling.h"
 #include "logging.h"
+#include "MemoryFree.h"
 
 const char *EH_GEN_END_MSG = ")|";
 //const char EH_GEN_ST_MSG[] = {0xA, 0xD,':', ':', 0};
@@ -13,7 +14,25 @@ char *errmsg = EH_EMPTY_STR;
 uint8_t derr = 0;
 uint8_t errno = 0;
 uint8_t loglevel = 50;
+uint8_t EH_flush = true;
 
+void printmem(){
+#if 0
+  // all my tests say it takes almost NO time.
+  uint16_t mem;
+  uint16_t time = micros();
+  mem = freeMemory();
+  time = micros() - time;
+  Logger.print("Mem:");
+  Logger.print(time);
+  Logger.print("us FM:");
+  Logger.print(mem);
+#else
+  Logger.print(F("M:"));
+  Logger.print(freeMemory());
+#endif
+}
+  
 void EH_printinfo(char *file, unsigned int line)
 {
   Logger.print(derr); 
@@ -83,7 +102,9 @@ void EH_printerrno(){
 
 void EH_start_debug(char *file, unsigned int line){
   Logger.print(EH_GEN_ST_MSG);
-  Logger.print(F("[DBG]: (")); 
+  Logger.print(F("[DBG]:"));
+  printmem();
+  Logger.print(F("(")); 
   EH_printinfo(file, line); 
   Logger.print(EH_GEN_END_MSG);
 }

@@ -58,52 +58,68 @@ void seterr(uint8_t error);
 #define EH_DW(code) do{code}while(0) //wraps in a do while(0) so that the syntax is correct.
 
 #define raise(E, ...)                       EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
-#define assert(A)                           EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(); goto error;})
+#define assert(A)                           EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(); EH_FLUSH(); goto error;})
 #define assert_raise(A, E, ...)             EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
 
 // These functions make the error label unnecessary
-#define raise_return(E, ...)                    EH_DW(seterr(E); log_err(); return __VA_ARGS__;)
+#define raise_return(E, ...)                    EH_DW(seterr(E); log_err(); EH_FLUSH(); return __VA_ARGS__;)
 #define raisem_return(E, M, ...)                EH_DW(EH_ST_raisem(E, M); return __VA_ARGS__;)
-#define assert_return(A, ...)                   EH_DW(if(!(A)){seterr(ERR_ASSERT); log_err(); return __VA_ARGS__;})
-#define assert_raise_return(A, E, ...)          EH_DW(if(!(A)){seterr(E); log_err(); return __VA_ARGS__;})
+#define assert_return(A, ...)                   EH_DW(if(!(A)){seterr(ERR_ASSERT); log_err(); EH_FLUSH(); return __VA_ARGS__;})
+#define assert_raise_return(A, E, ...)          EH_DW(if(!(A)){seterr(E); log_err(); EH_FLUSH(); return __VA_ARGS__;})
 #define assert_raisem_return(A, E, M, ...)      EH_DW(if(!(A)){EH_ST_raisem(E, M); return __VA_ARGS__;})
 
 
 //#define iferr_return        if(derr) return 
 //#define iferr_log_return    if(derr) {log_err();}  iferr_return
 #define iferr_return(...)        EH_DW(if(derr) return __VA_ARGS__;)
-#define iferr_log_return(...)    EH_DW(if(derr) {log_err(); return __VA_ARGS__;})
+#define iferr_log_return(...)    EH_DW(if(derr) {log_err(); EH_FLUSH(); return __VA_ARGS__;})
 #define iferr_catch()            EH_DW(if(derr) goto error;)
-#define iferr_log_catch()        EH_DW(if(derr) {log_err(); goto error;})
+#define iferr_log_catch()        EH_DW(if(derr) {log_err(); EH_FLUSH(); goto error;})
 
 // Only log at the proper level.
 #if LOGLEVEL >= LOG_DEBUG
   void EH_start_debug(char *file, unsigned int line);
-  #define debug(...) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
+  #define sdebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); Serial.print(M); EH_FLUSH();))
+  #define debug(...) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); Logger.println(__VA_ARGS__); EH_FLUSH();))
+
 #else
+  #define sdebug()
   #define debug(...) 
 #endif
 
 #if LOGLEVEL >= LOG_INFO
 void EH_start_info(char *file, unsigned int line);
-  #define log_info(...) EH_DW(LOG_IFLL(LOG_INFO, EH_start_info(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
+  #define slog_info(M) EH_DW(LOG_IFLL(LOG_INFO, EH_start_info(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
+  #define log_info(...) EH_DW(LOG_IFLL(LOG_INFO, EH_start_info(__FILE__, __LINE__); Logger.println(__VA_ARGS__); EH_FLUSH(); ))
 #else
+  #define slog_info(M)
   #define log_info(...) 
 #endif
 
 #if LOGLEVEL >= LOG_ERROR
   void EH_log_err(char *file, unsigned int line);
-  #define EH_ST_raisem(E, ...) seterr(E); EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
-  #define log_err(...)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__);))
-  #define clrerr_log()              EH_DW(LOG_IFLL(LOG_ERROR, seterr(ERR_CLEARED); log_err(); clrerr();))
+  #define slog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
+  #define log_err(...)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__); EH_FLUSH(); ))
+  #define EH_ST_raisem(E, ...) seterr(E); EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__); EH_FLUSH(); ))
+  #define clrerr_log()              EH_DW(LOG_IFLL(LOG_ERROR, seterr(ERR_CLEARED); log_err(); EH_FLUSH(); clrerr();))
   void EH_printerrno();
   void EH_printinfo(char *file, unsigned int line);
+  
 #else
-  #define EH_ST_raisem(E, ...) seterr(E)
+  #define slog_err(M)
   #define log_err(...)
+  #define EH_ST_raisem(E, ...) seterr(E)
   #define clrerr_log() clrerr()
 #endif
 
+#ifdef DEBUG_FLUSH
+  extern uint8_t EH_flush;
+  #define EH_FLUSH() if(EH_flush){Logger.flush();}
+  #define set_debug_flush(V) EH_flush = (V);
+#else
+  #define EH_FLUSH()
+  #define set_debug_flush(V)
+#endif
 
 // Using pt (protothreads) library with debug.
 // You can use the below functions OR you can define your own 
