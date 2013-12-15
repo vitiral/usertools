@@ -64,7 +64,8 @@ char *_get_word(char **c){
   char *ce = get_word_end(*c);
   //debug(ce);
   *ce = 0;
-  *c = ce + 1; // sets c to next word
+  if(*ce != 0) *c = ce + 1; // sets c to next word
+  else *c = ce;
   if(*word == 0) seterr(ERR_INPUT);
   return word;
 }
@@ -84,6 +85,7 @@ void ui_process_command(char *c){
   //debug(*c);
   c2 = get_word(c);
   iferr_log_return();
+  assert_return(c); assert_return(c2);
   debug(String("Calling Function:") + String(c2) + String(":") + c);
   call_thread(c2, c);
 }
@@ -221,10 +223,6 @@ uint8_t user_interface(pthread *pt, char *input){
       ui_buffer.i += 1;
       ui_buffer.buffer[ui_buffer.i] = 0;
     }
-    debug(String("buff size:") + String(ui_buffer.i));
-    debug(ui_buffer.buffer[ui_buffer.i-2], HEX);
-    debug(ui_buffer.buffer[ui_buffer.i-1], HEX);
-    debug(ui_buffer.buffer[ui_buffer.i], HEX);
   }
 done:
 error:
