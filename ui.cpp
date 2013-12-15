@@ -221,6 +221,7 @@ uint8_t user_interface(pthread *pt, char *input){
 done:
 error:
   free(buffer);
+  buffer = NULL;
   i = 0;
   return PT_YIELDED;
 }
