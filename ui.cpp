@@ -14,14 +14,17 @@
 #include "strtools.h"
 #include "MemoryFree.h"
 
-#define MAX_STR_LEN 100
-#define MAX_ARRAY_LEN 256
 
-//char *LINE_FEED = "\x0D\x0A";
-char UI_CMD_END_CHAR = 0x0A;
-char UI_CMD_PEND_CHAR = 0x0D;  // may be right before the end.
-char *UI_TABLE_SEP = " \t ";
+
 //const __FlashStringHelper *UI_TABLE_SEP = PROGMEM(" \t ");
+
+
+// #####################################################
+// ### Globals
+
+#define MAX_STR_LEN 100
+
+uint8_t print_periodically = false; // used by system_monitor
 
 // #####################################################
 // ### Functions
@@ -110,29 +113,13 @@ uint8_t cmd_kill(pthread *pt, char *input){
   return PT_ENDED;
 }
 
-struct ui_buffer{
-  char buffer[MAX_STR_LEN + 2];
-  uint8_t i;
-} 
-ui_buffer;
-
-void clr_ui_buff(){
-  ui_buffer.i = 0;
-  ui_buffer.buffer[0] = 0;
-}
-
-void UI__setup_ui(){
-  ui_buffer.i = 0;
-  ui_buffer.buffer[0] = 0;
-}
-
 void _print_monitor(uint32_t execution_time){
   Serial.print(F("Total Time: "));
   Serial.print(execution_time);
   Serial.print(F("Free Memory:"));
   Serial.println(freeMemory());
 
-  Serial.println(F("Name\t\tExTime\t\tLine\t\tError"));
+  Serial.println(F("Name\t\tExTime\t\tLine"));
   uint8_t i = 0;
   thread *th;
   while(i < TH__threads.len){
@@ -145,16 +132,13 @@ void _print_monitor(uint32_t execution_time){
     Serial.print(th->time % 100);
     Serial.print(UI_TABLE_SEP);
     Serial.print((unsigned int)th->pt.lc);
-    Serial.print(UI_TABLE_SEP);
-    Serial.println(th->pt.error);
+    //Serial.print(UI_TABLE_SEP);
+    //Serial.println(th->pt.error);
     
     th->time = 0; // reset time
     i++;
   }
-  
 }
-
-uint8_t print_periodically = false; 
 
 uint8_t monswitch(pthread *pt, char *input){
   char *word = get_word(input);
@@ -177,14 +161,11 @@ error:
 }
 
 uint8_t system_monitor(pthread *pt, char *input){
-  static uint32_t execution_time; // execution time in ms
-  
+  static uint16_t time;
   PT_BEGIN(pt);
-  execution_time = millis();
   while(true){
-    PT_WAIT_MS(pt, 5000);
-    if(print_periodically) _print_monitor((uint32_t)millis() - execution_time);
-    execution_time = millis();
+    PT_WAIT_MS(pt, time, 5000);
+    if(print_periodically) _print_monitor((uint32_t)millis() - time);
   }
   PT_END(pt);
 }
@@ -207,33 +188,32 @@ uint8_t print_variable(char *name){
 }
 
 uint8_t user_interface(pthread *pt, char *input){
-  uint8_t v;
+  uint8_t v, i = 0;
   char c;
-  Serial.setTimeout(0);
+  char buffer[MAX_STR_LEN];
+  buffer[0] = 0;
+  
   if(Serial.available()){
     while(Serial.available()){
       c = Serial.read();
-      ui_buffer.buffer[ui_buffer.i] = c;
-      if(ui_buffer.i > MAX_STR_LEN){
+      buffer[i] = c;
+      if(i > MAX_STR_LEN){
         while(Serial.available()) Serial.read();
-        clr_ui_buff();
         raise(ERR_COMMUNICATION, String(MAX_STR_LEN) + "ch MAX");
       }
-      else if(ui_buffer.buffer[ui_buffer.i] == UI_CMD_END_CHAR){
-        ui_buffer.buffer[ui_buffer.i + 1] = 0;
+      else if(buffer[i] == UI_CMD_END_CHAR){
+        buffer[i + 1] = 0;
         sdebug(F("Command:"));
-        edebug(ui_buffer.buffer);
-        ui_process_command(ui_buffer.buffer);
-        clr_ui_buff();
+        edebug(buffer);
+        ui_process_command(buffer);
         goto done;
       }
-      ui_buffer.i += 1;
-      ui_buffer.buffer[ui_buffer.i] = 0;
+      i += 1;
+      buffer[i] = 0;
     }
   }
 done:
 error:
-  // may want to do final stuff in the future (reset timeout)
   return PT_YIELDED;
 }
   

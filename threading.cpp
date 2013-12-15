@@ -76,8 +76,6 @@ thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
 
   pthread pt;
   pt.lc = PT_INNACTIVE;
-  pt.error = 0;
-  pt.time = 0;
   TH__threads.array[TH__threads.index].pt = pt;
   sdebug(F("Added F:")); cdebug(name); cdebug(F(" len:"));
   cdebug(TH__threads.array[TH__threads.index].el.name_len);
@@ -209,9 +207,6 @@ uint8_t restart_thread(thread *th){
   assert_raisem_return(th->pt.lc == PT_INNACTIVE, ERR_THREAD, th->el.name, 0);
   schedule_function(th, EH_EMPTY_STR);
 }
-
-#define UI_STD_VARLEN 20
-#define UI_STD_FUNLEN 20
 
 uint8_t thread_loop(){
   static int8_t i = 0;

@@ -14,10 +14,10 @@
 #define ui_setup_std(V, F) do{thread_setup(V, F); UI__setup_std(V, F);}while(0)
 
 void UI__setup_std(uint8_t V, uint8_t F);
-extern char UI_CMD_END_CHAR;
-extern char UI_CMD_PEND_CHAR;  // may be right before the end.
-extern char *UI_TABLE_SEP;
-//extern const __FlashStringHelper *UI_TABLE_SEP;
+#define UI_CMD_END_CHAR 0x0A
+#define UI_CMD_PEND_CHAR 0x0D  // may be right before the end.
+
+#define UI_TABLE_SEP F(" \t ")
 
 char *_get_word(char **c);
 long int _get_int(char **c);

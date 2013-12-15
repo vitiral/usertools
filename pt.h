@@ -57,11 +57,10 @@ extern const struct pt PT_std_pt;
 #define PT_INNACTIVE  LC_KILL_VALUE + 1
 
 
+#define PT_std_pt {0}
 // 5 bytes
 struct pt{
   lc_t lc;
-  unsigned int time;
-  unsigned short error;
 };
 
 typedef struct pt (pthread);
@@ -200,11 +199,10 @@ typedef struct pt (pthread);
  *
  * \hideinitializer
  */
-#define PT_WAIT_MS(pt, ms)                                  \
+#define PT_WAIT_MS(pt, time, ms)                                  \
   do {                                                      \
-  pt->time = millis();                                      \
-  PT_WAIT_UNTIL(pt, (unsigned int)millis() - pt->time > ms);              \
-  pt->time = millis(); /*for future calls that need time*/  \
+  time = millis();                                      \
+  PT_WAIT_UNTIL(pt, (unsigned int)millis() - time > ms);              \
   } while(0)
 
 /**
