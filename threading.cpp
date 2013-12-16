@@ -328,10 +328,11 @@ uint8_t thread_loop(){
         }  
         th_set_innactive(th);
         log_thread_exit(th);
+      }
 error:
       clrerr();
       PT_YIELD(pt);
-      }
+
     }
   }
   PT_END(pt);
