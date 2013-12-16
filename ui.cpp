@@ -113,10 +113,10 @@ void cmd_kill(char *input){
 
 }
 
-void _print_monitor(uint32_t execution_time){
+void _print_monitor(uint16_t execution_time){
   Serial.print(F("Total Time: "));
   Serial.print(execution_time);
-  Serial.print(F("Free Memory:"));
+  Serial.print(F(" \t\tFree Memory:"));
   Serial.println(freeMemory());
 
   Serial.println(F("Name\t\tExTime\t\tLine"));
@@ -131,7 +131,7 @@ void _print_monitor(uint32_t execution_time){
     Serial.write('.');
     Serial.print(th->time % 100);
     Serial.print(UI_TABLE_SEP);
-    Serial.print((unsigned int)th->pt.lc);
+    Serial.println((unsigned int)th->pt.lc);
     //Serial.print(UI_TABLE_SEP);
     //Serial.println(th->pt.error);
     
@@ -163,7 +163,7 @@ uint8_t system_monitor(pthread *pt, char *input){
   PT_BEGIN(pt);
   while(true){
     PT_WAIT_MS(pt, time, 5000);
-    if(print_periodically) _print_monitor((uint32_t)millis() - time);
+    if(print_periodically) _print_monitor((uint16_t)millis() - time);
   }
   PT_END(pt);
 }

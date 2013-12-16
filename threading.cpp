@@ -187,7 +187,6 @@ uint8_t call_thread(char *name, char *input){
   edebug(TH__threads.index);
   for(i = 0; i < TH__threads.index; i++){
     th = &TH__threads.array[i];
-    debug(th->el.name);
     if(cmp_str_elptr(name, name_len, th)){
       schedule_thread(th, input);
       return true;
@@ -203,6 +202,7 @@ uint8_t call_function(char *name, char *input){
   edebug(TH__functions.index);
   for(uint8_t i = 0; i < TH__functions.index; i++){
     fun = &TH__functions.array[i];
+    debug(fun->el.name);
     if(cmp_str_elptr(name, name_len, fun)){
       fun->fptr(input);
       return true;

@@ -67,9 +67,9 @@ typedef struct TH_ThreadArray{
       static uint8_t UI__variable_len = V;                              \
       UI__set_variable_array(UI__variable_array, UI__variable_len);     \
                                                                         \
-      static TH_variable UI__function_array[F];                         \
+      static TH_function UI__function_array[F];                         \
       static uint8_t UI__function_len = F;                              \
-      UI__set_variable_array(UI__function_array, UI__function_len);     \
+      UI__set_function_array(UI__function_array, UI__function_len);     \
                                                                         \
       static thread UI__thread_array[T];                                \
       static uint8_t UI__thread_len = T;                                \
