@@ -11,7 +11,7 @@ Logging::Logging()
   _mode = EH_STD_SERIAL;
   _soft = 0;
   silent = false;
-  wrote = false;
+  wrote = 0;
 }
 
 Logging::~Logging()
@@ -87,6 +87,18 @@ void Logging::flush(){
     assert_return(0);
   }
   assert_return(0);
+}
+
+void Logging::repeat(char *c, int times){
+  for(int t = 0; t < times; t ++){
+    Logger.print(c);
+  }
+}
+
+void Logging::repeat(char c, int times){
+  for(int t = 0; t < times; t ++){
+    Logger.write(c);
+  }
 }
 
 Logging Logger;

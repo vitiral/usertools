@@ -60,6 +60,8 @@ typedef struct TH_ThreadArray{
 // #####################################################
 // ### Intended Exported Functions
 
+#define TH_MAX_NAME_LEN 10
+
 // Setup Macros
 
 #define thread_setup(V, F, T) do{                                       \

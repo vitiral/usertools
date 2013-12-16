@@ -32,6 +32,7 @@
 #endif
 
 
+
 class Logging : public Stream
 {
 private:
@@ -48,10 +49,15 @@ public:
   void config_std();
   void config_soft(SoftwareSerial *soft);
   int peek();
+  
+  void repeat(char *c, int times);
+  void repeat(char c, int times);
+
   virtual size_t write(uint8_t byte);
   virtual int read();
   virtual int available();
   virtual void flush();
+  
   
   using Print::write;
 };

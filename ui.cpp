@@ -24,33 +24,30 @@
 // ### Globals
 
 #define MAX_STR_LEN 100
+
 uint16_t ui_loop_time = 0;
 
 // #####################################################
 // ### Interrupts
 
-
 void ui_watchdog(){
-  //if(((uint16_t)millis()) - ui_loop_time > 2000){
-    Logger.print("[CRITICAL] Timed out:");
-    if(th_calling){
-      Logger.println(th_calling);
-    }
-    else if(th_loop_index < 255){
-      Logger.println(TH__threads.array[th_loop_index].el.name);
-    }
-    else {
-        Logger.println("Unknown");
-    }
-    ui_loop_time = millis();
-    //asm volatile ("  jmp 0"); 
-    wdt_reset();
-    wdt_enable(WDTO_250MS);
-  //}
+  Logger.print("[CRITICAL] Timed out:");
+  if(th_calling){
+    Logger.println(th_calling);
+  }
+  else if(th_loop_index < 255){
+    Logger.println(TH__threads.array[th_loop_index].el.name);
+  }
+  else {
+      Logger.println("Unknown");
+  }
+  ui_loop_time = millis();
+  //asm volatile ("  jmp 0"); 
+  wdt_reset();
+  wdt_enable(WDTO_250MS);
 }
 
-
-void WDT_Init(void)
+void ui_wdt_enable(void)
 {
     //disable interrupts
     cli();
@@ -60,52 +57,51 @@ void WDT_Init(void)
     WDTCSR = (1<<WDCE)|(1<<WDE);
     //Start watchdog timer with 4s prescaller
     WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP3);
+    //wdt_enable(WDTO_2S);  // can NOT use this -- must use custom
     //Enable global interrupts
     sei();
 }
 
-void ui_timer1_setup()
+void ui_watchdog_setup()
 {
-    WDT_Init();
-    //wdt_enable(WDTO_2S);
-/*
-    debug("setting up timer");
-    // initialize Timer1
-    cli();         // disable global interrupts
-    TCCR1A = 0;    // set entire TCCR1A register to 0
-    TCCR1B = 0;
-    // enable Timer1 overflow interrupt:
-    TIMSK1 = (1 << TOIE1);
-    // Set CS12 bit so timer runs at clock speed/256:
-    //TCCR1B |= (1 << CS12);
-    TCCR1B |= (1 << CS10);
-    
-    // enable global interrupts:
-    sei();
-*/
+    ui_wdt_enable();
 }
 
-void ui_pet_dog(){
+void ui_pat_dog(){
   wdt_reset();
   ui_loop_time = millis(); // pet the custom dog.
 }
-  
 
 ISR(WDT_vect) {
    ui_watchdog();
-} 
-
-/*
-ISR(TIMER1_OVF_vect)
-{
-    ui_watchdog();
 }
-*/
-
-
 
 // #####################################################
 // ### Functions
+
+void print_row(String *row, uint8_t *col_widths){
+  uint8_t si = 0, column = 0, ncolumn = 0;
+  while((*row)[si] != 0){
+    Logger.write('|');
+    Logger.wrote = 0;
+    while(column == ncolumn){
+      switch((*row)[si]){
+      case 0:
+        return;
+      case '\t':
+        ncolumn += 1;
+        break;
+      default:
+        Logger.write((*row)[si]);
+      }
+      si++;
+    }
+    while(Logger.wrote < col_widths[column]){
+      Logger.write(' ');
+    }
+    column = ncolumn;
+  }
+}
 
 char *pass_ws(char *c){
   while(*c == ' ') {
@@ -141,7 +137,6 @@ char *_get_word(char **c){
   *c = pass_ws(*c);
   char *word = *c;
   char *ce = get_word_end(*c);
-  //debug(ce);
   if(*ce != 0) *c = ce + 1; // sets c to next word
   else *c = ce;
   *ce = 0;
@@ -201,28 +196,30 @@ void cmd_kill(char *input){
 void _print_monitor(uint16_t execution_time){
   Logger.print(F("Total Time: "));
   Logger.print(execution_time);
-  Logger.print(F(" \t\tFree Memory:"));
+  Logger.print(F("  Free Memory:"));
   Logger.println(freeMemory());
-
-  Logger.println(F("Name\t\tExTime\t\tLine"));
-  int16_t i = 0;
+  
+  
+  char nameray[] ="Ind\tName\tExTime\tLine";
   thread *th;
-  while(i < TH__threads.index){
+  uint8_t column_widths[] = {4, 12, 12, 12};
+  
+  String myStr;
+  
+  print_row(&String(nameray), column_widths);
+  Logger.println();
+  for(int i = 0; i < TH__threads.index; i++){
     th = &TH__threads.array[i];
-    if(th->pt.lc >= PT_KILL_VALUE) continue;
-    Logger.print(i);
-    Logger.write(' ');
-    Logger.print(th->el.name);
-    Logger.print(UI_TABLE_SEP);
-    Logger.print(th->time / 100);
-    Logger.write('.');
-    Logger.print(th->time % 100);
-    Logger.print(UI_TABLE_SEP);
-    Logger.println((unsigned int)th->pt.lc);
-    //Logger.print(UI_TABLE_SEP);
-    //Logger.println(th->pt.error);
+    if(th->pt.lc >= PT_KILL_VALUE)continue;
+    flash_to_str(th->el.name, nameray);
+    myStr = String(i)                                               + String('\t') + 
+      String(nameray)                                               + String('\t') + 
+      String(th->time / 100) + String('.') + String(th->time %100)  + String('\t') +
+      String((unsigned int)th->pt.lc);
+    print_row(&myStr, column_widths);
+    Logger.println();
+    ui_pat_dog();
     th->time = 0; // reset time
-    i++;
   }
 }
 
@@ -238,6 +235,7 @@ uint8_t system_monitor(pthread *pt, char *input){
 
 void print_options(char *input){
   uint8_t i = 0;
+  Logger.repeat('*', 5);
   Logger.println(F("Threads"));
   for(i = 0; i < TH__threads.index; i++){
     Logger.print(i);
@@ -245,11 +243,13 @@ void print_options(char *input){
     Logger.println(TH__threads.array[i].el.name);
   }
   
+  Logger.repeat('*', 5);
   Logger.println(F("\nVars"));
   for(i = 0; i < TH__variables.index; i++){
     Logger.println(TH__variables.array[i].el.name);
   }
   
+  Logger.repeat('*', 5);
   Logger.println(F("\nFuncs"));
   for(i = 0; i < TH__functions.index; i++){
     Logger.println(TH__functions.array[i].el.name);
@@ -310,7 +310,6 @@ error:
   i = 0;
   return PT_YIELDED;
 }
-  
 
 void UI__setup_std(){
   debug(F("UiStdSetup:"));
@@ -322,15 +321,18 @@ void UI__setup_std(){
   ui_expose_function("?", print_options);
   ui_expose_function("kill", cmd_kill);
   
-  ui_timer1_setup();
-  //wdt_enable(WDTO_4S);  //reset after 4S if no pat received
-  
+  ui_watchdog_setup();
 }
 
 void ui_loop(){
-  ui_pet_dog();
+  ui_pat_dog();
   
+  Logger.wrote = false;
   thread_loop();
+  if(Logger.wrote){
+    Logger.repeat('#', 5);
+    Logger.println();
+  }
 }
 
 

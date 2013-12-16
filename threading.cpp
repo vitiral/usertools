@@ -41,7 +41,7 @@ void UI__set_variable_array(TH_variable *vray, uint16_t len){
 
 void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize){
   assert_return(TH__variables.index <= TH__variables.len);
-  assert_return(fstr_len(name) <= MAX_STR_LEN);
+  assert_return(fstr_len(name) <= TH_MAX_NAME_LEN);
   assert_raise_return(TH__variables.array, ERR_PTR); // assert not null
   uint8_t len = fstr_len(name);
   assert_raise_return(len > 0, ERR_SIZE);
@@ -65,7 +65,7 @@ void UI__set_function_array(TH_function *fray, uint16_t len){
 
 void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   assert_return(TH__functions.index <= TH__functions.len);
-  assert_return(fstr_len(name) <= MAX_STR_LEN);
+  assert_return(fstr_len(name) <= TH_MAX_NAME_LEN);
   assert_raise_return(TH__functions.array, ERR_PTR); // assert not null
   uint8_t len = fstr_len(name);
   assert_raise_return(len > 0, ERR_SIZE);
@@ -92,7 +92,7 @@ void UI__set_thread_array(thread *fray, uint16_t len){
 thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr){
   debug(F("ExpFun"));
   assert_return(TH__threads.index <= TH__threads.len, NULL);
-  assert_return(fstr_len(name) <= MAX_STR_LEN, NULL);
+  assert_return(fstr_len(name) <= TH_MAX_NAME_LEN, NULL);
   assert_raise_return(TH__threads.array, ERR_PTR, NULL); // assert not null
 
   uint8_t len = fstr_len(name);

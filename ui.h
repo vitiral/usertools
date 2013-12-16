@@ -30,6 +30,7 @@ uint8_t print_variable(char *name);
 
 void ui_timer1_setup();
 void ui_watchdog();
+void ui_pat_dog();
 void system_monitor(char *input);
 void monswitch(char *input);
 void ui_loop();
