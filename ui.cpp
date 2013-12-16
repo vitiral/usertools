@@ -105,10 +105,16 @@ void __print_row(String *row, uint8_t *col_widths){
 }
 
 char *pass_ws(char *c){
-  while(*c == ' ') {
-    c++;
+  while(true) {
+    switch(*c){
+    case ' ':
+    case '\t':
+      c++;
+      break;
+    default:
+      return c;
+    }
   }
-  return c;
 }
 
 char *get_cmd_end(char *c){
@@ -126,10 +132,16 @@ char *get_cmd_end(char *c){
 
 char *get_word_end(char *c){
   c = pass_ws(c);
-  while(*c != ' ' and *c != 0 and *c != 0x0A and *c != 0x0D){
-    c++;
+  while(c++){
+    switch(*c){ // stop at ws, end, or line return
+    case 0:
+    case 0x0A:
+    case 0x0D:
+    case ' ':
+    case '\t':
+      return c;
+    }
   }
-  return c;
 }
 
 //char *word = get_word(c); // get first word
@@ -148,6 +160,9 @@ char *_get_word(char **c){
 long int _get_int(char **c){
   char *word = _get_word(c);
   iferr_log_return(0);
+  if (*word < '0' or *word > '9'){ // the strtol documentation doesn't seem to be working!!!
+      raise_return(ERR_INPUT, 0);  // it won't tell me if there has been an error (I've tried with the pointer)
+  }
   return strtol(word, NULL, 0);
 }
 
@@ -174,23 +189,39 @@ void cmd_v(char *input){
 }
 
 void cmd_kill(char *input){
-  char *word = get_word(input);
+  input = pass_ws(input);
+  char *wordend = get_word_end(input);
+  *wordend = 0;
   uint16_t v;
   char **tailptr;
   iferr_log_return();
-  sdebug(F("killing:")); edebug(word);
-  thread *th = TH_get_thread(word);
+  sdebug(F("killing:")); edebug(input);
+  thread *th = TH_get_thread(input);
   if(th) {
     debug(th->el.name);
     kill_thread(th);
   }
+  else{
+    raise_return(ERR_INPUT);
+  }
+  /*
   else {
-    v = strtol(word, tailptr, 0);
-    assert_raise_return(word != *tailptr, ERR_INPUT);
+    v = strtol(input, tailptr, 10);
+    debug(input);
+    debug((unsigned short)(*tailptr), HEX);
+    debug((unsigned long)input, HEX);
+    debug((unsigned long)*tailptr, HEX);
+    debug((unsigned long)**tailptr, HEX);
+    debug(tailptr == NULL);
+    sdebug(*tailptr == wordend); cdebug(F(" kill value ")); edebug(v);
+    assert_raise_return(*tailptr == wordend, ERR_INPUT);
+    //assert_raise_return(tailptr != NULL, ERR_INPUT);   //UNDOCUMENTED: apparently the value can be null! fun!
+    //assert_raise_return(**tailptr == 0, ERR_INPUT);
     kill_thread(v);
   }
+  */
   Logger.print(F("Killed:"));
-  Logger.println(word);
+  Logger.println(input);
 
 }
 

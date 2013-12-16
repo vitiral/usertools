@@ -261,13 +261,15 @@ thread *TH_get_thread(char *name){
   uint8_t i;
   uint8_t name_len = strlen(name);
   sdebug(F("gt: "));
-  edebug(name);
+  
   for(i = 0; i < TH__threads.index; i++){
     th = &TH__threads.array[i];
     if(cmp_str_elptr(name, name_len, th)){
+      edebug(th->el.name);
       return th;
     }
   }
+  edebug("NotFound");
   return NULL;
 }
 
