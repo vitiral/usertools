@@ -15,8 +15,6 @@
 #include "MemoryFree.h"
 
 #include <avr/wdt.h>
-#include <TInterrupts.h>
-
 #include <avr/interrupt.h>
 
 #define LEDPIN 2
@@ -51,7 +49,6 @@ void ui_watchdog(){
 void ui_timer1_setup()
 {
     debug("setting up timer");
-    pinMode(LEDPIN, OUTPUT);
     // initialize Timer1
     cli();         // disable global interrupts
     TCCR1A = 0;    // set entire TCCR1A register to 0
@@ -285,7 +282,7 @@ void UI__setup_std(){
   ui_expose_function("?", print_options);
   ui_expose_function("kill", cmd_kill);
   
-  ui_timer1_setup();
+  //ui_timer1_setup();
   //wdt_enable(WDTO_4S);  //reset after 4S if no pat received
   
 }

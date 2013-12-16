@@ -202,7 +202,7 @@ typedef struct pt (pthread);
 #define PT_WAIT_MS(pt, time, ms)                                  \
   do {                                                      \
   time = millis();                                      \
-  PT_WAIT_UNTIL(pt, (unsigned int)millis() - time > ms);              \
+  PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - time > ms);              \
   } while(0)
 
 /**
