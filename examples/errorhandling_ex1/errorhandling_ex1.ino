@@ -1,6 +1,15 @@
-#define DEBUG
+/* Copyright (c) 2014, Garrett Berg
+ * This example code is released into the public domain
+ *
+ * Author: Garrett Berg <garrett@cloudformdesign.com>
+ * 
+ * Example code to demonstrate use of the errorhandling
+ * library.
+ */
 
-#include <SoftwareSerial.h> // This has to be here for some STRANGE reason. Can someone help figure out why???
+#define DEBUG // without this nothing would be printed
+
+#include <SoftwareSerial.h> // BUG: must include before errorhandling.h
 #include <errorhandling.h>
 
 short int isint(char c){

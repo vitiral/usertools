@@ -5,6 +5,9 @@
  * Author: Garrett Berg <garrett@cloudformdesign.com>
  * 
  * Example code to demonstrate new features to protothreads
+ * 
+ * pthread instead of "struct pt"
+ * 
  * PT_LOCAL_BEGIN ::
  *   starts a protothread locally, does not need to be passed
  *   and does not need to be initialized.

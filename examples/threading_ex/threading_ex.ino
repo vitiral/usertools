@@ -1,7 +1,17 @@
-
-/*
-Notes:
- 
+/* Copyright (c) 2014, Garrett Berg
+ * This example code is released into the public domain
+ *
+ * Author: Garrett Berg <garrett@cloudformdesign.com>
+ * 
+ * Example code to demonstrate the ui.h and threading.h
+ * libraries
+ * 
+ * See setup() for how to create new threads, make variables
+ * and functions accessible to the user.
+ *
+ * start the terminal at 57600 baud to be able to toggle led's,
+ * read led variable values, "record" data.
+ *   -- Be sure to type "mon" to see the system monitor in action 
  */
 
 #include <Stream.h>

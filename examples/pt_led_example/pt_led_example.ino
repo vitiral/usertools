@@ -1,7 +1,8 @@
-/* Copyright (c) 2011, Jan Clement
+/* Copyright (c) 2014, Garrett Berg
+ * Original Copyright (c) 2011, Jan Clement
  * licenced under the GPL
  *
- * Author: Jan Clement <jan.clement@audiokits.de>
+ * Updated by Garrett Berg <garrett@cloudformdesign.com>
  * 
  * Example code to demonstrate the use of protothreads 
  * in an arduino sketch. It toggles an LED  using two 
@@ -16,6 +17,7 @@
 // directly in a similar way to the thread_loop in
 // threading.
 
+#include <SoftwareSerial.h> // BUG: this has to be included
 #include <pt.h>   // include protothread library
 
 #define LEDPIN 13  // LEDPIN is a constant 

@@ -1,3 +1,10 @@
+/* Copyright (c) 2014, Garrett Berg
+ * This example code is released into the public domain
+ *
+ * Author: Garrett Berg <garrett@cloudformdesign.com>
+ * 
+ * Code to test the errorhandling library
+ */
 #define DEBUG
 
 #include <SoftwareSerial.h>
@@ -30,7 +37,6 @@ void setup_std(){
 }
 
 void setup_soft(){
-  ui_setup_std(1, 1, 1);
   SoftSerial.begin(57600);
   SoftSerial.println("Started Soft Serial");
   EH_config_soft(SoftSerial);
