@@ -30,7 +30,7 @@ uint16_t ui_loop_time = 0;
 // ### Interrupts
 
 void ui_watchdog(){
-  if((uint16_t)millis() - ui_loop_time > 1000){
+  if(((uint16_t)millis()) - ui_loop_time > 1000){
     Logger.print("[CRITICAL] Timed out:");
     if(th_calling){
       Logger.println(th_calling);
@@ -38,11 +38,12 @@ void ui_watchdog(){
     else if(th_loop_index < 255){
       Logger.println(TH__threads.array[th_loop_index].el.name);
     }
-    else Logger.println("Unknown");
-    Logger.flush();
+    else {
+        Logger.println("Unknown");
+    }
+    ui_loop_time = millis();
     //asm volatile ("  jmp 0"); 
     wdt_enable(WDTO_15MS);
-    while(1);      // wait for reset
   }
 }
 
@@ -282,7 +283,7 @@ void UI__setup_std(){
   ui_expose_function("?", print_options);
   ui_expose_function("kill", cmd_kill);
   
-  //ui_timer1_setup();
+  ui_timer1_setup();
   //wdt_enable(WDTO_4S);  //reset after 4S if no pat received
   
 }
