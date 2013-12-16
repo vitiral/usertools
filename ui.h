@@ -1,4 +1,14 @@
-
+/* Copyright (c) 2014, Garrett Berg <garrett@cloudformdesign.com>, cloudformdesign.com
+ * This library is released under the FreeBSD License, if you need
+ * a copy go to: http://www.freebsd.org/copyright/freebsd-license.html
+ * 
+ * SUMMARY:
+ * User Interface library to make microcontroller threading integreate into a simple
+ *  user interface that allows the calling of functions and threads as well as the 
+ *  query of variables.
+ * See UserGuide_ui.html for more information.
+ */
+ 
 #ifndef ui_h
 #define ui_h
 

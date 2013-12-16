@@ -1,3 +1,11 @@
+/* Copyright (c) 2014, Garrett Berg <garrett@cloudformdesign.com>, cloudformdesign.com
+ * This library is released under the FreeBSD License, if you need
+ * a copy go to: http://www.freebsd.org/copyright/freebsd-license.html
+ * 
+ * SUMMARY:
+ * String tools, mostly to help with F() strings
+ */
+ 
 #ifndef strtools_h
 #define strtools_h
 

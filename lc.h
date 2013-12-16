@@ -1,4 +1,5 @@
-/*
+/* 
+ * Copyrigt (C) 2014 - 2015, Garrett Berg cloudformdesign.com
  * Copyright (c) 2004-2005, Swedish Institute of Computer Science.
  * All rights reserved. 
  *
@@ -29,6 +30,7 @@
  * This file is part of the protothreads library.
  * 
  * Author: Adam Dunkels <adam@sics.se>
+ * Updated by: Garrett Berg
  *
  * $Id: lc.h,v 1.2 2005/02/24 10:36:59 adam Exp $
  */

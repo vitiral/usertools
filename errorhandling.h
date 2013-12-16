@@ -1,10 +1,10 @@
-/*
- LICENSE: This code is released under the GNU GPL v3 or greater. For more info see:
- <http://www.gnu.org/licenses/gpl.html>
- Copyright: Garrett Berg cloudformdesign.com garrett@cloudformdesign.com
- Loosly based on code from the fantastic "Learn C the Hard Way",  Zed A. Shaw
- http://c.learncodethehardway.org/book/ex20.html
-*/
+/* Copyright (c) 2014, Garrett Berg <garrett@cloudformdesign.com>, cloudformdesign.com
+ * This library is released under the FreeBSD License, if you need
+ * a copy go to: http://www.freebsd.org/copyright/freebsd-license.html
+ * 
+ * SUMMARY:
+ * Library to help with debugging. See user guide in documentation.
+ */
 
 #ifndef __errorhandling_h__
 #define __errorhandling_h__

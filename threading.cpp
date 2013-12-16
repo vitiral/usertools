@@ -1,4 +1,12 @@
-
+/* Copyright (c) 2014, Garrett Berg <garrett@cloudformdesign.com>, cloudformdesign.com
+ * This library is released under the FreeBSD License, if you need
+ * a copy go to: http://www.freebsd.org/copyright/freebsd-license.html
+ * 
+ * SUMMARY:
+ * Threading library to make microcontroller threading simple, intuitive, and debuggable.
+ *   See UserGuide_ui.html in the documentation.
+ */
+ 
 #include "usertools.h"
 
 #include <Arduino.h>
