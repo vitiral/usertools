@@ -1,0 +1,342 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Serial UI
+\end_layout
+
+\begin_layout Author
+Garrett Berg, Cloudform Design, garrett@cloudformdesign.com
+\end_layout
+
+\begin_layout Section*
+Summary
+\end_layout
+
+\begin_layout Standard
+The SerialUI module was created so that it was easy to make Serial User
+ Interfaces on the arduino platform.
+ I is part of a suit of tools including the errorhandling library and the
+ new protothreads library that aims to make development for micro-controllers
+ easier and more fun.
+\end_layout
+
+\begin_layout Section*
+How to install
+\end_layout
+
+\begin_layout Standard
+Create a folder named 
+\begin_inset Quotes eld
+\end_inset
+
+SerialUI
+\begin_inset Quotes erd
+\end_inset
+
+ in your Arduino 
+\begin_inset Quotes eld
+\end_inset
+
+libraries
+\begin_inset Quotes erd
+\end_inset
+
+ folder and then extract the contents of this folder into it.
+\end_layout
+
+\begin_layout Section*
+Overview
+\end_layout
+
+\begin_layout Subsection*
+User Interface
+\end_layout
+
+\begin_layout Standard
+SerialUI operates as simply as it possibly can.
+ You can access either functions or variables through it's interface.
+ In summary:
+\end_layout
+
+\begin_layout Itemize
+The following terminal commands are supported:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+?v VARNAME
+\begin_inset Quotes erd
+\end_inset
+
+ -- Gives you the value of variable VARNAME in hex
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+?v
+\begin_inset Quotes erd
+\end_inset
+
+ -- prints out all exposed variable names that the user can access
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+?f
+\begin_inset Quotes erd
+\end_inset
+
+ -- prints out all exposed functions
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+?t
+\begin_inset Quotes erd
+\end_inset
+
+ -- prints all running threads (functions that have not terminated and are
+ being called on every loop)
+\end_layout
+
+\end_deeper
+\begin_layout Subsection*
+Coding Overview
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+ui_loop() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This should be called in your loop function.
+ It is what checks to see if there is new input and if any threads need
+ to be run.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+ui_expose_variable(
+\begin_inset Quotes eld
+\end_inset
+
+var_name
+\begin_inset Quotes erd
+\end_inset
+
+, variable) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This exposes a variable.
+ All the user has to do to read that variable is type 
+\begin_inset Quotes eld
+\end_inset
+
+?v var_name
+\begin_inset Quotes erd
+\end_inset
+
+ + LINE_FEED and the value in hex will be printed out.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+ui_expose_function(
+\begin_inset Quotes eld
+\end_inset
+
+func_name
+\begin_inset Quotes erd
+\end_inset
+
+, function) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This exposes a function.
+ If the user types 
+\begin_inset Quotes eld
+\end_inset
+
+func_name input1 input2
+\begin_inset Quotes erd
+\end_inset
+
+ + LINE_FEED the function will be called and sent 
+\begin_inset Quotes eld
+\end_inset
+
+input1 input2
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+ui_declare_variables(
+\series default
+MAX_NUM_VARIABLES
+\series bold
+) :: ui_declare_variables(
+\series default
+MAX_NUM_VARIABLES
+\series bold
+)
+\series default
+ ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+These should be called at the global namespace, where the MAX_NUM variables
+ should be >= the number of functions or variables that will be exposed.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+ui_setup_variables() :: ui_setup_functions() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+These need to be called in your 
+\series bold
+setup()
+\series default
+ function.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection*
+Initialization
+\end_layout
+
+\begin_layout Standard
+The function and variable arrays must be initialized with 
+\series bold
+)
+\series default
+ in the global variable namespace, and 
+\series bold
+ui_setup_variables()
+\series default
+, 
+\series bold
+ui_setup_functions() 
+\series default
+in the setup function.
+\end_layout
+
+\begin_layout Subsection*
+Threading
+\end_layout
+
+\begin_layout Standard
+SerialUI supports threading through the 
+\shape italic
+protothreads
+\shape default
+ library.
+ Each function has an associated thread that can be called.
+ For large projects, it is advised you use the protothreads library to run
+ functions concurrently.
+\end_layout
+
+\begin_layout Standard
+This library can make it significantly easier to manage multiple processes
+ with the thread_function(name, function) call.
+ This allows you to do in code what the user can do to exposed functions
+ in the terminal.
+\end_layout
+
+\begin_layout Subsection*
+Printing Status
+\end_layout
+
+\end_body
+\end_document

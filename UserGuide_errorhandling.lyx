@@ -1,0 +1,1516 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Arduino 
+\series bold
+errorhandling
+\series default
+ Library
+\end_layout
+
+\begin_layout Author
+Garrett Berg, Cloudform Design
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+LICENSE: 
+\series default
+This code is released under the GNU GPL v3 or greater.
+ For more info see: <http://www.gnu.org/licenses/gpl.html>
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Copyright: 
+\series default
+Garrett Berg 
+\begin_inset CommandInset href
+LatexCommand href
+name "cloudformdesign.com"
+target "cloudformdesign.com"
+
+\end_inset
+
+, 
+\begin_inset CommandInset href
+LatexCommand href
+name "garrett@cloudformdesign.com"
+target "garrett@cloudformdesign.com"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Loosly based on code from the fantastic "
+\shape italic
+Learn C the Hard Way
+\shape default
+", Zed A.
+ Shaw, 
+\begin_inset CommandInset href
+LatexCommand href
+name "http://c.learncodethehardway.org/book/ex20.html"
+target "http://c.learncodethehardway.org/book/ex20.html"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Summary
+\end_layout
+
+\begin_layout Standard
+This is the Arduino errorhandling library, meant to make debugging and error
+ handling be simple and work together.
+\end_layout
+
+\begin_layout Section*
+How to install
+\end_layout
+
+\begin_layout Standard
+Create a folder named 
+\begin_inset Quotes eld
+\end_inset
+
+errorhandling
+\begin_inset Quotes erd
+\end_inset
+
+ in your Arduino 
+\begin_inset Quotes eld
+\end_inset
+
+libraries
+\begin_inset Quotes erd
+\end_inset
+
+ folder and then extract the contents of this folder into it.
+\end_layout
+
+\begin_layout Subsection*
+Current Known Issues
+\end_layout
+
+\begin_layout Itemize
+
+\shape italic
+#include <SoftwareSerial.h>
+\shape default
+ must be added before 
+\shape italic
+#include <errorhandling.h>
+\end_layout
+
+\begin_layout Subsection*
+Intended Use
+\end_layout
+
+\begin_layout Standard
+There are many times where you want to do error checking and simultaneously
+ provide debugging.
+ This library helps significantly.
+ Errors are automatically printed if DEBUG is defined.
+\end_layout
+
+\begin_layout Standard
+This library offers two ways to deal with errors,:
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+return checks
+\series default
+ -- these do all your logging for you and set 
+\series bold
+derr
+\series default
+ (the global error variable).
+ They then return R.
+ These are intended for "simple use" cases, where you do not need to do
+ any error handling (like send special error messages, close ports, etc)
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+goto error checks
+\series default
+ -- these do your logging, etc and then "
+\shape italic
+goto error
+\shape default
+" where you can do error handling like closing ports, etc.
+ 
+\end_layout
+
+\begin_layout Standard
+In the sub functions, you can then use noerr_log_return() to follow the
+ stack trace down so you can see what called what.
+ This helps you keep track of where your code is giving errors.
+\end_layout
+
+\begin_layout Section*
+Preprossessor Definitions
+\end_layout
+
+\begin_layout Standard
+You can define the following definitions to affect the behavior of this
+ module
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+#define DEBUG
+\end_layout
+
+\begin_layout Itemize
+define DEBUG or LOGLEVEL before importing this module to print things, otherwise
+ error checking, etc will be silent.
+\end_layout
+
+\begin_layout Itemize
+if DEBUG is defined and LOGLEVEL is not, LOGLEVEL == 50
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+#define LOGLEVEL
+\end_layout
+
+\begin_layout Itemize
+LOGLEVEL can be defined as various values up to 50.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+>= 50 -- all messages printed (debug, info, error)
+\end_layout
+
+\begin_layout Itemize
+< 50 -- debug not printed (just info and error)
+\end_layout
+
+\begin_layout Itemize
+< 40 -- info not printed (just error)
+\end_layout
+
+\begin_layout Itemize
+< 30 -- nothing is printed
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+loglevel can also be changed while code is running with 
+\series bold
+set_loglevel(uint8_t)
+\series default
+.
+ However, definning LOGLEVEL takes less programming space.
+\end_layout
+
+\begin_layout Subsection*
+Alternate Serial Ports:
+\end_layout
+
+\begin_layout Standard
+You can use a different serial port from the hardware one, through the SoftwareS
+erial
+\end_layout
+
+\begin_layout Standard
+library.
+ Simple initilize your SoftwareSerial class and pass it to EH_config.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Example:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+mysoft = SoftwareSerial(10, 11); RX, TX
+\end_layout
+
+\begin_layout Plain Layout
+
+void setup(){
+\end_layout
+
+\begin_layout Plain Layout
+
+  mysoft.begin(57600); //57600 is the recommended speed because the library
+ can delay other code
+\end_layout
+
+\begin_layout Plain Layout
+
+  EH_config(mysoft);
+\end_layout
+
+\begin_layout Plain Layout
+
+  //...
+ rest of your code
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Subsection*
+Global Variables:
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+errno
+\series default
+ :: specifies error type.
+ String format is automatically printed with log_err()
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+derr
+\series default
+ :: main error.
+ This is what specifies that an error occured (non-zero == error)
+\end_layout
+
+\begin_layout Section*
+Macro Overview:
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Logging functions:
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+debug(...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+prints out: [DBG](derr file:line)|...
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+log_info(...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+prints out: [INFO](derr file:line)|...
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+log_err(...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+prints out [ERR](derr file:line)|(strerrno:errno)|...
+\end_layout
+
+\begin_layout Itemize
+Note automatically called by all below functions except noerr and clrerr
+\backslash
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+
+\series bold
+Error handling Functions:
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Definitions:
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+A
+\series default
+ -- assertion, if A is false the macro triggers
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+E 
+\series default
+-- Specified Error to be raised.
+ See section on Defined Errors
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+M 
+\series default
+-- User message
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+R 
+\series default
+-- Return value.
+ Should be left off for void functions.
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+\begin_inset Quotes eld
+\end_inset
+
+...
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\series default
+-- Same as M except can take advantage of the same functionality as Serial.printl
+n(...)
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+assert(A) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Assert that the value is true.
+ If it is not true, then derr and errno = ERR_ASSERT
+\end_layout
+
+\begin_layout Itemize
+Also logs error with message "AS"
+\end_layout
+
+\begin_layout Itemize
+Note: requires "error:" defined for goto
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+raise(E, ...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Raises the error 
+\series bold
+E 
+\series default
+and logs it
+\end_layout
+
+\begin_layout Itemize
+Also can print a message
+\end_layout
+
+\begin_layout Itemize
+Note: requires "error:" defined for goto
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+assert_raise(A, E, ...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+if A is false, raise(E)
+\end_layout
+
+\begin_layout Itemize
+Also can print a message
+\end_layout
+
+\begin_layout Itemize
+Note: requires "error:" defined for goto
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+iferr_catch() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+if there is an error, "goto error"
+\end_layout
+
+\begin_layout Itemize
+Note: requires "error:" defined for goto
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+iferr_log_catch() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+same as above, but also logs error.OM
+\end_layout
+
+\begin_layout Itemize
+Note: requires "error:" defined for goto
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+[fun]_return(..., return_val) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+The above functions have a "return" variety, where they return the return_val
+ instead of "goto error"
+\end_layout
+
+\begin_layout Itemize
+They are: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\series bold
+assert_return(A, R)
+\series default
+ -- note: in void functions, R should not be included (i.e.
+ assert_return(A))
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+raise_return(E, R)
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+assert_raise_return(A, E, R) 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+raisem_return(E, M, R)
+\series default
+ -- where M is a message
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+assert_raisem_return(A, E, M, R)
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+iferr_return(R) iferr_log_return(R)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+clrerr() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+clears error specifiers (derr = 0; errno = 0
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+clrerr_log() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+clears error specifiers and logs that it did so
+\end_layout
+
+\end_deeper
+\begin_layout Section*
+Defined Errors
+\end_layout
+
+\begin_layout Standard
+The following errors are defined by this module and will print the indicated
+ output when they are raised.
+\end_layout
+
+\begin_layout Standard
+Note:
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+ERR_NOERR 
+\series default
+indicates that no error has happened.
+ This is the error value after clrerr() is called
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+ERR_NONEW 
+\series default
+indicates that there are no 
+\shape italic
+new
+\shape default
+ errors.
+ 
+\series bold
+errno
+\series default
+ is set to this value after log_err() is called (while derr is not changed).
+ This exists to aid in debugging so you can follow the stack of errors with
+ each call to 
+\series bold
+iferr_log_return()
+\end_layout
+
+\begin_layout Labeling
+\labelwidthstring 00.00.0000
+
+\series bold
+ERR_CLEARED 
+\series default
+is a special error used by clrerr_log() and is used to let the user know
+ where an error was cleared.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="21" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Defined
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Value
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+log_err output
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_NOERR
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+NoErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_BASE
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+BaseErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_TIMEOUT
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+TimeoutErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_SERIAL
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ SerialErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_SPI
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+SpiErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_I2C
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+I2cErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_COMMUNICATION
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ComErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_CONFIG
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+7
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ConfigErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_PIN
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+PinErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_INPUT
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+9
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+InputErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_TYPE
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+50
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+TypeErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_VALUE
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+51
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ValueErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_ASSERT
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+52
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+AssertErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_TESTFAIL
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+53
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+TestFail
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_CLEARED
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+252
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+"Cleared Error"
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_NONEW
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+253
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+NoNew 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_EMPTY
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+254
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_UNKNOWN
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+255
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+UnknownErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+
+\series bold
+Logging Values
+\end_layout
+
+\begin_layout Standard
+The logging value can be set with either:
+\end_layout
+
+\begin_layout Itemize
+#define LOGLEVEL myloglevel
+\end_layout
+
+\begin_layout Itemize
+set_loglevel(myloglevel)
+\end_layout
+
+\begin_layout Standard
+The 
+\shape italic
+#define
+\shape default
+ version is preferred when it can be used, as it can significantly reduce
+ your code size.
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="3">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LOGV_DEBUG
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+50
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Everything is logged
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LOGV_INFO
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+40
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+info and errors are logged
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LOGV_ERROR
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+30
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+only errors are logged
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LOGV_SILENT
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+nothing is logged
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
