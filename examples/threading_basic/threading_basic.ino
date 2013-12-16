@@ -64,8 +64,6 @@ void setup(){
   expose_function("hi", hello_world);
   expose_function("hang", hangup);
   expose_thread("print", print_back);
-
-  Logger.println("Your options are:");
   
   call_name("mon", "");     // start the system monitor -- will print every 5 seconds
                             // turn off with "kill mon" in the terminal
