@@ -287,6 +287,17 @@ void kill_thread(uint8_t index){
   kill_thread(&TH__threads.array[index]);
 }
 
+void kill_thread(char *name){
+  kill_thread(TH_get_thread(name));
+}
+
+void kill_thread(const __FlashStringHelper *name){
+  char *cname = (char *)malloc(fstr_len(name));
+  flash_to_str(name, cname); 
+  kill_thread(cname);
+  free(cname);
+}
+
 uint8_t restart_thread(thread *th){
   assert_raisem_return(th->pt.lc == PT_INNACTIVE, ERR_THREAD, th->el.name, 0);
   schedule_thread(th, EH_EMPTY_STR);

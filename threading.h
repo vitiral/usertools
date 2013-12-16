@@ -100,6 +100,8 @@ uint8_t thread_loop();
 
 void kill_thread(thread *th);
 void kill_thread(uint8_t index);
+void kill_thread(char *name);
+void kill_thread(const __FlashStringHelper *name);
 
 
 // #####################################################
