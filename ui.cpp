@@ -350,6 +350,10 @@ error:
   return PT_YIELDED;
 }
 
+void ui_std_greeting(){
+  Logger.println(F("!!!Make sure you are sending NL + CR\n?=help\n"));
+}
+
 void UI__setup_std(){
   debug(F("UiStdSetup:"));
   start_thread("*UI", user_interface);  // user interface. REQUIRED
@@ -359,7 +363,8 @@ void UI__setup_std(){
   expose_function("v", cmd_v);
   expose_function("?", print_options);
   expose_function("kill", cmd_kill);
-
+  
+  
   ui_watchdog_setup();
 }
 

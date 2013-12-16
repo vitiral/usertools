@@ -44,6 +44,7 @@ void system_monitor(char *input);
 void monswitch(char *input);
 void print_options(char *input);
 void ui_loop();
+void ui_std_greeting();
 #define print_row(S, C) __print_row(&(S), C)
 void __print_row(String *row, uint8_t *col_widths);
 

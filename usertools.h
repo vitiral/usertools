@@ -19,9 +19,9 @@ Memproblem:
 #define usertools_h
 
 //#define DEBUG_FLUSH
-//#define DEBUG
+#define DEBUG
 //#define LOGLEVEL 40
-#define LOGLEVEL 30
+//#define LOGLEVEL 30
 
 /*
 #include "threading.h"
