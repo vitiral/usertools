@@ -29,8 +29,9 @@ uint16_t ui_loop_time = 0;
 // #####################################################
 // ### Interrupts
 
+
 void ui_watchdog(){
-  if(((uint16_t)millis()) - ui_loop_time > 1000){
+  if(((uint16_t)millis()) - ui_loop_time > 2000){
     Logger.print("[CRITICAL] Timed out:");
     if(th_calling){
       Logger.println(th_calling);
@@ -43,7 +44,7 @@ void ui_watchdog(){
     }
     ui_loop_time = millis();
     //asm volatile ("  jmp 0"); 
-    wdt_enable(WDTO_15MS);
+    wdt_enable(WDTO_250MS);
   }
 }
 
@@ -63,6 +64,12 @@ void ui_timer1_setup()
     // enable global interrupts:
     sei();
 }
+
+ISR(TIMER1_OVF_vect)
+{
+    ui_watchdog();
+}
+
 
 
 // #####################################################
@@ -289,7 +296,7 @@ void UI__setup_std(){
 }
 
 void ui_loop(){
-  ui_loop_time = millis();
+  ui_loop_time = millis(); // pet the custom dog.
   
   thread_loop();
 }
