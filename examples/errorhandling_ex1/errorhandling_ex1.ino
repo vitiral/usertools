@@ -51,6 +51,8 @@ error:
 void setup(){
   Serial.begin(BAUD);
   log_info(String("Set up at baud: ") + String(BAUD));
+  Logger.println("********************");
+  Logger.println("MAKE SURE YOU ARE NOT SENDING LINE ENDINGS. Set to 'No Line Ending'\n");
   EH_test();
 }
 
