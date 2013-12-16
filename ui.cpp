@@ -148,7 +148,7 @@ char *_get_word(char **c){
 long int _get_int(char **c){
   char *word = _get_word(c);
   iferr_log_return(0);
-  return strtol(*c, NULL, 0);
+  return strtol(word, NULL, 0);
 }
 
 void ui_process_command(char *c){
