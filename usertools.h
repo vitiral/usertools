@@ -13,8 +13,6 @@ Memproblem:
  1622 with just errorhandling imported and logging something. 
 */
 
-
-
 #ifndef usertools_h
 #define usertools_h
 

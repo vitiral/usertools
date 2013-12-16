@@ -17,7 +17,7 @@
 
 // #####################################################
 // ### Useful Functions
-uint16_t fstr_len(const __FlashStringHelper *ifsh){
+uint16_t flash_len(const __FlashStringHelper *ifsh){
   const char PROGMEM *p = (const char PROGMEM *)ifsh;
   size_t n = 0;
   while (1) {
@@ -77,7 +77,7 @@ uint8_t __cmp_str_elptr(char *name, uint16_t name_len, TH_element *el){
 }
 
 //compare flash helper with element pointer
-uint8_t cmp_flhp_elptr(const __FlashStringHelper *flph, uint8_t len, TH_element *el){
+uint8_t cmp_flash_elptr(const __FlashStringHelper *flph, uint8_t len, TH_element *el){
   //debug("cmp flhp");
   //debug(flph);
   //debug(el->name);
@@ -85,5 +85,55 @@ uint8_t cmp_flhp_elptr(const __FlashStringHelper *flph, uint8_t len, TH_element 
   if(!cmp_flash_flash(flph, el->name)) return false;
   //debug("equal");
   return true;
+}
+
+
+char *pass_ws(char *c){
+  while(true) {
+    switch(*c){
+    case ' ':
+    case '\t':
+      c++;
+      break;
+    default:
+      return c;
+    }
+  }
+}
+
+char *get_word_end(char *c){
+  c = pass_ws(c);
+  while(c++){
+    switch(*c){ // stop at ws, end, or line return
+    case 0:
+    case 0x0A:
+    case 0x0D:
+    case ' ':
+    case '\t':
+      return c;
+    }
+  }
+}
+
+//char *word = get_word(c); // get first word
+//char *word2 = get_word(c); // get next word
+char *_get_word(char **c){
+  *c = pass_ws(*c);
+  char *word = *c;
+  char *ce = get_word_end(*c);
+  if(*ce != 0) *c = ce + 1; // sets c to next word
+  else *c = ce;
+  *ce = 0;
+  if(*word == 0) seterr(ERR_INPUT);
+  return word;
+}
+
+long int _get_int(char **c){
+  char *word = _get_word(c);
+  iferr_log_return(0);
+  if (*word < '0' or *word > '9'){ // the strtol documentation doesn't seem to be working!!!
+      raise_return(ERR_INPUT, 0);  // it won't tell me if there has been an error (I've tried with the pointer)
+  }
+  return strtol(word, NULL, 0);
 }
 

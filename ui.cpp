@@ -114,68 +114,6 @@ void __print_row(String *row, uint8_t *col_widths){
   }
 }
 
-char *pass_ws(char *c){
-  while(true) {
-    switch(*c){
-    case ' ':
-    case '\t':
-      c++;
-      break;
-    default:
-      return c;
-    }
-  }
-}
-
-char *get_cmd_end(char *c){
-  uint8_t k = false;
-  while(*c != UI_CMD_END_CHAR){
-    c++;
-    k = true;
-  }
-  if(k){ // if the prev char is 0x0A, make that the end.
-    if(*(c-1) == UI_CMD_PEND_CHAR) c -= 1;
-  }
-  assert_return(c, 0);
-  return c;
-}
-
-char *get_word_end(char *c){
-  c = pass_ws(c);
-  while(c++){
-    switch(*c){ // stop at ws, end, or line return
-    case 0:
-    case 0x0A:
-    case 0x0D:
-    case ' ':
-    case '\t':
-      return c;
-    }
-  }
-}
-
-//char *word = get_word(c); // get first word
-//char *word2 = get_word(c); // get next word
-char *_get_word(char **c){
-  *c = pass_ws(*c);
-  char *word = *c;
-  char *ce = get_word_end(*c);
-  if(*ce != 0) *c = ce + 1; // sets c to next word
-  else *c = ce;
-  *ce = 0;
-  if(*word == 0) seterr(ERR_INPUT);
-  return word;
-}
-
-long int _get_int(char **c){
-  char *word = _get_word(c);
-  iferr_log_return(0);
-  if (*word < '0' or *word > '9'){ // the strtol documentation doesn't seem to be working!!!
-      raise_return(ERR_INPUT, 0);  // it won't tell me if there has been an error (I've tried with the pointer)
-  }
-  return strtol(word, NULL, 0);
-}
-
 void ui_process_command(char *c){
   char *c2;
   char *word;
@@ -242,7 +180,7 @@ void _print_monitor(uint16_t execution_time){
   Logger.println(freeMemory());
   
   
-  char nameray[] ="Ind\tName\tExTime\tLine";
+  char nameray[] = "Ind\tName\tt exec[ms]\tLine"; // also used for storing flash names
   thread *th;
   uint8_t column_widths[] = {4, 12, 12, 12};
   

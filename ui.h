@@ -18,8 +18,7 @@
 #include "threading.h"
 
 // Helpful for String Parsing
-#define get_word(C) _get_word(&(C))
-#define get_int(C) _get_int(&(C))
+
 
 #define UI__MIN_F 3
 #define UI__MIN_T 2
@@ -30,9 +29,6 @@ void UI__setup_std();
 #define UI_CMD_PEND_CHAR 0x0D  // may be right before the end.
 
 #define UI_TABLE_SEP F(" \t ")
-
-char *_get_word(char **c);
-long int _get_int(char **c);
 
 // #####################################################
 // ### Functions

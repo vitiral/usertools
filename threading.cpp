@@ -49,9 +49,9 @@ void UI__set_variable_array(TH_variable *vray, uint16_t len){
 
 void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize){
   assert_return(TH__variables.index <= TH__variables.len);
-  assert_return(fstr_len(name) <= TH_MAX_NAME_LEN);
+  assert_return(flash_len(name) <= TH_MAX_NAME_LEN);
   assert_raise_return(TH__variables.array, ERR_PTR); // assert not null
-  uint8_t len = fstr_len(name);
+  uint8_t len = flash_len(name);
   assert_raise_return(len > 0, ERR_SIZE);
 
   TH__variables.array[TH__variables.index].el.name = name;
@@ -73,9 +73,9 @@ void UI__set_function_array(TH_function *fray, uint16_t len){
 
 void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   assert_return(TH__functions.index <= TH__functions.len);
-  assert_return(fstr_len(name) <= TH_MAX_NAME_LEN);
+  assert_return(flash_len(name) <= TH_MAX_NAME_LEN);
   assert_raise_return(TH__functions.array, ERR_PTR); // assert not null
-  uint8_t len = fstr_len(name);
+  uint8_t len = flash_len(name);
   assert_raise_return(len > 0, ERR_SIZE);
 
   TH__functions.array[TH__functions.index].el.name = name;
@@ -100,10 +100,10 @@ void UI__set_thread_array(thread *fray, uint16_t len){
 thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr){
   debug(F("ExpFun"));
   assert_return(TH__threads.index <= TH__threads.len, NULL);
-  assert_return(fstr_len(name) <= TH_MAX_NAME_LEN, NULL);
+  assert_return(flash_len(name) <= TH_MAX_NAME_LEN, NULL);
   assert_raise_return(TH__threads.array, ERR_PTR, NULL); // assert not null
 
-  uint8_t len = fstr_len(name);
+  uint8_t len = flash_len(name);
   assert_raise_return(len > 0, ERR_SIZE, NULL);
 
   TH__threads.array[TH__threads.index].el.name = name;
@@ -150,7 +150,7 @@ void th_set_innactive(thread *f){
 uint8_t schedule_thread(thread *fun, char *input) {
   uint8_t out = false;
   uint8_t len;
-  len = fstr_len(fun->el.name);
+  len = flash_len(fun->el.name);
   th_calling = (char *)malloc(len + 1);
   memcheck(th_calling);
   flash_to_str(fun->el.name, th_calling);
@@ -292,7 +292,7 @@ void kill_thread(char *name){
 }
 
 void kill_thread(const __FlashStringHelper *name){
-  char *cname = (char *)malloc(fstr_len(name));
+  char *cname = (char *)malloc(flash_len(name));
   flash_to_str(name, cname); 
   kill_thread(cname);
   free(cname);

@@ -11,14 +11,22 @@
 
 #define cmp_str_elptr(N, L, E) __cmp_str_elptr(N, L, (TH_element *)(E))
 
-uint16_t fstr_len(const __FlashStringHelper *ifsh);
+uint16_t flash_len(const __FlashStringHelper *ifsh);
 
 void flash_to_str(const __FlashStringHelper *ifsh, char *str);
 
 uint8_t cmp_str_flash(char *str, const __FlashStringHelper *flsh);
 uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHelper *flsh2);
 uint8_t __cmp_str_elptr(char *name, uint16_t name_len, TH_element *el);
-uint8_t cmp_flhp_elptr(const __FlashStringHelper *flph, uint8_t len, TH_element *el);
+uint8_t cmp_flash_elptr(const __FlashStringHelper *flph, uint8_t len, TH_element *el);
+
+
+char *get_word_end(char *c);
+char *pass_ws(char *c);
+#define get_word(C) _get_word(&(C))
+#define get_int(C) _get_int(&(C))
+char *_get_word(char **c);
+long int _get_int(char **c);
 
 #endif
 
