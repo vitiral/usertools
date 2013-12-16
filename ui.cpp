@@ -31,7 +31,7 @@ uint16_t ui_loop_time = 0;
 
 
 void ui_watchdog(){
-  if(((uint16_t)millis()) - ui_loop_time > 2000){
+  //if(((uint16_t)millis()) - ui_loop_time > 2000){
     Logger.print("[CRITICAL] Timed out:");
     if(th_calling){
       Logger.println(th_calling);
@@ -44,12 +44,31 @@ void ui_watchdog(){
     }
     ui_loop_time = millis();
     //asm volatile ("  jmp 0"); 
+    wdt_reset();
     wdt_enable(WDTO_250MS);
-  }
+  //}
+}
+
+
+void WDT_Init(void)
+{
+    //disable interrupts
+    cli();
+    //reset watchdog
+    wdt_reset();
+    //set up WDT interrupt
+    WDTCSR = (1<<WDCE)|(1<<WDE);
+    //Start watchdog timer with 4s prescaller
+    WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP3);
+    //Enable global interrupts
+    sei();
 }
 
 void ui_timer1_setup()
 {
+    WDT_Init();
+    //wdt_enable(WDTO_2S);
+/*
     debug("setting up timer");
     // initialize Timer1
     cli();         // disable global interrupts
@@ -63,12 +82,25 @@ void ui_timer1_setup()
     
     // enable global interrupts:
     sei();
+*/
 }
 
+void ui_pet_dog(){
+  wdt_reset();
+  ui_loop_time = millis(); // pet the custom dog.
+}
+  
+
+ISR(WDT_vect) {
+   ui_watchdog();
+} 
+
+/*
 ISR(TIMER1_OVF_vect)
 {
     ui_watchdog();
 }
+*/
 
 
 
@@ -296,7 +328,7 @@ void UI__setup_std(){
 }
 
 void ui_loop(){
-  ui_loop_time = millis(); // pet the custom dog.
+  ui_pet_dog();
   
   thread_loop();
 }
