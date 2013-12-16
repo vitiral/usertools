@@ -18,13 +18,15 @@
 #define MAX_STR_LEN 100
 #define MAX_ARRAY_LEN 256
 
-
-
 // #####################################################
 // ### Globals
 TH_Variables TH__variables = {0, 0, 0};
 TH_Functions TH__functions = {0, 0, 0};
 TH_ThreadArray TH__threads = {0, 0, 0};
+
+char *th_calling = NULL;
+uint8_t th_loop_index = 255;
+
 
 // #####################################################
 // ### Macro Helpers
@@ -114,13 +116,13 @@ thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr){
 // ### Internal Functions
 
 void log_thread_exit(thread *th){
-  Serial.print(F("[Th Exit]:"));
-  Serial.println(th->el.name);
+  Logger.print(F("[Th Exit]:"));
+  Logger.println(th->el.name);
 }
 
 void log_thread_start(thread *th){
-  Serial.print(F("[Th Start]:"));
-  Serial.println(th->el.name);
+  Logger.print(F("[Th Start]:"));
+  Logger.println(th->el.name);
   debug(th->pt.lc);
 }
 
@@ -141,21 +143,32 @@ void th_set_innactive(thread *f){
 // schedule an initialized function
 // returns 0 on error
 uint8_t schedule_thread(thread *fun, char *input) {
-  uint8_t out;
+  uint8_t out = false;
+  uint8_t len;
+  len = fstr_len(fun->el.name);
+  th_calling = (char *)malloc(len + 1);
+  memcheck(th_calling);
+  flash_to_str(fun->el.name, th_calling);
+  
   sdebug(F("Calling:"));
+
   edebug(fun->el.name);
-  assert_raise_return(fun->pt.lc == PT_INNACTIVE, ERR_THREAD, 0);
+  assert_raise(fun->pt.lc == PT_INNACTIVE, ERR_THREAD, 0);
   PT_INIT(&(fun->pt));
-  assert_return(fun->fptr, 0);
+  assert(fun->fptr);
   out = fun->fptr(&(fun->pt), input);
   if(out >= PT_EXITED){
     th_set_innactive(fun);
-    return 1;
+    out = true;
   }
   else{
     log_thread_start(fun);
-    return 1;
+    out = true;
   }
+error:
+  free(th_calling);
+  th_calling = NULL;
+  return out;
 }
 
 
@@ -197,21 +210,25 @@ uint8_t call_thread(char *name, char *input){
 
 uint8_t call_function(char *name, char *input){
   uint8_t name_len = strlen(name);
+  uint8_t out = 0;
   TH_function *fun;
+  th_calling = name;
   sdebug(F("cT name:")); cdebug(name); cdebug(F(" index=")); 
   edebug(TH__functions.index);
   for(uint8_t i = 0; i < TH__functions.index; i++){
     fun = &TH__functions.array[i];
-    debug(fun->el.name);
+    //debug(fun->el.name);
     if(cmp_str_elptr(name, name_len, fun)){
       fun->fptr(input);
-      return true;
+      out = true;
     }
   }
-  return false;
+error:
+  th_calling = NULL;
+  return out;
 }
 
-uint8_t ui_call_name(char *name, char *input){
+uint8_t th_call_name(char *name, char *input){
   if(not call_thread(name, input)) return call_function(name, input);
 }
 
@@ -251,13 +268,17 @@ void kill_thread(thread *th){
   th->pt.lc = PT_KILL_VALUE;
 }
 
+void kill_thread(uint8_t index){
+  assert_raise_return(index < TH__threads.index, ERR_INDEX);
+  kill_thread(&TH__threads.array[index]);
+}
+
 uint8_t restart_thread(thread *th){
   assert_raisem_return(th->pt.lc == PT_INNACTIVE, ERR_THREAD, th->el.name, 0);
   schedule_thread(th, EH_EMPTY_STR);
 }
 
 uint8_t thread_loop(){
-  static int8_t i = 0;
   uint64_t time;
   uint16_t timeus;
   uint8_t fout;
@@ -267,13 +288,13 @@ uint8_t thread_loop(){
   PT_LOCAL_BEGIN(pt);
   while(true){
     PT_YIELD(pt);
-    for(i = 0; i < TH__threads.index; i++){
-      th = &TH__threads.array[i];
+    for(th_loop_index = 0; th_loop_index < TH__threads.index; th_loop_index++){
+      th = &TH__threads.array[th_loop_index];
       init_lc = th->pt.lc;
       if(init_lc == PT_INNACTIVE) continue;
       time = millis();
       timeus = micros();
-      assert(th->fptr, i);    // NOT NULL PTR
+      assert(th->fptr, th_loop_index);    // NOT NULL PTR
       fout = th->fptr(&(th->pt), EH_EMPTY_STR);
       timeus = (uint16_t)micros() - timeus;
       time = (uint64_t)millis() - time;
@@ -300,7 +321,6 @@ uint8_t thread_loop(){
         }  
         th_set_innactive(th);
         log_thread_exit(th);
-        i -= 1;
       }
 error:
       clrerr();

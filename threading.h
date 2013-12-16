@@ -88,6 +88,7 @@ typedef struct TH_ThreadArray{
 uint8_t thread_loop();
 
 void kill_thread(thread *th);
+void kill_thread(uint8_t index);
 
 
 // #####################################################
@@ -108,8 +109,7 @@ thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
 // ### User Functions
 
 thread *schedule_thread(const __FlashStringHelper *name, TH_thfunptr fun);
-uint8_t ui_call_name(char *name, char *input);
-uint8_t ui_loop();
+uint8_t th_call_name(char *name, char *input);
 uint8_t restart_thread(thread *th);
 
 
@@ -123,5 +123,8 @@ extern TH_ThreadArray TH__threads;
 
 TH_variable *TH_get_variable(char *name);
 thread *TH_get_thread(char *name);
+
+extern char *th_calling;
+extern uint8_t th_loop_index;
 
 #endif

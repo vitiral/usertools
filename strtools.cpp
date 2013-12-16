@@ -20,6 +20,17 @@ uint16_t fstr_len(const __FlashStringHelper *ifsh){
   return n;
 }
 
+void *flash_to_str(const __FlashStringHelper *flsh, char *str){
+  const char PROGMEM *p = (const char PROGMEM *)flsh;
+  size_t n = 0;
+  char c = 1;
+  while (c != 0) {
+    c = pgm_read_byte(p++);
+    str[n] = c;
+  }
+}
+  
+
 uint8_t cmp_str_flash(char *str, const __FlashStringHelper *flsh){
   const char PROGMEM *p = (const char PROGMEM *)flsh;
   size_t n = 0;

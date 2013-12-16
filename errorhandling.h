@@ -15,7 +15,7 @@
 #define ERR_SERIAL        3 // SerialErr
 #define ERR_SPI           4 // Spierr
 #define ERR_I2C           5 // I2cErr
-#define ERR_COMMUNICATION 6 // ComErr
+#define ERR_COM           6 // ComErr
 #define ERR_CONFIG        7 // ConfigErr
 #define ERR_PIN           8 // PinErr
 #define ERR_INPUT         9 // InputErr
@@ -28,6 +28,7 @@
 #define ERR_INDEX         55 // IndexErr
 #define ERR_SIZE          56 // SizeErr
 #define ERR_THREAD        57 // ThreadErr
+#define ERR_MEMORY        58 // MemErr
 
 #define ERR_CLEARED       252 // "Cleared Error" used by clrerr_log and is then cleared
 #define ERR_NONEW         253 // NoNew -- error already printed
@@ -48,8 +49,6 @@
 void EH_test();
 extern uint8_t derr;
 extern uint8_t errno;
-extern char *errmsg;
-extern char *EH_CLEAR_ERROR_MSG;
 extern char *EH_EMPTY_STR;
 
 void clrerr();
@@ -57,9 +56,10 @@ void seterr(uint8_t error);
 
 #define EH_DW(code) do{code}while(0) //wraps in a do while(0) so that the syntax is correct.
 
-#define raise(E, ...)                       EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
-#define assert(A, ...)                           EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})
-#define assert_raise(A, E, ...)             EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
+#define raise(E, ...)                           EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
+#define assert(A, ...)                          EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})
+#define assert_raise(A, E, ...)                 EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
+#define memcheck(A)                             assert_raise(A, ERR_MEMORY)
 
 // These functions make the error label unnecessary
 #define raise_return(E, ...)                    EH_DW(seterr(E); log_err(); EH_FLUSH(); return __VA_ARGS__;)
@@ -67,6 +67,7 @@ void seterr(uint8_t error);
 #define assert_return(A, ...)                   EH_DW(if(!(A)){seterr(ERR_ASSERT); log_err(); EH_FLUSH(); return __VA_ARGS__;})
 #define assert_raise_return(A, E, ...)          EH_DW(if(!(A)){seterr(E); log_err(); EH_FLUSH(); return __VA_ARGS__;})
 #define assert_raisem_return(A, E, M, ...)      EH_DW(if(!(A)){EH_ST_raisem(E, M); return __VA_ARGS__;})
+#define memcheck_return(A, ...)                 assert_raise_return(A, ERR_MEMORY, __VA_ARGS__)
 
 //#define iferr_return        if(derr) return 
 //#define iferr_log_return    if(derr) {log_err();}  iferr_return

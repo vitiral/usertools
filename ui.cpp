@@ -14,17 +14,58 @@
 #include "strtools.h"
 #include "MemoryFree.h"
 
+#include <avr/wdt.h>
+#include <TInterrupts.h>
 
+#include <avr/interrupt.h>
 
-//const __FlashStringHelper *UI_TABLE_SEP = PROGMEM(" \t ");
+#define LEDPIN 2
 
 
 // #####################################################
 // ### Globals
 
 #define MAX_STR_LEN 100
+uint16_t ui_loop_time = 0;
 
-uint8_t print_periodically = false; // used by system_monitor
+// #####################################################
+// ### Interrupts
+
+void ui_watchdog(){
+  if((uint16_t)millis() - ui_loop_time > 1000){
+    Logger.print("[CRITICAL] Timed out:");
+    if(th_calling){
+      Logger.println(th_calling);
+    }
+    else if(th_loop_index < 255){
+      Logger.println(TH__threads.array[th_loop_index].el.name);
+    }
+    else Logger.println("Unknown");
+    Logger.flush();
+    //asm volatile ("  jmp 0"); 
+    wdt_enable(WDTO_15MS);
+    while(1);      // wait for reset
+  }
+}
+
+void ui_timer1_setup()
+{
+    debug("setting up timer");
+    pinMode(LEDPIN, OUTPUT);
+    // initialize Timer1
+    cli();         // disable global interrupts
+    TCCR1A = 0;    // set entire TCCR1A register to 0
+    TCCR1B = 0;
+    // enable Timer1 overflow interrupt:
+    TIMSK1 = (1 << TOIE1);
+    // Set CS12 bit so timer runs at clock speed/256:
+    //TCCR1B |= (1 << CS12);
+    TCCR1B |= (1 << CS10);
+    
+    // enable global interrupts:
+    sei();
+}
+
 
 // #####################################################
 // ### Functions
@@ -80,82 +121,72 @@ long int _get_int(char **c){
 void ui_process_command(char *c){
   char *c2;
   char *word;
+  
   sdebug(F("Parse CMD:"));
   edebug(*c);
   c = pass_ws(c);
-  //debug(*c);
   c2 = get_word(c);
   iferr_log_return();
   assert_return(c); assert_return(c2);
   sdebug(F("Calling Function:"));
   cdebug(c2); cdebug(':');
   edebug(c);
-  ui_call_name(c2, c);
+  th_call_name(c2, c);
 }
 
 void cmd_v(char *input){
   char *word = get_word(input);
   iferr_log_return();
   print_variable(word);
-
 }
 
 void cmd_kill(char *input){
   char *word = get_word(input);
+  uint16_t v;
+  char **tailptr;
   iferr_log_return();
   sdebug(F("killing:")); edebug(word);
   thread *th = TH_get_thread(word);
-  debug(th->el.name);
-  assert_raise_return(th, ERR_INPUT);
-  kill_thread(th);
-  Serial.print(F("Killed:"));
-  Serial.println(word);
+  if(th) {
+    debug(th->el.name);
+    kill_thread(th);
+  }
+  else {
+    v = strtol(word, tailptr, 0);
+    assert_raise_return(word != *tailptr, ERR_INPUT);
+    kill_thread(v);
+  }
+  Logger.print(F("Killed:"));
+  Logger.println(word);
 
 }
 
 void _print_monitor(uint16_t execution_time){
-  Serial.print(F("Total Time: "));
-  Serial.print(execution_time);
-  Serial.print(F(" \t\tFree Memory:"));
-  Serial.println(freeMemory());
+  Logger.print(F("Total Time: "));
+  Logger.print(execution_time);
+  Logger.print(F(" \t\tFree Memory:"));
+  Logger.println(freeMemory());
 
-  Serial.println(F("Name\t\tExTime\t\tLine"));
-  uint8_t i = 0;
+  Logger.println(F("Name\t\tExTime\t\tLine"));
+  int16_t i = 0;
   thread *th;
   while(i < TH__threads.index){
     th = &TH__threads.array[i];
     if(th->pt.lc >= PT_KILL_VALUE) continue;
-    Serial.print(th->el.name);
-    Serial.print(UI_TABLE_SEP);
-    Serial.print(th->time / 100);
-    Serial.write('.');
-    Serial.print(th->time % 100);
-    Serial.print(UI_TABLE_SEP);
-    Serial.println((unsigned int)th->pt.lc);
-    //Serial.print(UI_TABLE_SEP);
-    //Serial.println(th->pt.error);
-    
+    Logger.print(i);
+    Logger.write(' ');
+    Logger.print(th->el.name);
+    Logger.print(UI_TABLE_SEP);
+    Logger.print(th->time / 100);
+    Logger.write('.');
+    Logger.print(th->time % 100);
+    Logger.print(UI_TABLE_SEP);
+    Logger.println((unsigned int)th->pt.lc);
+    //Logger.print(UI_TABLE_SEP);
+    //Logger.println(th->pt.error);
     th->time = 0; // reset time
     i++;
   }
-}
-
-void monswitch(char *input){
-  char *word = get_word(input);
-  assert_raise(word, ERR_INPUT);
-  iferr_log_return();
-  
-  if(cmp_str_flash(word, F("on"))) {
-    debug(F("=on"));
-    print_periodically = true;
-  }
-  else if(cmp_str_flash(word, F("off"))){
-    debug(F("=off"));
-    print_periodically = false;
-  }
-  else goto error;
-error:
-  debug(F("VI:on,off"));
 }
 
 uint8_t system_monitor(pthread *pt, char *input){
@@ -163,28 +194,28 @@ uint8_t system_monitor(pthread *pt, char *input){
   PT_BEGIN(pt);
   while(true){
     PT_WAIT_MS(pt, time, 5000);
-    if(print_periodically) _print_monitor((uint16_t)millis() - time);
+    _print_monitor((uint16_t)millis() - time);
   }
   PT_END(pt);
 }
 
 void print_options(char *input){
   uint8_t i = 0;
-  Serial.println(F("Threads"));
+  Logger.println(F("Threads"));
   for(i = 0; i < TH__threads.index; i++){
-    Serial.print(i);
-    Serial.write('\t');
-    Serial.println(TH__threads.array[i].el.name);
+    Logger.print(i);
+    Logger.write('\t');
+    Logger.println(TH__threads.array[i].el.name);
   }
   
-  Serial.println(F("\nVars"));
+  Logger.println(F("\nVars"));
   for(i = 0; i < TH__variables.index; i++){
-    Serial.println(TH__variables.array[i].el.name);
+    Logger.println(TH__variables.array[i].el.name);
   }
   
-  Serial.println(F("\nFuncs"));
+  Logger.println(F("\nFuncs"));
   for(i = 0; i < TH__functions.index; i++){
-    Serial.println(TH__functions.array[i].el.name);
+    Logger.println(TH__functions.array[i].el.name);
   }
 }
 
@@ -195,13 +226,13 @@ uint8_t print_variable(char *name){
   uint8_t name_len = strlen(name);
   var = TH_get_variable(name);
   assert_raise_return(var, ERR_INPUT, false);
-  Serial.print(F("v=x"));
+  Logger.print(F("v=x"));
   for(n = var->size - 1; n >= 0; n--){
     uint8_t *chptr = (uint8_t*)(var->vptr);  // works
-    if(chptr[n] < 0x10) Serial.write('0');
-    Serial.print(chptr[n], HEX);
+    if(chptr[n] < 0x10) Logger.write('0');
+    Logger.print(chptr[n], HEX);
   }
-  Serial.println();
+  Logger.println();
   return true;
 }
 
@@ -216,13 +247,13 @@ uint8_t user_interface(pthread *pt, char *input){
     buffer[0] = 0;
   }
   
-  if(Serial.available()){
-    while(Serial.available()){
-      c = Serial.read();
+  if(Logger.available()){
+    while(Logger.available()){
+      c = Logger.read();
       buffer[i] = c;
       if(i > MAX_STR_LEN){
-        while(Serial.available()) Serial.read();
-        raise(ERR_COMMUNICATION, F("Size"));
+        while(Logger.available()) Logger.read();
+        raise(ERR_COM, F("Size"));
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
         buffer[i + 1] = 0;
@@ -246,13 +277,23 @@ error:
 
 void UI__setup_std(){
   debug(F("UiStdSetup:"));
-  start_thread("*M", system_monitor);
-  start_thread("*UI", user_interface);
+  start_thread("*UI", user_interface);  // user interface. REQUIRED
   
-  ui_expose_function("mon", monswitch);
+  ui_expose_thread("mon", system_monitor); // system monitor
+  
   ui_expose_function("v", cmd_v);
+  ui_expose_function("?", print_options);
   ui_expose_function("kill", cmd_kill);
   
+  ui_timer1_setup();
+  //wdt_enable(WDTO_4S);  //reset after 4S if no pat received
+  
+}
+
+void ui_loop(){
+  ui_loop_time = millis();
+  
+  thread_loop();
 }
 
 

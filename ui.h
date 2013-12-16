@@ -27,10 +27,12 @@ long int _get_int(char **c);
 // #####################################################
 // ### Functions
 uint8_t print_variable(char *name);
-#define ui_loop() thread_loop()
 
+void ui_timer1_setup();
+void ui_watchdog();
 void system_monitor(char *input);
 void monswitch(char *input);
+void ui_loop();
 
 
 // #####################################################
