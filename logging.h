@@ -31,8 +31,6 @@
   #define LOGLEVEL LOG_SILENT
 #endif
 
-
-
 class Logging : public Stream
 {
 private:

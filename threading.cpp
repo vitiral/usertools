@@ -101,10 +101,7 @@ thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr){
   TH__threads.array[TH__threads.index].el.name = name;
   TH__threads.array[TH__threads.index].el.name_len = len;
   TH__threads.array[TH__threads.index].fptr = fptr;
-
-  pthread pt;
-  pt.lc = PT_INNACTIVE;
-  TH__threads.array[TH__threads.index].pt = pt;
+  TH__threads.array[TH__threads.index].pt.lc = PT_INNACTIVE;
   sdebug(F("Added T:")); cdebug(name); cdebug(F(" len:"));
   cdebug(TH__threads.array[TH__threads.index].el.name_len);
   TH__threads.index++;
