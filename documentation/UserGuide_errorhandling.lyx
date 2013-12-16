@@ -69,7 +69,7 @@ errorhandling
 \end_layout
 
 \begin_layout Author
-Garrett Berg, Cloudform Design
+Garrett Berg, Cloudform Design, garrett@cloudformdesign.com
 \end_layout
 
 \begin_layout Standard
@@ -77,8 +77,16 @@ Garrett Berg, Cloudform Design
 \series bold
 LICENSE: 
 \series default
-This code is released under the GNU GPL v3 or greater.
- For more info see: <http://www.gnu.org/licenses/gpl.html>
+This library is released under the FreeBSD License, if you need a copy go
+ to:
+\begin_inset CommandInset href
+LatexCommand href
+name " http://www.freebsd.org/copyright/freebsd-license.html"
+target " http://www.freebsd.org/copyright/freebsd-license.html"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -129,30 +137,6 @@ Summary
 \begin_layout Standard
 This is the Arduino errorhandling library, meant to make debugging and error
  handling be simple and work together.
-\end_layout
-
-\begin_layout Section*
-How to install
-\end_layout
-
-\begin_layout Standard
-Create a folder named 
-\begin_inset Quotes eld
-\end_inset
-
-errorhandling
-\begin_inset Quotes erd
-\end_inset
-
- in your Arduino 
-\begin_inset Quotes eld
-\end_inset
-
-libraries
-\begin_inset Quotes erd
-\end_inset
-
- folder and then extract the contents of this folder into it.
 \end_layout
 
 \begin_layout Subsection*

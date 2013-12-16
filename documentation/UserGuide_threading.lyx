@@ -61,11 +61,54 @@
 \begin_body
 
 \begin_layout Title
-Serial UI
+
+\series bold
+Threading
 \end_layout
 
 \begin_layout Author
 Garrett Berg, Cloudform Design, garrett@cloudformdesign.com
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+LICENSE: 
+\series default
+This library is released under the FreeBSD License, if you need a copy go
+ to:
+\begin_inset CommandInset href
+LatexCommand href
+name " http://www.freebsd.org/copyright/freebsd-license.html"
+target " http://www.freebsd.org/copyright/freebsd-license.html"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Copyright: 
+\series default
+Garrett Berg 
+\begin_inset CommandInset href
+LatexCommand href
+name "cloudformdesign.com"
+target "cloudformdesign.com"
+
+\end_inset
+
+, 
+\begin_inset CommandInset href
+LatexCommand href
+name "garrett@cloudformdesign.com"
+target "garrett@cloudformdesign.com"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section*
@@ -73,110 +116,28 @@ Summary
 \end_layout
 
 \begin_layout Standard
-The SerialUI module was created so that it was easy to make Serial User
- Interfaces on the arduino platform.
- I is part of a suit of tools including the errorhandling library and the
- new protothreads library that aims to make development for micro-controllers
- easier and more fun.
-\end_layout
-
-\begin_layout Section*
-How to install
-\end_layout
-
-\begin_layout Standard
-Create a folder named 
+The threading.h library was created to make threading simpler for microcontroller
+s, while still using a very small footprint.
+ It is integrated with the User Interface library (
 \begin_inset Quotes eld
 \end_inset
 
-SerialUI
+ui.h
 \begin_inset Quotes erd
 \end_inset
 
- in your Arduino 
-\begin_inset Quotes eld
-\end_inset
-
-libraries
-\begin_inset Quotes erd
-\end_inset
-
- folder and then extract the contents of this folder into it.
+), and it is recommended that you use that library instead of this one for
+ simple projects, as it will provide a full user interface through the terminal.
 \end_layout
 
-\begin_layout Section*
+\begin_layout Subsection*
 Overview
-\end_layout
-
-\begin_layout Subsection*
-User Interface
-\end_layout
-
-\begin_layout Standard
-SerialUI operates as simply as it possibly can.
- You can access either functions or variables through it's interface.
- In summary:
-\end_layout
-
-\begin_layout Itemize
-The following terminal commands are supported:
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-\begin_inset Quotes eld
-\end_inset
-
-?v VARNAME
-\begin_inset Quotes erd
-\end_inset
-
- -- Gives you the value of variable VARNAME in hex
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Quotes eld
-\end_inset
-
-?v
-\begin_inset Quotes erd
-\end_inset
-
- -- prints out all exposed variable names that the user can access
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Quotes eld
-\end_inset
-
-?f
-\begin_inset Quotes erd
-\end_inset
-
- -- prints out all exposed functions
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Quotes eld
-\end_inset
-
-?t
-\begin_inset Quotes erd
-\end_inset
-
- -- prints all running threads (functions that have not terminated and are
- being called on every loop)
-\end_layout
-
-\end_deeper
-\begin_layout Subsection*
-Coding Overview
 \end_layout
 
 \begin_layout Itemize
 
 \series bold
-ui_loop() ::
+threading_loop() ::
 \end_layout
 
 \begin_deeper
@@ -184,6 +145,14 @@ ui_loop() ::
 This should be called in your loop function.
  It is what checks to see if there is new input and if any threads need
  to be run.
+\end_layout
+
+\begin_layout Itemize
+If you are using the ui.h module, call 
+\series bold
+ui_loop()
+\series default
+ instead
 \end_layout
 
 \end_deeper
@@ -252,90 +221,147 @@ input1 input2
 
 \end_layout
 
+\begin_layout Itemize
+The function must be of type 
+\begin_inset Quotes eld
+\end_inset
+
+void function(char *input)
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
 \end_deeper
 \begin_layout Itemize
 
 \series bold
-ui_declare_variables(
-\series default
-MAX_NUM_VARIABLES
-\series bold
-) :: ui_declare_variables(
-\series default
-MAX_NUM_VARIABLES
-\series bold
-)
-\series default
- ::
+ui_expose_thread(
+\begin_inset Quotes eld
+\end_inset
+
+thread_name
+\begin_inset Quotes erd
+\end_inset
+
+, thread_function) ::
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-These should be called at the global namespace, where the MAX_NUM variables
- should be >= the number of functions or variables that will be exposed.
+This exposes a thread.
+ If the user types 
+\begin_inset Quotes eld
+\end_inset
+
+thread_name input1 input2
+\begin_inset Quotes erd
+\end_inset
+
+ + LINE_FEED the function will be called and sent 
+\begin_inset Quotes eld
+\end_inset
+
+input1 input2
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+the function must be of type 
+\begin_inset Quotes eld
+\end_inset
+
+PT_THREAD thread_function(pthread *pt, char *input)
+\begin_inset Quotes erd
+\end_inset
+
+
 \end_layout
 
 \end_deeper
 \begin_layout Itemize
 
 \series bold
-ui_setup_variables() :: ui_setup_functions() ::
+call_name(name, input) ::
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-These need to be called in your 
-\series bold
-setup()
-\series default
- function.
+calls the exposed thread or function of the specified name.
 \end_layout
 
 \end_deeper
-\begin_layout Subsection*
-Initialization
+\begin_layout Itemize
+
+\series bold
+schedule_thread(name, function) ::
 \end_layout
 
-\begin_layout Standard
-The function and variable arrays must be initialized with 
-\series bold
-)
-\series default
- in the global variable namespace, and 
-\series bold
-ui_setup_variables()
-\series default
-, 
-\series bold
-ui_setup_functions() 
-\series default
-in the setup function.
+\begin_deeper
+\begin_layout Itemize
+both exposes and calls the thread (do not use if you have already exposed
+ the thread as it will duplicate it)
 \end_layout
 
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+thread_setup(num_vars, num_functions, num_threads) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Must be called in the 
+\series bold
+setup
+\series default
+
+\begin_inset space ~
+\end_inset
+
+function, before any threads are exposed or called.
+ You must keep track of the number of variables, functions, and threads
+ you use and input them.
+ The number can be higher than what you actually use (but uses more memory).
+\end_layout
+
+\begin_layout Itemize
+If you are using the ui.h module, use 
+\series bold
+ui_setup(V, F, T) 
+\series default
+instead
+\end_layout
+
+\end_deeper
 \begin_layout Subsection*
 Threading
 \end_layout
 
 \begin_layout Standard
-SerialUI supports threading through the 
+This module supports threading through the 
 \shape italic
 protothreads
 \shape default
  library.
  Each function has an associated thread that can be called.
- For large projects, it is advised you use the protothreads library to run
- functions concurrently.
-\end_layout
-
-\begin_layout Standard
-This library can make it significantly easier to manage multiple processes
- with the thread_function(name, function) call.
- This allows you to do in code what the user can do to exposed functions
- in the terminal.
-\end_layout
-
-\begin_layout Subsection*
-Printing Status
+ This library can make it significantly easier to manage multiple processes
+ with the run_thread(name, function) call.
+ See the 
+\series bold
+threading_ex 
+\series default
+in the documentation for examples.
+ Also see 
+\series bold
+README_pt.txt 
+\series default
+for information on how to use protothreads.
 \end_layout
 
 \end_body

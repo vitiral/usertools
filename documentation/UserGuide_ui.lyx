@@ -61,7 +61,54 @@
 \begin_body
 
 \begin_layout Title
+
+\series bold
 User Interface (ui) for the Arduino
+\end_layout
+
+\begin_layout Author
+Garrett Berg, Cloudform Design, garrett@cloudformdesign.com
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+LICENSE: 
+\series default
+This library is released under the FreeBSD License, if you need a copy go
+ to:
+\begin_inset CommandInset href
+LatexCommand href
+name " http://www.freebsd.org/copyright/freebsd-license.html"
+target " http://www.freebsd.org/copyright/freebsd-license.html"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Copyright: 
+\series default
+Garrett Berg 
+\begin_inset CommandInset href
+LatexCommand href
+name "cloudformdesign.com"
+target "cloudformdesign.com"
+
+\end_inset
+
+, 
+\begin_inset CommandInset href
+LatexCommand href
+name "garrett@cloudformdesign.com"
+target "garrett@cloudformdesign.com"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section*
@@ -230,14 +277,315 @@ Call functions: same as exposing variables.
 Overview
 \end_layout
 
-\begin_layout Subsection*
-The task manager
+\begin_layout Standard
+Please see UserGuide_threading.h for the functions that you can call.
+ See the example 
+\series bold
+threading_ex 
+\series default
+for code examples.
 \end_layout
 
 \begin_layout Standard
-Lets start with the coolest bells and whistles.
+The best way to see the power of the threading module is to see it in action.
+ Do the following:
+\end_layout
+
+\begin_layout Itemize
+Load up 
+\series bold
+threading_ex
+\end_layout
+
+\begin_layout Itemize
+Program it to your arduino
+\end_layout
+
+\begin_layout Itemize
+Set your baud rate = 57600 and set it to send both NR and CR characters
+ on each enter.
+\end_layout
+
+\begin_layout Itemize
+Play with it!
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+type 
+\begin_inset Quotes eld
+\end_inset
+
+record
+\begin_inset Quotes erd
+\end_inset
+
+ to do a recording of the LED output
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+
+\series bold
+kill blink
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\series default
+will kill the blink and 
+\begin_inset Quotes eld
+\end_inset
+
+
+\series bold
+blink 1000
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\series default
+will start it again with a period of 1000ms (1 second)
+\end_layout
+
+\begin_layout Itemize
+Be sure to type 
+\series bold
+
+\begin_inset Quotes eld
+\end_inset
+
+mon
+\begin_inset Quotes erd
+\end_inset
+
+ -- 
+\series default
+This starts the System Monitor and outputs useful information about how
+ long each thread is taking and how much memory you have available.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+
+\series bold
+v led
+\begin_inset Quotes erd
+\end_inset
+
+ 
+\series default
+Will give you the value of the led.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Quotes eld
+\end_inset
+
+?
+\begin_inset Quotes erd
+\end_inset
+
+ will give you all the options
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Check out the code and read the documentation to see how things are working!
+\end_layout
+
+\begin_layout Itemize
+Check out the other documentation:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\series bold
+UserGuide_errorhandling
+\series default
+
+\begin_inset space ~
+\end_inset
+
+is how you can generate error messages and do error handling.
+ It also has logging.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+UserGuide_threading
+\series default
+ is a useful reference on how to create your threads
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+README_pt.txt 
+\series default
+The protothread library is how you create your threads -- it would be helpful
+ to read this.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection*
+Code Overview
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+ui_setup_std(F, V, T) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Same as thread_setup(F, V, T) (see UserGuide_threading), but also sets up
+ the User Interface for serial communication.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+ui_pat_dog() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+The user interface uses the watchdog timer so that if your thread times
+ out (longer than 2 seconds) it will automatically reset AND print which
+ function/thread it failed (very useful).
+ If your function is going to take longer than 2 seconds, you need to call
+ this function periodically.
+ However, this is not recommended as it is bad policy for threading.
+ See examples and README_pt.txt to see how to avoid this.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Note: do NOT call wdt_enable(...) -- it will break the functionality that prints
+ which thread failed.
  
 \end_layout
 
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+call_name(
+\begin_inset Quotes eld
+\end_inset
+
+mon
+\begin_inset Quotes erd
+\end_inset
+
+) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Starts the system monitor from software, good thing in the setup function.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+call_name(
+\begin_inset Quotes eld
+\end_inset
+
+?
+\begin_inset Quotes erd
+\end_inset
+
+) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Software printout of options.
+ Good thing in the setup function.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+See UserGuide_threading 
+\series default
+for how to expose threads, etc.
+\end_layout
+
+\begin_layout Section*
+Serial Port
+\end_layout
+
+\begin_layout Standard
+Threading operates as simply as it possibly can.
+ You can access either functions or variables through it's interface.
+ In summary:
+\end_layout
+
+\begin_layout Itemize
+The following terminal commands are supported:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\series bold
+v
+\series default
+ ::VARNAME
+\begin_inset Quotes erd
+\end_inset
+
+ -- Gives you the value of variable VARNAME in hex that you have exposed
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+? :: 
+\series default
+print all options for threads, variables and function calls.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+mon ::
+\series default
+ starts the system monitor
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+kill [process name] :: 
+\series default
+kills the indicated process name
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+(exposed thread/function) [input] :: 
+\series default
+calls a thread or function that you have exposed.
+ Sends it input
+\end_layout
+
+\end_deeper
 \end_body
 \end_document
