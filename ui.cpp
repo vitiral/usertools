@@ -79,7 +79,7 @@ ISR(WDT_vect) {
 // #####################################################
 // ### Functions
 
-void print_row(String *row, uint8_t *col_widths){
+void __print_row(String *row, uint8_t *col_widths){
   uint8_t si = 0, column = 0, ncolumn = 0;
   while((*row)[si] != 0){
     Logger.write('|');
@@ -87,6 +87,7 @@ void print_row(String *row, uint8_t *col_widths){
     while(column == ncolumn){
       switch((*row)[si]){
       case 0:
+        Logger.println();
         return;
       case '\t':
         ncolumn += 1;
@@ -160,10 +161,10 @@ void ui_process_command(char *c){
   c2 = get_word(c);
   iferr_log_return();
   assert_return(c); assert_return(c2);
-  sdebug(F("Calling Function:"));
+  sdebug(F("Calling Name:"));
   cdebug(c2); cdebug(':');
   edebug(c);
-  th_call_name(c2, c);
+  call_name(c2, c);
 }
 
 void cmd_v(char *input){
@@ -206,8 +207,7 @@ void _print_monitor(uint16_t execution_time){
   
   String myStr;
   
-  print_row(&String(nameray), column_widths);
-  Logger.println();
+  print_row(String(nameray), column_widths);
   for(int i = 0; i < TH__threads.index; i++){
     th = &TH__threads.array[i];
     if(th->pt.lc >= PT_KILL_VALUE)continue;
@@ -216,8 +216,7 @@ void _print_monitor(uint16_t execution_time){
       String(nameray)                                               + String('\t') + 
       String(th->time / 100) + String('.') + String(th->time %100)  + String('\t') +
       String((unsigned int)th->pt.lc);
-    print_row(&myStr, column_widths);
-    Logger.println();
+    print_row(myStr, column_widths);
     ui_pat_dog();
     th->time = 0; // reset time
   }
@@ -260,7 +259,6 @@ uint8_t print_variable(char *name){
   TH_variable *var;
   int8_t n;
   uint8_t i;
-  uint8_t name_len = strlen(name);
   var = TH_get_variable(name);
   assert_raise_return(var, ERR_INPUT, false);
   Logger.print(F("v=x"));
@@ -315,12 +313,12 @@ void UI__setup_std(){
   debug(F("UiStdSetup:"));
   start_thread("*UI", user_interface);  // user interface. REQUIRED
   
-  ui_expose_thread("mon", system_monitor); // system monitor
+  expose_thread("mon", system_monitor); // system monitor
   
-  ui_expose_function("v", cmd_v);
-  ui_expose_function("?", print_options);
-  ui_expose_function("kill", cmd_kill);
-  
+  expose_function("v", cmd_v);
+  expose_function("?", print_options);
+  expose_function("kill", cmd_kill);
+
   ui_watchdog_setup();
 }
 

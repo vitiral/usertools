@@ -28,12 +28,14 @@ long int _get_int(char **c);
 // ### Functions
 uint8_t print_variable(char *name);
 
-void ui_timer1_setup();
 void ui_watchdog();
 void ui_pat_dog();
 void system_monitor(char *input);
 void monswitch(char *input);
+void print_options(char *input);
 void ui_loop();
+#define print_row(S, C) __print_row(&(S), C)
+void __print_row(String *row, uint8_t *col_widths);
 
 
 // #####################################################

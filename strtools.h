@@ -5,7 +5,7 @@
 
 uint16_t fstr_len(const __FlashStringHelper *ifsh);
 
-void *flash_to_str(const __FlashStringHelper *ifsh, char *str);
+void flash_to_str(const __FlashStringHelper *ifsh, char *str);
 
 uint8_t cmp_str_flash(char *str, const __FlashStringHelper *flsh);
 uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHelper *flsh2);

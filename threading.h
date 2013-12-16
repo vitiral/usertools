@@ -81,9 +81,9 @@ typedef struct TH_ThreadArray{
 //#define thread_function(name, func)  do{static thread name; schedule_thread(name, func)}while(0) 
 
 // Expose Macros
-#define ui_expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
-#define ui_expose_function(name, FUN) UI__expose_function(F(name), FUN)
-#define ui_expose_thread(name, FUN)   UI__expose_thread(F(name), FUN)
+#define expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
+#define expose_function(name, FUN) UI__expose_function(F(name), FUN)
+#define expose_thread(name, FUN)   UI__expose_thread(F(name), FUN)
 
 #define start_thread(name, func) schedule_thread(F(name), func)
 
@@ -111,7 +111,9 @@ thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
 // ### User Functions
 
 thread *schedule_thread(const __FlashStringHelper *name, TH_thfunptr fun);
-uint8_t th_call_name(char *name, char *input);
+uint8_t call_thread(char *name, char *input);
+uint8_t call_function(char *name, char *input);
+uint8_t call_name(char *name, char *input);
 uint8_t restart_thread(thread *th);
 
 

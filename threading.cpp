@@ -151,7 +151,6 @@ uint8_t schedule_thread(thread *fun, char *input) {
   flash_to_str(fun->el.name, th_calling);
   
   sdebug(F("Calling:"));
-
   edebug(fun->el.name);
   assert_raise(fun->pt.lc == PT_INNACTIVE, ERR_THREAD, 0);
   PT_INIT(&(fun->pt));
@@ -201,10 +200,13 @@ uint8_t call_thread(char *name, char *input){
   for(i = 0; i < TH__threads.index; i++){
     th = &TH__threads.array[i];
     if(cmp_str_elptr(name, name_len, th)){
+      sdebug("Match"); cdebug(name);
+      edebug(th->el.name);
       schedule_thread(th, input);
       return true;
     }
   }
+  debug("rtn false");
   return false; 
 }
 
@@ -213,7 +215,7 @@ uint8_t call_function(char *name, char *input){
   uint8_t out = 0;
   TH_function *fun;
   th_calling = name;
-  sdebug(F("cT name:")); cdebug(name); cdebug(F(" index=")); 
+  sdebug(F("cF name:")); cdebug(name); cdebug(F(" index=")); 
   edebug(TH__functions.index);
   for(uint8_t i = 0; i < TH__functions.index; i++){
     fun = &TH__functions.array[i];
@@ -228,8 +230,10 @@ error:
   return out;
 }
 
-uint8_t th_call_name(char *name, char *input){
-  if(not call_thread(name, input)) return call_function(name, input);
+uint8_t call_name(char *name, char *input){
+  if(call_thread(name, input) == false) {
+    return call_function(name, input);
+  }
 }
 
 TH_variable *TH_get_variable(char *name){
@@ -241,7 +245,10 @@ TH_variable *TH_get_variable(char *name){
   edebug(name);
   for(i = 0; i < TH__variables.index; i++){
     var = &TH__variables.array[i];
+    debug(var->el.name);
     if(cmp_str_elptr(name, name_len, var)){
+      sdebug("Match");
+      edebug(var->el.name);
       return var;
     }
   }
@@ -314,17 +321,17 @@ uint8_t thread_loop(){
       if(time > 65535) th->time = 65535;
       else th->time = time;
 
-      if(fout >= PT_EXITED or init_lc == PT_KILL_VALUE){
+      if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){
         if(fout < PT_EXITED){
           seterr(ERR_THREAD);
           log_err(F("NoDie"));
         }  
         th_set_innactive(th);
         log_thread_exit(th);
-      }
 error:
       clrerr();
       PT_YIELD(pt);
+      }
     }
   }
   PT_END(pt);

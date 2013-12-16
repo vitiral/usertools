@@ -108,7 +108,7 @@ typedef struct pt (pthread);
  *
  * \hideinitializer
  */
-#define PT_THREAD(name_args) char name_args
+#define PT_THREAD uint8_t
 
 /**
  * \name Declaration and definition
