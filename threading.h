@@ -7,7 +7,8 @@
 // #####################################################
 // ### Struct Declaration
 
-typedef uint8_t (*TH_funptr)(struct pt *pt, char *input);
+typedef uint8_t (*TH_thfunptr)(struct pt *pt, char *input);
+typedef void (*TH_funptr)(char *input);
 
 // 3 bytes
 typedef struct TH_element {
@@ -22,16 +23,30 @@ typedef struct TH_variable {
   uint8_t     size;
 };
 
+// 5 bytes
+typedef struct TH_function{
+  TH_element     el;
+  TH_funptr      fptr;
+};
+
 // 12 bytes 
 typedef struct thread{
   TH_element     el;
-  TH_funptr      fptr;
+  TH_thfunptr    fptr;
   struct pt      pt;
   uint16_t time;  // stores execution time in 10us increments
 };
 
+
+
 typedef struct TH_Variables{
   TH_variable *array;
+  uint8_t len;
+  uint16_t index;
+};
+
+typedef struct TH_Functions{
+  TH_function *array;
   uint8_t len;
   uint16_t index;
 };
@@ -41,40 +56,34 @@ typedef struct TH_ThreadArray{
   uint8_t len;
   uint16_t index;
 };
-  
-class TH_thread_instance
-{
-public:
-  thread             *th;
-  TH_thread_instance(thread *th_in){
-    th = th_in;
-  }
-  TH_thread_instance(){
-    th = NULL;
-  }
-};
 
 // #####################################################
 // ### Intended Exported Functions
 
 // Setup Macros
 
-#define thread_setup(V, T) do{static TH_variable UI__variable_array[V]; \
+#define thread_setup(V, F, T) do{                                       \
+      static TH_variable UI__variable_array[V];                         \
       static uint8_t UI__variable_len = V;                              \
       UI__set_variable_array(UI__variable_array, UI__variable_len);     \
                                                                         \
-      static thread UI__function_array[T];                              \
-      static uint8_t UI__function_len = T;                              \
-      UI__set_function_array(UI__function_array, UI__function_len);     \
+      static TH_variable UI__function_array[F];                         \
+      static uint8_t UI__function_len = F;                              \
+      UI__set_variable_array(UI__function_array, UI__function_len);     \
+                                                                        \
+      static thread UI__thread_array[T];                                \
+      static uint8_t UI__thread_len = T;                                \
+      UI__set_thread_array(UI__thread_array, UI__thread_len);           \
     }while(0)
                                        
-//#define thread_function(name, func)  do{static thread name; schedule_function(name, func)}while(0) 
+//#define thread_function(name, func)  do{static thread name; schedule_thread(name, func)}while(0) 
 
 // Expose Macros
 #define ui_expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
-#define ui_expose_function(name, FUN)         UI__expose_function(F(name), FUN)
+#define ui_expose_function(name, FUN) UI__expose_function(F(name), FUN)
+#define ui_expose_thread(name, FUN)   UI__expose_thread(F(name), FUN)
 
-#define start_thread(name, func) schedule_function(F(name), func)
+#define start_thread(name, func) schedule_thread(F(name), func)
 
 uint8_t thread_loop();
 
@@ -87,16 +96,19 @@ void kill_thread(thread *th);
 void UI__set_variable_array(TH_variable *vray, uint16_t len);
 void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
 
-void UI__set_function_array(thread *fray, uint16_t len);
-thread *UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
+void UI__set_function_array(TH_function *fray, uint16_t len);
+void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
+
+void UI__set_thread_array(thread *fray, uint16_t len);
+thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
 
 
 
 // #####################################################
 // ### User Functions
 
-thread *schedule_function(const __FlashStringHelper *name, TH_funptr fun);
-uint8_t call_thread(char *name, char *input);
+thread *schedule_thread(const __FlashStringHelper *name, TH_thfunptr fun);
+uint8_t ui_call_name(char *name, char *input);
 uint8_t ui_loop();
 uint8_t restart_thread(thread *th);
 
@@ -106,7 +118,9 @@ uint8_t restart_thread(thread *th);
 
 void TH__set_innactive(thread *f);
 extern TH_Variables TH__variables;
+extern TH_Functions TH__functions;
 extern TH_ThreadArray TH__threads;
+
 TH_variable *TH_get_variable(char *name);
 thread *TH_get_thread(char *name);
 

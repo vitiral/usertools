@@ -53,9 +53,8 @@ extern const struct pt PT_std_pt;
 
 #include "lc.h"
 
-#define PT_KILL       LC_KILL_VALUE
+#define PT_KILL_VALUE LC_KILL_VALUE
 #define PT_INNACTIVE  LC_KILL_VALUE + 1
-
 
 #define PT_std_pt {0}
 // 5 bytes
@@ -143,9 +142,11 @@ typedef struct pt (pthread);
  * \hideinitializer
  */
 #define PT_BEGIN(pt) { char PT_YIELD_FLAG = 1; LC_RESUME((pt)->lc)
-#define PT_LOCAL_BEGIN(PT)                                                        \
-  static struct pt pt_local_pointed = PT_std_pt;                \
-  static struct pt *(PT) = &pt_local_pointed;   \
+
+
+#define PT_LOCAL_BEGIN(PT)                          \
+  static struct pt pt_local_pointed = PT_std_pt;    \
+  static struct pt *(PT) = &pt_local_pointed;       \
   PT_BEGIN(PT)
 
 /**
@@ -378,7 +379,7 @@ typedef struct pt (pthread);
  * \hideinitializer 
  */
 
-#define PT_KILL_ST(s) LC_KILL
+#define PT_KILL(s) LC_KILL(s)
 
 #define PT_KILLED(s) do{PT_INIT(s); return PT_KILLED;} while(0) 
 

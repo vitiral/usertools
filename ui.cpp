@@ -90,27 +90,27 @@ void ui_process_command(char *c){
   sdebug(F("Calling Function:"));
   cdebug(c2); cdebug(':');
   edebug(c);
-  call_thread(c2, c);
+  ui_call_name(c2, c);
 }
 
-uint8_t cmd_v(pthread *pt, char *input){
+void cmd_v(char *input){
   char *word = get_word(input);
-  iferr_log_return(PT_ENDED);
+  iferr_log_return();
   print_variable(word);
-  return PT_ENDED;
+
 }
 
-uint8_t cmd_kill(pthread *pt, char *input){
+void cmd_kill(char *input){
   char *word = get_word(input);
-  iferr_log_return(PT_ENDED);
+  iferr_log_return();
   sdebug(F("killing:")); edebug(word);
   thread *th = TH_get_thread(word);
   debug(th->el.name);
-  assert_raise_return(th, ERR_INPUT, PT_ENDED);
+  assert_raise_return(th, ERR_INPUT);
   kill_thread(th);
   Serial.print(F("Killed:"));
   Serial.println(word);
-  return PT_ENDED;
+
 }
 
 void _print_monitor(uint32_t execution_time){
@@ -122,9 +122,9 @@ void _print_monitor(uint32_t execution_time){
   Serial.println(F("Name\t\tExTime\t\tLine"));
   uint8_t i = 0;
   thread *th;
-  while(i < TH__threads.len){
+  while(i < TH__threads.index){
     th = &TH__threads.array[i];
-    if(th->pt.lc >= PT_KILL) continue;
+    if(th->pt.lc >= PT_KILL_VALUE) continue;
     Serial.print(th->el.name);
     Serial.print(UI_TABLE_SEP);
     Serial.print(th->time / 100);
@@ -140,10 +140,10 @@ void _print_monitor(uint32_t execution_time){
   }
 }
 
-uint8_t monswitch(pthread *pt, char *input){
+void monswitch(char *input){
   char *word = get_word(input);
   assert_raise(word, ERR_INPUT);
-  iferr_log_return(PT_ENDED);
+  iferr_log_return();
   
   if(cmp_str_flash(word, F("on"))) {
     debug(F("=on"));
@@ -154,10 +154,8 @@ uint8_t monswitch(pthread *pt, char *input){
     print_periodically = false;
   }
   else goto error;
-  return PT_ENDED;
 error:
   debug(F("VI:on,off"));
-  return PT_ENDED;
 }
 
 uint8_t system_monitor(pthread *pt, char *input){
@@ -168,6 +166,26 @@ uint8_t system_monitor(pthread *pt, char *input){
     if(print_periodically) _print_monitor((uint32_t)millis() - time);
   }
   PT_END(pt);
+}
+
+void print_options(char *input){
+  uint8_t i = 0;
+  Serial.println(F("Threads"));
+  for(i = 0; i < TH__threads.index; i++){
+    Serial.print(i);
+    Serial.write('\t');
+    Serial.println(TH__threads.array[i].el.name);
+  }
+  
+  Serial.println(F("\nVars"));
+  for(i = 0; i < TH__variables.index; i++){
+    Serial.println(TH__variables.array[i].el.name);
+  }
+  
+  Serial.println(F("\nFuncs"));
+  for(i = 0; i < TH__functions.index; i++){
+    Serial.println(TH__functions.array[i].el.name);
+  }
 }
 
 uint8_t print_variable(char *name){
@@ -188,7 +206,6 @@ uint8_t print_variable(char *name){
 }
 
 uint8_t user_interface(pthread *pt, char *input){
-  // Note: this is actually a protothread
   uint8_t v;
   static uint8_t i = 0;
   char c;
@@ -227,7 +244,7 @@ error:
 }
   
 
-void UI__setup_std(uint8_t V, uint8_t F){
+void UI__setup_std(){
   debug(F("UiStdSetup:"));
   start_thread("*M", system_monitor);
   start_thread("*UI", user_interface);
