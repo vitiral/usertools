@@ -16,6 +16,7 @@
 #include <Arduino.h>
 #include "pt.h"
 #include "threading.h"
+#include "strtools.h"
 
 // Helpful for String Parsing
 
