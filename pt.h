@@ -60,27 +60,41 @@ extern const struct pt PT_std_pt;
 
 
 #define PT_DATA_BYTES 3
-struct PT_data {
-  struct pt_data *next;
+
+struct PT_data;
+
+struct PT_data_base {
+  struct PT_data *next;
   uint8_t type;
 };
 
-struct PT_data_int{
-  struct PT_data;
-  int data;
+struct PT_data {
+  struct PT_data_base b;
 };
 
-typedef ptindex uint8_t;
+struct PT_data_int{
+  struct PT_data_base b;
+  int16_t data;
+};
+
+struct PT_data_lint{
+  struct PT_data_base b;
+  int32_t data;
+};
+
+typedef uint8_t ptindex;
 
 class pt{
 public:
   pt();
   ~pt();
   lc_t lc;
-  pt_data *data;
+  PT_data *data;
   
-  pt_data *get_end();
-  void put_int_input(long int input); //want one for each int value
+  PT_data *get_end();
+  PT_data *get_input(ptindex index);
+  
+  void put_int_input(int input); //want one for each int value
   
   long int get_int_input(ptindex index);
   
