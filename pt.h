@@ -57,10 +57,33 @@ extern const struct pt PT_std_pt;
 #define PT_KILL_VALUE LC_KILL_VALUE
 #define PT_INNACTIVE  LC_KILL_VALUE + 1
 
-#define PT_std_pt {0}
 
-struct pt{
+
+#define PT_DATA_BYTES 3
+struct PT_data {
+  struct pt_data *next;
+  uint8_t type;
+};
+
+struct PT_data_int{
+  struct PT_data;
+  int data;
+};
+
+typedef ptindex uint8_t;
+
+class pt{
+public:
+  pt();
+  ~pt();
   lc_t lc;
+  pt_data *data;
+  
+  pt_data *get_end();
+  void put_int_input(long int input); //want one for each int value
+  
+  long int get_int_input(ptindex index);
+  
 };
 
 typedef struct pt (pthread);
