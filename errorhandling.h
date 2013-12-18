@@ -12,6 +12,7 @@
 #include "usertools.h"
 
 #include <string.h>
+#include <errno.h>
 #include "logging.h"
 
 #define ERR_NOERR         0 // NoErr -- no error has occured
@@ -32,7 +33,7 @@
 #define ERR_PTR           54 // PtrErr
 #define ERR_INDEX         55 // IndexErr
 #define ERR_SIZE          56 // SizeErr
-#define ERR_THREAD        57 // ThreadErr
+#define ERR_THREAD        57 // Threaerrno
 #define ERR_MEMORY        58 // MemErr
 
 #define ERR_CLEARED       252 // "Cleared Error" used by clrerr_log and is then cleared
@@ -47,8 +48,7 @@
 #define EH_config_soft(soft)     Logger.config_soft(&soft)
 
 void EH_test();
-extern uint8_t derr;
-extern uint8_t errno;
+extern uint8_t errprint;
 extern char *EH_EMPTY_STR;
 
 void clrerr();
@@ -70,12 +70,12 @@ void seterr(uint8_t error);
 #define assert_raisem_return(A, E, M, ...)      EH_DW(if(!(A)){EH_ST_raisem(E, M); return __VA_ARGS__;})
 #define memcheck_return(A, ...)                 assert_raise_return(A, ERR_MEMORY, __VA_ARGS__)
 
-//#define iferr_return        if(derr) return 
-//#define iferr_log_return    if(derr) {log_err();}  iferr_return
-#define iferr_return(...)        EH_DW(if(derr) return __VA_ARGS__;)
-#define iferr_log_return(...)    EH_DW(if(derr) {log_err(); EH_FLUSH(); return __VA_ARGS__;})
-#define iferr_catch()            EH_DW(if(derr) goto error;)
-#define iferr_log_catch()        EH_DW(if(derr) {log_err(); EH_FLUSH(); goto error;})
+//#define iferr_return        if(errno) return 
+//#define iferr_log_return    if(errno) {log_err();}  iferr_return
+#define iferr_return(...)        EH_DW(if(errno) return __VA_ARGS__;)
+#define iferr_log_return(...)    EH_DW(if(errno) {log_err(); EH_FLUSH(); return __VA_ARGS__;})
+#define iferr_catch()            EH_DW(if(errno) goto error;)
+#define iferr_log_catch()        EH_DW(if(errno) {log_err(); EH_FLUSH(); goto error;})
 
 // Only log at the proper level.
 #if LOGLEVEL >= LOG_DEBUG
@@ -115,7 +115,7 @@ void EH_start_info(char *file, unsigned int line);
   #define log_err(...)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__); EH_FLUSH(); ))
   #define EH_ST_raisem(E, ...) seterr(E); EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Logger.println(__VA_ARGS__); EH_FLUSH(); ))
   #define clrerr_log()              EH_DW(LOG_IFLL(LOG_ERROR, seterr(ERR_CLEARED); log_err(); EH_FLUSH(); clrerr();))
-  void EH_printerrno();
+  void EH_printerrp();
   void EH_printinfo(char *file, unsigned int line);
   
 #else
@@ -136,26 +136,8 @@ void EH_start_info(char *file, unsigned int line);
   #define set_debug_flush(V)
 #endif
 
-// Using pt (protothreads) library with debug.
-// You can use the below functions OR you can define your own 
-// error handling.
-// If you do error handling, make PT_ERROR_OCCURED your last line.
-//  (returns PT_ERROR)
 
-#ifdef DEBUG000
-#define PT_RAISE(pt, E) derr = (E); if(derr != pt->error){ errno=ERR_ASSERT; log_err(); Logger.println();} return PT_ERROR
-
-
-#define PT_ERROR_OCCURED return PT_ERROR
-
-// sets the pt location so that when it fails, it starts there again
-#define PT_ERROR_TRY(pt) PTX_time = 0; LC_SET(pt)
-
-// if PT_ASSERT fails, returns. On next call continues at place last set (use PT_ERROR_TRY)
-
-#define PT_NOERR(pt) if(derr) return PT_ERROR
-#endif
-#endif
+#endif //file
 
 
 

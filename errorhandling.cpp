@@ -12,11 +12,11 @@
 #include "logging.h"
 #include "MemoryFree.h"
 
+
 #define EH_GEN_END_MSG F(")|")
 #define EH_GEN_ST_MSG F(":: ")
 
-uint8_t derr = 0;
-uint8_t errno = 0;
+uint8_t errprint = 0;
 uint8_t loglevel = 50;
 uint8_t EH_flush = true;
 char *EH_EMPTY_STR = "";
@@ -40,19 +40,19 @@ void printmem(){
   
 void EH_printinfo(char *file, unsigned int line)
 {
-  Logger.print(derr); 
+  Logger.print(errno); 
   Logger.write(' '); 
   Logger.print(file); 
   Logger.write(':'); 
   Logger.print(line);
 }
 
-void EH_printerrno(){
+void EH_printerrp(){
   Logger.write('(');
-  Logger.print(errno);
+  Logger.print(errprint);
   Logger.write(':');
   
-  switch(errno){
+  switch(errprint){
   case ERR_NOERR:
     Logger.print(F("No")); break;
   case ERR_BASE:
@@ -128,20 +128,20 @@ void EH_log_err(char *file, unsigned int line){
   Logger.print(F("[ERR](")); 
   EH_printinfo(file, line);
   Logger.print(EH_GEN_END_MSG); 
-  EH_printerrno();
-  if(errno) errno = ERR_NONEW;
+  EH_printerrp();
+  if(errprint) errprint = ERR_NONEW;
 
 }
 
 void clrerr(){
-  derr = 0; 
   errno = 0; 
+  errprint = 0; 
 
 }
 
 void seterr(uint8_t error){
-  derr = error;
   errno = error;
+  errprint = error;
 
 }
 

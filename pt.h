@@ -66,6 +66,7 @@ extern const struct pt PT_std_pt;
 
 struct PT_data;
 
+
 struct PT_data_base {
   struct PT_data *next;
   uint8_t type;
@@ -89,6 +90,7 @@ typedef uint8_t ptindex;
 
 class pt{
 public:
+
   pt();
   ~pt();
   lc_t lc;
@@ -96,6 +98,8 @@ public:
   
   PT_data *get_end();
   PT_data *get_input(ptindex index);
+  
+  PT_data *put_data(void *ptd);
   
   void put_int_input(int input); //want one for each int value
   
