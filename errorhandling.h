@@ -59,8 +59,8 @@ void seterr(uint8_t error);
 #define raise(E, ...)                           EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
 #define assert(A, ...)                          EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})
 #define assert_raise(A, E, ...)                 EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
-#define getmem(P, size)                         P = malloc(size); memcheck(P)
 #define memcheck(A)                             assert_raise(A, ERR_MEMORY)
+#define memclr(M)                               if(M) free(M)
 
 // These functions make the error label unnecessary
 #define raise_return(E, ...)                    EH_DW(seterr(E); log_err(); EH_FLUSH(); return __VA_ARGS__;)
@@ -70,8 +70,6 @@ void seterr(uint8_t error);
 #define assert_raisem_return(A, E, M, ...)      EH_DW(if(!(A)){EH_ST_raisem(E, M); return __VA_ARGS__;})
 #define memcheck_return(A, ...)                 assert_raise_return(A, ERR_MEMORY, __VA_ARGS__)
 
-//#define iferr_return        if(errno) return 
-//#define iferr_log_return    if(errno) {log_err();}  iferr_return
 #define iferr_return(...)        EH_DW(if(errno) return __VA_ARGS__;)
 #define iferr_log_return(...)    EH_DW(if(errno) {log_err(); EH_FLUSH(); return __VA_ARGS__;})
 #define iferr_catch()            EH_DW(if(errno) goto error;)

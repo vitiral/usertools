@@ -67,6 +67,7 @@ extern const struct pt PT_std_pt;
 struct PT_data;
 
 
+// 3 bytes
 struct PT_data_base {
   struct PT_data *next;
   uint8_t type;
@@ -76,34 +77,63 @@ struct PT_data {
   struct PT_data_base b;
 };
 
-struct PT_data_int{
+struct PT_data_int16{
   struct PT_data_base b;
   int16_t data;
 };
 
-struct PT_data_lint{
+struct PT_data_int8{
+  struct PT_data_base b;
+  int8_t data;
+};
+
+struct PT_data_int32{
   struct PT_data_base b;
   int32_t data;
+};
+
+struct PT_data_str{
+  struct PT_data_base b;
+  char *data;
 };
 
 typedef uint8_t ptindex;
 
 class pt{
-public:
 
-  pt();
-  ~pt();
-  lc_t lc;
+private:
   PT_data *data;
-  
+
   PT_data *get_end();
   PT_data *get_input(ptindex index);
   
-  PT_data *put_data(void *ptd);
+  void put_data(void *ptd);
+  void destroy_data(PT_data *pd, uint16_t size, PT_data *prev);
   
-  void put_int_input(int input); //want one for each int value
+  void put_data_input(void *ptd);
+  void put_data_temp(void *ptd);
+  PT_data *get_temp();
+  int32_t get_int(PT_data_int32 *pint);
   
-  long int get_int_input(ptindex index);
+  
+public:
+  lc_t lc;
+  // Constructors
+  pt();
+  ~pt();
+  
+  // Temp
+  void put_temp(uint16_t input);
+  uint16_t get_uint16_temp();
+  void clear_temp();
+  
+  void put_input(uint8_t input)
+  void put_input(int16_t input);
+  int32_t get_int_input(ptindex index);
+  
+  void put_str_input(char *input, uint16_t len);
+  void put_str_input(char *input);
+  char *get_str_input(ptindex index);
   
 };
 

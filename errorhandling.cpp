@@ -130,7 +130,6 @@ void EH_log_err(char *file, unsigned int line){
   Logger.print(EH_GEN_END_MSG); 
   EH_printerrp();
   if(errprint) errprint = ERR_NONEW;
-
 }
 
 void clrerr(){
