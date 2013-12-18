@@ -52,6 +52,9 @@
 
 extern const struct pt PT_std_pt;
 
+#include "usertools.h"
+#include "errorhandling.h"
+
 #include "lc.h"
 
 #define PT_KILL_VALUE LC_KILL_VALUE

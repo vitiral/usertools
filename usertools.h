@@ -16,10 +16,13 @@ Memproblem:
 #ifndef usertools_h
 #define usertools_h
 
+#include <Arduino.h>
+#include <inttypes.h>
+
 //#define DEBUG_FLUSH
-//#define DEBUG
+#define DEBUG
 //#define LOGLEVEL 40
-#define LOGLEVEL 30
+//#define LOGLEVEL 30
 
 /*
 #include "threading.h"

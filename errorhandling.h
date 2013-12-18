@@ -9,6 +9,11 @@
 #ifndef __errorhandling_h__
 #define __errorhandling_h__
 
+#include "usertools.h"
+
+#include <string.h>
+#include "logging.h"
+
 #define ERR_NOERR         0 // NoErr -- no error has occured
 #define ERR_BASE          1 // BaseErr -- general error
 #define ERR_TIMEOUT       2 // TimeoutErr
@@ -35,11 +40,6 @@
 #define ERR_EMPTY         254 // nothing printed, still an error
 #define ERR_UNKNOWN       255 // unknown error
 
-#include <SoftwareSerial.h>
-#include <string.h>
-#include <inttypes.h>
-#include "logging.h"
-
 #define EH_STD_SERIAL 0
 #define EH_SOFT_SERIAL 1
 
@@ -59,6 +59,7 @@ void seterr(uint8_t error);
 #define raise(E, ...)                           EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
 #define assert(A, ...)                          EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})
 #define assert_raise(A, E, ...)                 EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
+#define getmem(P, size)                         P = malloc(size); memcheck(P)
 #define memcheck(A)                             assert_raise(A, ERR_MEMORY)
 
 // These functions make the error label unnecessary

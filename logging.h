@@ -9,10 +9,10 @@
  
 #ifndef logging_h
 #define logging_h
+#include "usertools.h"
 #include <SoftwareSerial.h>
-#include <string.h>
-#include <inttypes.h>
 #include <Stream.h>
+#include <string.h>
 
 #define LOG_DEBUG 50
 #define LOG_INFO 40
