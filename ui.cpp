@@ -207,7 +207,7 @@ uint8_t system_monitor(pthread *pt, char *input){
   static uint16_t time;
   PT_BEGIN(pt);
   while(true){
-    PT_WAIT_MS(pt, time, 5000);
+    PT_WAIT_MS(pt, 5000);
     _print_monitor((uint16_t)millis() - time);
   }
   PT_END(pt);

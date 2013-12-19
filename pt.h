@@ -175,7 +175,7 @@ struct PT_data_pt{
  *
  * \hideinitializer
  */
-#define PT_INIT(pt)   LC_INIT((pt)->lc)
+#define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_data();} while(0)
 
 /** @} */
 
@@ -230,9 +230,9 @@ struct PT_data_pt{
  */
 #define PT_BEGIN(pt) { char PT_YIELD_FLAG = 1; LC_RESUME((pt)->lc)
 
-#define PT_LOCAL_BEGIN(PT)                          \
-  static pthread pt_local_pointed = pthread();      \
-  static pthread *(PT) = &pt_local_pointed;         \
+#define PT_LOCAL_BEGIN(PT)                                  \
+  static struct pthread pt_local_pointed;                   \
+  static struct pthread *(PT) = &pt_local_pointed;          \
   PT_BEGIN(PT)
 
 /**
@@ -285,11 +285,21 @@ struct PT_data_pt{
  *
  * \hideinitializer
  */
+ 
+ #define PT_WAIT_MS(pt, ms)                                           \
+  do {                                                                \
+  (pt)->put_temp((uint16_t)millis());                                   \
+  PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - (uint16_t)(pt)->get_int_temp() > ms);  \
+  (pt)->clear_temp();                                                   \
+  } while(0)
+    
+/*
 #define PT_WAIT_MS(pt, time, ms)                                  \
   do {                                                      \
   time = millis();                                      \
   PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - time > ms);              \
   } while(0)
+*/
 
 /**
  * Block and wait while condition is true.
@@ -341,11 +351,20 @@ struct PT_data_pt{
  *
  * \hideinitializer
  */
+#define PT_SPAWN(pt, thread, ...)		                              \
+  do {						                                                \
+    (pt)->put_temp_pt();                                            \
+    PT_INIT(((pt)->get_pt_temp()));				                          \
+    PT_WAIT_THREAD(pt, thread((pt)->get_pt_temp(), __VA_ARGS__));		\
+    (pt)->clear_temp();                                             \
+  } while(0)
+ /*
 #define PT_SPAWN(pt, child, thread)		\
   do {						\
     PT_INIT((child));				\
     PT_WAIT_THREAD((pt), (thread));		\
   } while(0)
+*/
 
 /** @} */
 

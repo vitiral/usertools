@@ -2,6 +2,8 @@
 
 #include "pt.h"
 
+
+
 // commented = not supported, but may in future
 enum vtype{
   //vt_int8,
@@ -32,8 +34,6 @@ enum vtype{
 
 #define VTYPE_MASK 0b111111
 #define VTYPE(D) (VTYPE_MASK bitand (D))
-
-
 
 // *****************************************************
 // **** Private Class Helpers
@@ -225,7 +225,7 @@ void pthread::put_temp(uint16_t temp){
   PT_data *put;
   put = (PT_data *)malloc(sizeof(PT_data_int16));
   memcheck(put);
-  ((PT_data_int16 *)put)->data = *((int16_t *)temp);
+  ((PT_data_int16 *)put)->data = (int16_t)temp;
   init_PT_data(put);
   put->b.type = TYPE_TEMP bitor vt_uint16;
   if(data){
@@ -235,6 +235,9 @@ void pthread::put_temp(uint16_t temp){
   return;
 error:
   return;
+  /*
+  put_data(&temp, TYPE_TEMP bitor vt_uint16, 0);
+  */
 }
 
 void pthread::put_temp_pt(){
@@ -256,14 +259,24 @@ error:
 
 // used for getting time
 uint16_t pthread::get_int_temp(){
-  uint16_t out;
   PT_data_int32 *temp = (PT_data_int32 *)get_temp();
   iferr_log_catch();
-  assert_raise(VTYPE(temp->b.type) == vt_uint16, ERR_INDEX);
-  out = (uint16_t)(temp->data);
-  return out;
+  assert_raise(VTYPE(temp->b.type) == vt_uint16, ERR_TYPE);
+  return (uint16_t)(temp->data);
+  
+  //PT_data_int32 *temp = (PT_data_int32 *)get_temp();
+  //return get_int(temp);
 error:
   return 0;
+}
+
+pthread *pthread::get_pt_temp(){
+  PT_data_pt *temp = (PT_data_pt *)get_temp();
+  iferr_log_catch();
+  assert_raise(VTYPE(temp->b.type) == vt_pt, ERR_TYPE);
+  return &(temp->data);
+error:
+  return NULL;
 }
 
 void pthread::clear_temp(){

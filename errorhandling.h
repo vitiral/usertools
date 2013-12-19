@@ -6,6 +6,12 @@
  * Library to help with debugging. See user guide in documentation.
  */
 
+
+/*
+ * Notes:
+ * __FILE-__ -> F(__FILE__) ==> 12814 -> 14550 using Flash!!!
+ *      The compiler is doing some special stuff for __FILE__
+ */
 #ifndef __errorhandling_h__
 #define __errorhandling_h__
 
