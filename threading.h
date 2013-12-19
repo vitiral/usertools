@@ -16,7 +16,7 @@
 // #####################################################
 // ### Struct Declaration
 
-typedef uint8_t (*TH_thfunptr)(struct pt *pt, char *input);
+typedef uint8_t (*TH_thfunptr)(pthread *pt, char *input);
 typedef void (*TH_funptr)(char *input);
 
 // 3 bytes
@@ -42,7 +42,7 @@ typedef struct TH_function{
 typedef struct thread{
   TH_element     el;
   TH_thfunptr    fptr;
-  struct pt      pt;
+  pthread      pt;
   uint16_t time;  // stores execution time in 10us increments
 };
 

@@ -50,8 +50,6 @@
 #ifndef __PT_H__
 #define __PT_H__
 
-extern const struct pt PT_std_pt;
-
 #include "usertools.h"
 #include "errorhandling.h"
 
@@ -77,14 +75,19 @@ struct PT_data {
   struct PT_data_base b;
 };
 
-struct PT_data_int16{
-  struct PT_data_base b;
-  int16_t data;
-};
-
 struct PT_data_int8{
   struct PT_data_base b;
   int8_t data;
+};
+
+struct PT_data_uint8{
+  struct PT_data_base b;
+  uint8_t data;
+};
+
+struct PT_data_int16{
+  struct PT_data_base b;
+  int16_t data;
 };
 
 struct PT_data_int32{
@@ -99,8 +102,11 @@ struct PT_data_str{
 
 typedef uint8_t ptindex;
 
-class pt{
 
+class psthread;
+
+class pthread
+{
 private:
   PT_data *data;
 
@@ -108,26 +114,28 @@ private:
   PT_data *get_input(ptindex index);
   
   void put_data(void *ptd);
-  void destroy_data(PT_data *pd, uint16_t size, PT_data *prev);
+  void destroy_data(PT_data *pd, PT_data *prev);
   
   void put_data_input(void *ptd);
   void put_data_temp(void *ptd);
   PT_data *get_temp();
-  int32_t get_int(PT_data_int32 *pint);
   
+  void put_int(uint32_t in, uint8_t type);
+  int32_t get_int(PT_data_int32 *pint);
   
 public:
   lc_t lc;
   // Constructors
-  pt();
-  ~pt();
+  pthread();
+  pthread(psthread *pst);
+  ~pthread();
   
   // Temp
   void put_temp(uint16_t input);
   uint16_t get_uint16_temp();
   void clear_temp();
   
-  void put_input(uint8_t input)
+  void put_input(uint8_t input);
   void put_input(int16_t input);
   int32_t get_int_input(ptindex index);
   
@@ -137,7 +145,15 @@ public:
   
 };
 
-typedef struct pt (pthread);
+extern const pthread PT_std_pt;
+
+class psthread
+{
+public:
+  psthread();
+  psthread(pthread *pt);
+  ~psthread();
+};
 
 #define PT_WAITING 0
 #define PT_YIELDED 1
@@ -220,8 +236,8 @@ typedef struct pt (pthread);
 
 
 #define PT_LOCAL_BEGIN(PT)                          \
-  static struct pt pt_local_pointed = PT_std_pt;    \
-  static struct pt *(PT) = &pt_local_pointed;       \
+  static pthread pt_local_pointed = PT_std_pt;    \
+  static pthread *(PT) = &pt_local_pointed;       \
   PT_BEGIN(PT)
 
 /**

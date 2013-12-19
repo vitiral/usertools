@@ -82,9 +82,11 @@ void ui_pat_dog(){
   ui_loop_time = millis(); // pet the custom dog.
 }
 
+/*
 ISR(WDT_vect) {
    ui_watchdog();
 }
+ */
 
 // #####################################################
 // ### Functions
