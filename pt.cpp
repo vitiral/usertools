@@ -131,6 +131,12 @@ void pthread::put_data(void *putdata, uint8_t type, uint16_t len){
   if(data == NULL){
     data = (PT_data *)put;
   }
+  else if(PTYPE(type) == TYPE_TEMP){
+    // temp always goes in front, can only have one temp data
+    assert_raise(PTYPE(data->b.type) != TYPE_TEMP, ERR_INDEX);
+    put->b.next = data;
+    data = (PT_data *)put;
+  }
   else{
     get_end()->b.next = (PT_data *)put;
   }
@@ -151,6 +157,8 @@ void pthread::destroy_data(PT_data *pd, PT_data *prev){
     prev->b.next = pd->b.next;
   }
   
+  /* // I guess malloc keeps track of how much it has to free somehow?
+   * // It seems to free void pointers just fine!
   // free memory
   switch(VTYPE(pd->b.type)){
     // ** Integers
@@ -174,20 +182,18 @@ void pthread::destroy_data(PT_data *pd, PT_data *prev){
     default:
       assert(0, pd->b.type);
   }
+   * */
+   switch(VTYPE(pd->b.type)){
+     case(vt_str):
+      free(((PT_data_str *)pd)->data);
+      free(pd);
+      return;
+   }
+   free(pd);
+   return;
 error:
   return;
 }
-
-PT_data *pthread::get_temp_object(){
-  PT_data *td;
-  assert_raise(data, ERR_THREAD);
-  td = data;
-  assert_raise(PTYPE(data->b.type) == TYPE_TEMP, ERR_THREAD);
-  return td;
-error:
-  return NULL;
-}
-
 int32_t pthread::get_int(PT_data_int32 *pint){
   switch(VTYPE(pint->b.type)){
     // signed
@@ -205,10 +211,7 @@ int32_t pthread::get_int(PT_data_int32 *pint){
       return (uint16_t) pint->data;
     case(vt_uint32):
       return (uint32_t) pint->data;
-    
-    case(vt_str):
-      assert(0);
-    
+
     default:
       raise(ERR_TYPE, pint->b.type, HEX);
   }
@@ -231,14 +234,6 @@ uint16_t pthread::get_temp(){
   return out;
 error:
   return 0;
-}
-
-void pthread::clear_temp(){
-  PT_data *td = get_temp_object();
-  iferr_log_catch();
-  destroy_data(td, NULL);
-error:
-  return;
 }
 
 // *****************************************************
@@ -295,7 +290,22 @@ error:
 }
 
 
+// *****************************************************
+// **** Destroy / Clear
 
+void pthread::clear_data(){
+  while(data){
+    destroy_data(data, NULL);
+  }
+}
+
+void pthread::clear_temp(){
+  
+}
+void pthread::clear_input(ptindex index){
+  
+}
+  
 
 // *****************************************************
 // **** psthread (small pthread)

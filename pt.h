@@ -131,7 +131,9 @@ public:
   // Temp
   void put_temp(uint16_t input);
   uint16_t get_temp();
+  void clear_data();
   void clear_temp();
+  void clear_input(ptindex index);
   
   void put_input(uint8_t input);
   void put_input(int16_t input);
