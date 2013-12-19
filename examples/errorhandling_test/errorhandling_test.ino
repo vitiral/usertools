@@ -19,7 +19,7 @@ ByteBuffer failbuffer;
 void setup(){
   failbuffer.init(100);
   //setup_std();
-  setup_soft();
+  log_setup_soft(SoftSerial);
   log_info("setup");
   debug("Testing Debug");
   
@@ -36,10 +36,11 @@ void setup_std(){
   Serial.println("Started Std Serial");
 }
 
+
 void setup_soft(){
   SoftSerial.begin(57600);
   SoftSerial.println("Started Soft Serial");
-  EH_config_soft(SoftSerial);
+  Logger.config_soft(&SoftSerial);
 }
 
 void do_failure(){
@@ -155,7 +156,7 @@ unsigned short test1(unsigned short tp){
   case 20:
     tobreak = true;
     do_failure2();
-    assert(derr);
+    assert(errno);
     break;
   case 21:
     // Testing syntax

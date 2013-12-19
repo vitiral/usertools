@@ -111,6 +111,7 @@ void setup(){
   Logger.println("  ***  Welcome to the Threading Example. Here are your options:");
   print_options("");    // print out the options for the user right away. Note that we have to pass an empty
                         // string because this function is just like our exposed functions
+  EH_test();
 }
 
 void loop(){
