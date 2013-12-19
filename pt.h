@@ -113,14 +113,12 @@ private:
   PT_data *get_end();
   PT_data *get_input(ptindex index);
   
-  void put_data(void *ptd);
+  void put_data(void *putdata, uint8_t type);
+  void put_data(void *putdata, uint8_t type, uint16_t len);
   void destroy_data(PT_data *pd, PT_data *prev);
   
-  void put_data_input(void *ptd);
-  void put_data_temp(void *ptd);
-  PT_data *get_temp();
+  PT_data *get_temp_object();
   
-  void put_int(uint32_t in, uint8_t type);
   int32_t get_int(PT_data_int32 *pint);
   
 public:
@@ -132,7 +130,7 @@ public:
   
   // Temp
   void put_temp(uint16_t input);
-  uint16_t get_uint16_temp();
+  uint16_t get_temp();
   void clear_temp();
   
   void put_input(uint8_t input);
