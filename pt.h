@@ -58,12 +58,11 @@
 #define PT_KILL_VALUE LC_KILL_VALUE
 #define PT_INNACTIVE  LC_KILL_VALUE + 1
 
-
-
 #define PT_DATA_BYTES 3
 
+typedef uint8_t ptindex;
 struct PT_data;
-
+class pthread;
 
 // 3 bytes
 struct PT_data_base {
@@ -100,11 +99,6 @@ struct PT_data_str{
   char *data;
 };
 
-typedef uint8_t ptindex;
-
-
-class psthread;
-
 class pthread
 {
 private:
@@ -117,50 +111,52 @@ private:
   void put_data(void *putdata, uint8_t type, uint16_t len);
   void destroy_data(PT_data *pd, PT_data *prev);
   
-  PT_data *get_temp_object();
-  
   int32_t get_int(PT_data_int32 *pint);
   
 public:
   lc_t lc;
   // Constructors
   pthread();
-  pthread(psthread *pst);
   ~pthread();
   
   // Temp
   void put_temp(uint16_t input);
-  uint16_t get_temp();
-  void clear_data();
+  void put_temp_pt();
+  PT_data *get_temp();
+  uint16_t get_int_temp();
+  pthread *get_pt_temp();
+  
   void clear_temp();
+  
+  void clear_data();
+  
   void clear_input(ptindex index);
   
   void put_input(uint8_t input);
   void put_input(int16_t input);
+  void put_input(uint16_t input);
+  void put_input(int32_t input);
+  void put_input(char *input, uint16_t len);
+  void put_input(char *input);
+  
   int32_t get_int_input(ptindex index);
-  
-  void put_str_input(char *input, uint16_t len);
-  void put_str_input(char *input);
   char *get_str_input(ptindex index);
-  
 };
 
-extern const pthread PT_std_pt;
-
-class psthread
-{
-public:
-  psthread();
-  psthread(pthread *pt);
-  ~psthread();
+// data for storing another pthread
+// stored only in temp.
+struct PT_data_pt{
+  struct PT_data_base b;
+  pthread data;
 };
 
-#define PT_WAITING 0
-#define PT_YIELDED 1
-#define PT_ERROR   2
-#define PT_EXITED  3
-#define PT_ENDED   4
-#define PT_KILLED  5
+
+#define PT_WAITING      0
+#define PT_YIELDED      1
+#define PT_HAD_ERROR    2
+#define PT_EXITED       3
+#define PT_ENDED        4
+#define PT_KILLED     5
 
 /**
  * \name Initialization
@@ -234,10 +230,9 @@ public:
  */
 #define PT_BEGIN(pt) { char PT_YIELD_FLAG = 1; LC_RESUME((pt)->lc)
 
-
 #define PT_LOCAL_BEGIN(PT)                          \
-  static pthread pt_local_pointed = PT_std_pt;    \
-  static pthread *(PT) = &pt_local_pointed;       \
+  static pthread pt_local_pointed = pthread();      \
+  static pthread *(PT) = &pt_local_pointed;         \
   PT_BEGIN(PT)
 
 /**

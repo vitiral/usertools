@@ -2,16 +2,23 @@
 
 #include "pt.h"
 
+// commented = not supported, but may in future
 enum vtype{
+  //vt_int8,
   vt_uint8,
-  vt_uint16,
-  vt_uint32,
-  vt_int8,
+  
   vt_int16,
-  vt_int32,
+  vt_uint16,
   
-  vt_str,
+  //vt_int32,
+  //vt_uint32,
   
+  vt_uint8ray,  // 8 bit uint arrays
+  vt_int16ray,  // 16 bit int arrays
+  
+  vt_str,       // storing character arrays
+  
+  vt_pt,        // storing protothreads
 };
 
 #define TYPE_BITSHIFT 6
@@ -41,7 +48,7 @@ pthread::pthread(){
 }
 
 pthread::~pthread(){
-  // destroy data
+  clear_data();
 }
 
 PT_data *pthread::get_end(){
@@ -51,6 +58,131 @@ PT_data *pthread::get_end(){
     if(next->b.next == NULL) return next;
     next = next->b.next;
   }
+}
+
+void pthread::put_data(void *putdata, uint8_t type){
+  return put_data(putdata, type, 0);
+}
+  
+void pthread::put_data(void *putdata, uint8_t type, uint16_t len){
+  PT_data *put = NULL;
+  void *pdata = NULL;
+  
+  // Allocate correct amount of space
+  switch(VTYPE(type)){
+    //case(vt_int8):
+    case(vt_uint8):
+      //1debug("ti8");
+      put = (PT_data *)malloc(sizeof(PT_data_int8));
+      break;
+    case(vt_int16):
+    case(vt_uint16):
+      //1debug("ti16");
+      put = (PT_data *)malloc(sizeof(PT_data_int16));
+      break;
+
+/* Cant seem to get this one to work
+    case(vt_int32):
+      //1debug("ti32");
+      put = (PT_data *)malloc(sizeof(PT_data_int32));
+      break;
+*/
+    case(vt_str):
+      //1debug("tstr");
+      put = (PT_data *)malloc(sizeof(PT_data_str));
+      break;
+    default:
+      assert(0);
+  }
+  
+  memcheck(put);
+  
+  switch(VTYPE(type)){
+    //case(vt_int8):
+    case(vt_uint8):
+      ((PT_data_int8 *)put)->data = *((int8_t *)putdata);
+      break;
+    case(vt_int16):
+    case(vt_uint16):
+      ((PT_data_int16 *)put)->data = *((int16_t *)putdata);
+      break;
+
+/*
+    case(vt_int32):
+      ((PT_data_int32 *)put)->data = *((int32_t *)putdata);
+*/
+    case(vt_str):
+      if(len == 0) len = strlen((char *) putdata) + 1;
+      assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
+      pdata = malloc(len);
+      memcheck(pdata);
+      memcpy(pdata, putdata, len);
+      ((PT_data_str *)put)->data = (char *)pdata;
+      break;
+    default:
+      assert(0);
+  }
+  
+  init_PT_data(put);
+  put->b.type = type;
+  if(data == NULL){
+    data = (PT_data *)put;
+  }
+//  else if(PTYPE(type) == TYPE_TEMP){
+//    // temp always goes in front, can only have one temp data
+//    assert_raise(PTYPE(data->b.type) != TYPE_TEMP, ERR_INDEX);
+//    put->b.next = data;
+//    data = (PT_data *)put;
+//  }
+  else{
+    get_end()->b.next = (PT_data *)put;
+  }
+  return;
+  
+error:
+  memclr(put);
+  memclr(pdata);
+  return;
+}
+
+void pthread::destroy_data(PT_data *pd, PT_data *prev){
+  // remove from link chain
+  assert(pd);
+  if(prev == NULL){
+    data = pd->b.next;
+  }
+  else{
+    prev->b.next = pd->b.next;
+  }
+  switch(VTYPE(pd->b.type)){
+    case(vt_str):
+      free(((PT_data_str *)pd)->data);
+      break;
+  }
+  free(pd);
+  return;
+error:
+  return;
+}
+
+int32_t pthread::get_int(PT_data_int32 *pint){
+  switch(VTYPE(pint->b.type)){
+    case(vt_uint8):
+      return (uint8_t) pint->data;
+      
+    case(vt_int16):
+      return (int16_t)((uint16_t)pint->data);
+    case(vt_uint16):
+      return (uint16_t)pint->data;
+      
+    //case(vt_int32):
+    //  return (int32_t)((uint32_t)pint->data);
+
+    default:
+      raise(ERR_TYPE, pint->b.type, HEX);
+  }
+error:
+ return 0;
 }
 
 PT_data *pthread::get_input(ptindex index){
@@ -73,186 +205,110 @@ error:
   return NULL;
 }
 
-void pthread::put_data(void *putdata, uint8_t type){
-  return put_data(putdata, type, 0);
-}
-  
-void pthread::put_data(void *putdata, uint8_t type, uint16_t len){
-  PT_data *put = NULL;
-  void *pdata = NULL;
-  
-  // Allocate correct amount of space
-  switch(VTYPE(type)){
-    case(vt_int8):
-    case(vt_uint8):
-      debug("ti8");
-      put = (PT_data *)malloc(sizeof(PT_data_int8));
-      break;
-    case(vt_int16):
-    case(vt_uint16):
-      debug("ti16");
-      put = (PT_data *)malloc(sizeof(PT_data_int16));
-      break;
-      
-    case(vt_str):
-      debug("tstr");
-      put = (PT_data *)malloc(sizeof(PT_data_str));
-      break;
-    default:
-      assert(0);
-  }
-  
-  memcheck(put);
-  
-  switch(VTYPE(type)){
-    case(vt_int8):
-    case(vt_uint8):
-      ((PT_data_int8 *)put)->data = *((int8_t *)putdata);
-      break;
-    case(vt_int16):
-    case(vt_uint16):
-      ((PT_data_int16 *)put)->data = *((int16_t *)putdata);
-      break;
-      
-    case(vt_str):
-      if(len == 0) len = strlen((char *) putdata) + 1;
-      assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
-      pdata = malloc(len);
-      memcheck(pdata);
-      memcpy(pdata, putdata, len);
-      ((PT_data_str *)put)->data = (char *)pdata;
-      break;
-    default:
-      assert(0);
-  }
-  
-  init_PT_data(put);
-  put->b.type = type;
-  if(data == NULL){
-    data = (PT_data *)put;
-  }
-  else if(PTYPE(type) == TYPE_TEMP){
-    // temp always goes in front, can only have one temp data
-    assert_raise(PTYPE(data->b.type) != TYPE_TEMP, ERR_INDEX);
-    put->b.next = data;
-    data = (PT_data *)put;
-  }
-  else{
-    get_end()->b.next = (PT_data *)put;
-  }
-  return;
-  
-error:
-  memclr(put);
-  memclr(pdata);
-  return;
-}
-
-void pthread::destroy_data(PT_data *pd, PT_data *prev){
-  // remove from link chain
-  if(prev == NULL){
-    data = pd->b.next;
-  }
-  else{
-    prev->b.next = pd->b.next;
-  }
-  
-  /* // I guess malloc keeps track of how much it has to free somehow?
-   * // It seems to free void pointers just fine!
-  // free memory
-  switch(VTYPE(pd->b.type)){
-    // ** Integers
-    case(vt_int8):
-    case(vt_uint8):
-      free((PT_data_int8 *) pd);
-      return;
-    case(vt_int16):
-    case(vt_uint16):
-      free((PT_data_int16 *) pd);
-      return;
-    case(vt_int32):
-    case(vt_uint32):
-      free((PT_data_int32 *) pd);
-      return;
-      
-    case(vt_str):
-      free(((PT_data_str *)pd)->data);
-      free((PT_data_str *) pd);
-      return;
-    default:
-      assert(0, pd->b.type);
-  }
-   * */
-   switch(VTYPE(pd->b.type)){
-     case(vt_str):
-      free(((PT_data_str *)pd)->data);
-      free(pd);
-      return;
-   }
-   free(pd);
-   return;
-error:
-  return;
-}
-int32_t pthread::get_int(PT_data_int32 *pint){
-  switch(VTYPE(pint->b.type)){
-    // signed
-    case(vt_int8):
-      return (int8_t) ((uint8_t)pint->data);
-    case(vt_int16):
-      return (int16_t) ((uint16_t)pint->data);
-    case(vt_int32):
-      return (int32_t) ((uint32_t)pint->data);
-    
-    // unsigned
-    case(vt_uint8):
-      return (uint8_t) pint->data;
-    case(vt_uint16):
-      return (uint16_t) pint->data;
-    case(vt_uint32):
-      return (uint32_t) pint->data;
-
-    default:
-      raise(ERR_TYPE, pint->b.type, HEX);
-  }
-error:
- return 0;
-}
 
 // *****************************************************
 // **** Temporary
-void pthread::put_temp(uint16_t input){
-  put_data(&input, TYPE_TEMP bitor vt_uint16);
+// * Eventually all temporary functions will be separated
+// * so that if only they are used less Flash can be 
+// * used.
+
+PT_data *pthread::get_temp(){
+  assert_raise(data, ERR_INDEX);
+  assert_raise(PTYPE(data->b.type) == TYPE_TEMP, ERR_INDEX);
+  return data;
+error:
+  return NULL;
 }
 
-uint16_t pthread::get_temp(){
-  int16_t out;
-  PT_data_int16 *td = (PT_data_int16 *) get_temp();
+// kept separate on purpose
+void pthread::put_temp(uint16_t temp){
+  PT_data *put;
+  put = (PT_data *)malloc(sizeof(PT_data_int16));
+  memcheck(put);
+  ((PT_data_int16 *)put)->data = *((int16_t *)temp);
+  init_PT_data(put);
+  put->b.type = TYPE_TEMP bitor vt_uint16;
+  if(data){
+    put->b.next = data;
+  }
+  data = put;
+  return;
+error:
+  return;
+}
+
+void pthread::put_temp_pt(){
+  PT_data *put;
+  //pthread pt = ;
+  put = (PT_data *)malloc(sizeof(PT_data_pt));
+  memcheck(put);
+  ((PT_data_pt *)put)->data = pthread();
+  init_PT_data(put);
+  put->b.type = TYPE_TEMP bitor vt_pt;
+  if(data){
+    put->b.next = data;
+  }
+  data = put;
+  return;
+error:
+  return;
+}
+
+// used for getting time
+uint16_t pthread::get_int_temp(){
+  uint16_t out;
+  PT_data_int32 *temp = (PT_data_int32 *)get_temp();
   iferr_log_catch();
-  out = (uint16_t)(td->data);
-  // destroy temp()
+  assert_raise(VTYPE(temp->b.type) == vt_uint16, ERR_INDEX);
+  out = (uint16_t)(temp->data);
   return out;
 error:
   return 0;
 }
 
+void pthread::clear_temp(){
+  // Separated
+  PT_data *temp = get_temp();
+  iferr_log_catch();
+  data = temp->b.next;
+  if(VTYPE(temp->b.type) == vt_pt){
+    ((PT_data_pt *)temp)->data.clear_data();
+  }
+  free(temp);
+  return;
+error:
+  return;
+}
+
 // *****************************************************
-// **** Integers
-// * Put integers with put_intXX_input()
-// * Get integers with get_int_input()    // no need for xx
-
-// puts an integer into the data list, allocating
-// space for it.
-
+// **** Input
 
 void pthread::put_input(uint8_t input){
-  debug("Pui8");
+  //1debug("Pui8");
   put_data(&input, TYPE_INPUT bitor vt_uint8, 0);
 }
 
 void pthread::put_input(int16_t input){
-  debug("P16");
+  //1debug("P_i16");
   put_data(&input, TYPE_INPUT bitor vt_int16, 0);
+}
+
+void pthread::put_input(uint16_t input){
+  //1debug("P_i16");
+  put_data(&input, TYPE_INPUT bitor vt_uint16, 0);
+}
+
+//void pthread::put_input(int32_t input){
+//  //1debug("P_i32");
+//  put_data(&input, TYPE_INPUT bitor vt_int32, 0);
+//}
+
+void pthread::put_input(char *input){
+  return put_data(input, TYPE_INPUT bitor vt_str);
+}
+
+void pthread::put_input(char *input, uint16_t len){
+  return put_data(input, TYPE_INPUT bitor vt_str, len);
 }
 
 int32_t pthread::get_int_input(ptindex index){
@@ -269,17 +325,6 @@ error:
   return 0;
 }
 
-// *****************************************************
-// **** Strings
-
-void pthread::put_str_input(char *input){
-  return put_data(input, TYPE_INPUT bitor vt_str);
-}
-
-void pthread::put_str_input(char *input, uint16_t len){
-  return put_data(input, TYPE_INPUT bitor vt_str, len);
-}
-
 char *pthread::get_str_input(ptindex index){
   PT_data_str *mydata = (PT_data_str *)get_input(index);
   iferr_catch();
@@ -289,6 +334,9 @@ error:
   return NULL;
 }
 
+void pthread::clear_input(ptindex index){
+  
+}
 
 // *****************************************************
 // **** Destroy / Clear
@@ -299,12 +347,7 @@ void pthread::clear_data(){
   }
 }
 
-void pthread::clear_temp(){
-  
-}
-void pthread::clear_input(ptindex index){
-  
-}
+
   
 
 // *****************************************************
