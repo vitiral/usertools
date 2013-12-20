@@ -50,9 +50,9 @@ void UI__set_variable_array(TH_variable *vray, uint16_t len){
 void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize){
   assert_return(TH__variables.index <= TH__variables.len);
   assert_return(flash_len(name) <= TH_MAX_NAME_LEN);
-  assert_raise_return(TH__variables.array, ERR_PTR); // assert not null
+  assert_raise_return(TH__variables.array, ERR_VALUE); // assert not null
   uint8_t len = flash_len(name);
-  assert_raise_return(len > 0, ERR_SIZE);
+  assert_raise_return(len > 0, ERR_VALUE);
 
   TH__variables.array[TH__variables.index].el.name = name;
   TH__variables.array[TH__variables.index].el.name_len = len;
@@ -74,9 +74,9 @@ void UI__set_function_array(TH_function *fray, uint16_t len){
 void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   assert_return(TH__functions.index <= TH__functions.len);
   assert_return(flash_len(name) <= TH_MAX_NAME_LEN);
-  assert_raise_return(TH__functions.array, ERR_PTR); // assert not null
+  assert_raise_return(TH__functions.array, ERR_VALUE); // assert not null
   uint8_t len = flash_len(name);
-  assert_raise_return(len > 0, ERR_SIZE);
+  assert_raise_return(len > 0, ERR_VALUE);
 
   TH__functions.array[TH__functions.index].el.name = name;
   TH__functions.array[TH__functions.index].el.name_len = len;
@@ -101,10 +101,10 @@ thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr){
   debug(F("ExpFun"));
   assert_return(TH__threads.index <= TH__threads.len, NULL);
   assert_return(flash_len(name) <= TH_MAX_NAME_LEN, NULL);
-  assert_raise_return(TH__threads.array, ERR_PTR, NULL); // assert not null
+  assert_raise_return(TH__threads.array, ERR_VALUE, NULL); // assert not null
 
   uint8_t len = flash_len(name);
-  assert_raise_return(len > 0, ERR_SIZE, NULL);
+  assert_raise_return(len > 0, ERR_VALUE, NULL);
 
   TH__threads.array[TH__threads.index].el.name = name;
   TH__threads.array[TH__threads.index].el.name_len = len;
@@ -157,7 +157,7 @@ uint8_t schedule_thread(thread *fun, char *input) {
   
   sdebug(F("Calling:"));
   edebug(fun->el.name);
-  assert_raise(fun->pt.lc == PT_INNACTIVE, ERR_THREAD, 0);
+  assert_raise(fun->pt.lc == PT_INNACTIVE, ERR_VALUE, 0);
   PT_INIT(&(fun->pt));
   assert(fun->fptr);
   out = fun->fptr(&(fun->pt), input);
@@ -299,7 +299,7 @@ void kill_thread(const __FlashStringHelper *name){
 }
 
 uint8_t restart_thread(thread *th){
-  assert_raisem_return(th->pt.lc == PT_INNACTIVE, ERR_THREAD, th->el.name, 0);
+  assert_raisem_return(th->pt.lc == PT_INNACTIVE, ERR_VALUE, th->el.name, 0);
   schedule_thread(th, EH_EMPTY_STR);
 }
 
@@ -341,7 +341,7 @@ uint8_t thread_loop(){
 
       if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){
         if(fout < PT_EXITED){
-          seterr(ERR_THREAD);
+          seterr(ERR_TYPE);
           log_err(F("NoDie"));
         }  
         th_set_innactive(th);
@@ -350,7 +350,6 @@ uint8_t thread_loop(){
 error:
       clrerr();
       PT_YIELD(pt);
-
     }
   }
   PT_END(pt);

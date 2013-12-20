@@ -22,29 +22,19 @@
 #include "logging.h"
 
 #define ERR_NOERR         0 // NoErr -- no error has occured
-#define ERR_BASE          1 // BaseErr -- general error
 #define ERR_TIMEOUT       2 // TimeoutErr
-#define ERR_SERIAL        3 // SerialErr
-#define ERR_SPI           4 // Spierr
-#define ERR_I2C           5 // I2cErr
-#define ERR_COM           6 // ComErr
-#define ERR_CONFIG        7 // ConfigErr
-#define ERR_PIN           8 // PinErr
-#define ERR_INPUT         9 // InputErr
+#define ERR_COM           3 // ComErr
+#define ERR_INPUT         4 // InputErr
 
 #define ERR_TYPE          50 // TypeErr
 #define ERR_VALUE         51 // ValueErr
 #define ERR_ASSERT        52 // AssertErr
-#define ERR_TESTFAIL      53 // TestFail
-#define ERR_PTR           54 // PtrErr
-#define ERR_INDEX         55 // IndexErr
-#define ERR_SIZE          56 // SizeErr
-#define ERR_THREAD        57 // Threaerrno
-#define ERR_MEMORY        58 // MemErr
+#define ERR_INDEX         54 // IndexErr
+#define ERR_MEMORY        55 // MemErr
+#define ERR_CRITICAL      56 // CRITErr
 
-#define ERR_CLEARED       252 // "Cleared Error" used by clrerr_log and is then cleared
-#define ERR_NONEW         253 // NoNew -- error already printed
-#define ERR_EMPTY         254 // nothing printed, still an error
+#define ERR_CLEARED       253 // "Cleared Error" used by clrerr_log and is then cleared
+#define ERR_NONEW         254 // NoNew -- error already printed
 #define ERR_UNKNOWN       255 // unknown error
 
 #define EH_STD_SERIAL 0
@@ -61,19 +51,6 @@ void clrerr();
 void seterr(uint8_t error);
 
 #define EH_DW(code) do{code}while(0) //wraps in a do while(0) so that the syntax is correct.
-
-// used in errorhandling
-#ifdef DEBUG_DYNAMIC_LOG  // allows you to turn logging on and off dynamically 
-#ifdef LOGLEVEL
-#if LOGLEVEL >= LOG_ERROR
-#define LOG_IFLL(LL,code) if(LOG_loglevel >= LL){code} 
-#endif
-#endif
-#endif
-
-#ifndef LOG_IFLL(LL, code)
-#define LOG_IFLL(LL, code) code
-#endif
     
 #define raise(E, ...)                           EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
 #define assert(A, ...)                          EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})

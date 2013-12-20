@@ -105,13 +105,14 @@ private:
   PT_data *data;
 
   PT_data *get_end();
-  PT_data *get_input(ptindex index);
+  PT_data *get_type(ptindex index, uint8_t type);
   
   void put_data(void *putdata, uint8_t type);
   void put_data(void *putdata, uint8_t type, uint16_t len);
   void destroy_data(PT_data *pd, PT_data *prev);
   
   int32_t get_int(PT_data_int32 *pint);
+  int32_t get_int_type(ptindex index, uint8_t type);
   
 public:
   lc_t lc;
@@ -125,22 +126,36 @@ public:
   PT_data *get_temp();
   uint16_t get_int_temp();
   pthread *get_pt_temp();
-  
   void clear_temp();
   
-  void clear_data();
-  
-  void clear_input(ptindex index);
-  
+  // Input
   void put_input(uint8_t input);
   void put_input(int16_t input);
   void put_input(uint16_t input);
   void put_input(int32_t input);
   void put_input(char *input, uint16_t len);
   void put_input(char *input);
+  void clear_input();
   
   int32_t get_int_input(ptindex index);
   char *get_str_input(ptindex index);
+  
+  // Output
+  void put_output(uint8_t output);
+  void put_output(int16_t output);
+  void put_output(uint16_t output);
+  void put_output(int32_t output);
+  void put_output(char *output, uint16_t len);
+  void put_output(char *output);
+  void clear_output();
+  
+  int32_t get_int_output(ptindex index);
+  char *get_str_output(ptindex index);
+  
+  // General Destructors
+  void clear_data();
+  void clear_type(uint8_t type);
+  
 };
 
 // data for storing another pthread

@@ -55,22 +55,10 @@ void EH_printerrp(){
   switch(errprint){
   case ERR_NOERR:
     Logger.print(F("No")); break;
-  case ERR_BASE:
-    Logger.print(F("Base")); break;
   case ERR_TIMEOUT:
     Logger.print(F("Timeout")); break;
-  case ERR_SERIAL:
-    Logger.print(F("Serial")); break;
-  case ERR_SPI:
-    Logger.print(F("Spi")); break;
-  case ERR_I2C:
-    Logger.print(F("I2c")); break;
   case ERR_COM:
     Logger.print(F("Com")); break;
-  case ERR_CONFIG:
-    Logger.print(F("Config")); break;
-  case ERR_PIN:
-    Logger.print(F("Pin")); break;
   case ERR_INPUT:
     Logger.print(F("Input")); break;
   
@@ -80,25 +68,16 @@ void EH_printerrp(){
     Logger.print(F("Value")); break;
   case ERR_ASSERT:
     Logger.print(F("Assert")); break;
-  case ERR_TESTFAIL:
-    Logger.print(F("TestFail")); break;
-  case ERR_PTR:
-    Logger.print(F("Ptr")); break;
   case ERR_INDEX:
     Logger.print(F("Index")); break;
-  case ERR_SIZE:
-    Logger.print(F("Size")); break;
-  case ERR_THREAD:
-    Logger.print(F("Thread")); break;
-  case ERR_MEMORY:
     Logger.print(F("Mem")); break;
+  case ERR_CRITICAL:
+    Logger.print(F("CRITErr")); break;
   
   case ERR_CLEARED:
-    Logger.print(F("Cleared or")); break;
+    Logger.print(F("Clred")); break;
   case ERR_NONEW:
     Logger.print(F("NoNew")); break;
-  case ERR_EMPTY:
-    Logger.print(EH_EMPTY_STR); break;
   case ERR_UNKNOWN:
   default:
     Logger.print(F("Unknown")); break;

@@ -25,16 +25,20 @@
   #endif
 #endif
 
+// Dynamic Logging, used in error handling
+#ifdef LOG_DYNAMIC  // allows you to turn logging on and off dynamically 
 #ifdef LOGLEVEL
-  #if LOGLEVEL >= LOG_ERROR
-    extern uint8_t LOG_loglevel;
-    #define set_loglevel(LL) LOG_loglevel = LL
-  #else
-    #define set_loglevel(LL)
-  #endif
-#else
+#if LOGLEVEL >= LOG_ERROR
+  #define LOG_IFLL(LL,code) if(LOG_loglevel >= LL){code} 
+  extern uint8_t LOG_loglevel;
+  #define set_loglevel(LL) LOG_loglevel = LL
+#endif
+#endif
+#endif
+
+#ifndef LOG_IFLL(LL, code)
+  #define LOG_IFLL(LL, code) code
   #define set_loglevel(LL)
-  #define LOGLEVEL LOG_SILENT
 #endif
 
 class Logging : public Stream
