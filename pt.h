@@ -96,7 +96,7 @@ struct PT_data_int32{
 
 struct PT_data_str{
   struct PT_data_base b;
-  char *data;
+  char data[];
 };
 
 class pthread

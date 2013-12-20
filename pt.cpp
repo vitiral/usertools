@@ -89,8 +89,15 @@ void pthread::put_data(void *putdata, uint8_t type, uint16_t len){
 */
     case(vt_str):
       //1debug("tstr");
-      put = (PT_data *)malloc(sizeof(PT_data_str));
+      if(len == 0) len = strlen((char *) putdata) + 1;
+      assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
+      put = (PT_data *)malloc(sizeof(PT_data_str) + len);
       break;
+      
+    case(vt_pt):
+      put = (PT_data *) malloc(sizeof(PT_data_pt));
+      break;
+    
     default:
       assert(0);
   }
@@ -112,13 +119,13 @@ void pthread::put_data(void *putdata, uint8_t type, uint16_t len){
       ((PT_data_int32 *)put)->data = *((int32_t *)putdata);
 */
     case(vt_str):
-      if(len == 0) len = strlen((char *) putdata) + 1;
-      assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
-      pdata = malloc(len);
-      memcheck(pdata);
-      memcpy(pdata, putdata, len);
-      ((PT_data_str *)put)->data = (char *)pdata;
+      memcpy(((PT_data_str *)put)->data, putdata, len);
       break;
+    
+    case(vt_pt):
+      ((PT_data_pt *)put)->data = *((pthread *)putdata);
+      break;
+      
     default:
       assert(0);
   }
@@ -128,12 +135,12 @@ void pthread::put_data(void *putdata, uint8_t type, uint16_t len){
   if(data == NULL){
     data = (PT_data *)put;
   }
-//  else if(PTYPE(type) == TYPE_TEMP){
-//    // temp always goes in front, can only have one temp data
-//    assert_raise(PTYPE(data->b.type) != TYPE_TEMP, ERR_INDEX);
-//    put->b.next = data;
-//    data = (PT_data *)put;
-//  }
+  else if(PTYPE(type) == TYPE_TEMP){
+    // temp always goes in front, can only have one temp data
+    assert_raise(PTYPE(data->b.type) != TYPE_TEMP, ERR_INDEX);
+    put->b.next = data;
+    data = (PT_data *)put;
+  }
   else{
     get_end()->b.next = (PT_data *)put;
   }
@@ -155,10 +162,11 @@ void pthread::destroy_data(PT_data *pd, PT_data *prev){
     prev->b.next = pd->b.next;
   }
   switch(VTYPE(pd->b.type)){
-    case(vt_str):
-      free(((PT_data_str *)pd)->data);
-      break;
+    case vt_pt:
+    ((PT_data_pt *)pd)->data.clear_data();
+    break;
   }
+  
   free(pd);
   return;
 error:
@@ -220,8 +228,9 @@ error:
   return NULL;
 }
 
-// kept separate on purpose
 void pthread::put_temp(uint16_t temp){
+  put_data(&temp, TYPE_TEMP bitor vt_uint16, 0);
+  /*
   PT_data *put;
   put = (PT_data *)malloc(sizeof(PT_data_int16));
   memcheck(put);
@@ -235,12 +244,13 @@ void pthread::put_temp(uint16_t temp){
   return;
 error:
   return;
-  /*
-  put_data(&temp, TYPE_TEMP bitor vt_uint16, 0);
   */
+  
 }
 
 void pthread::put_temp_pt(){
+  put_data(&pthread(), TYPE_TEMP bitor vt_pt, 0);
+  /*
   PT_data *put;
   //pthread pt = ;
   put = (PT_data *)malloc(sizeof(PT_data_pt));
@@ -255,6 +265,7 @@ void pthread::put_temp_pt(){
   return;
 error:
   return;
+  */
 }
 
 // used for getting time
@@ -280,16 +291,9 @@ error:
 }
 
 void pthread::clear_temp(){
-  // Separated
   PT_data *temp = get_temp();
-  iferr_log_catch();
-  data = temp->b.next;
-  if(VTYPE(temp->b.type) == vt_pt){
-    ((PT_data_pt *)temp)->data.clear_data();
-  }
-  free(temp);
-  return;
-error:
+  iferr_log_return();
+  destroy_data(temp, NULL);
   return;
 }
 

@@ -62,6 +62,19 @@ void seterr(uint8_t error);
 
 #define EH_DW(code) do{code}while(0) //wraps in a do while(0) so that the syntax is correct.
 
+// used in errorhandling
+#ifdef DEBUG_DYNAMIC_LOG  // allows you to turn logging on and off dynamically 
+#ifdef LOGLEVEL
+#if LOGLEVEL >= LOG_ERROR
+#define LOG_IFLL(LL,code) if(LOG_loglevel >= LL){code} 
+#endif
+#endif
+#endif
+
+#ifndef LOG_IFLL(LL, code)
+#define LOG_IFLL(LL, code) code
+#endif
+    
 #define raise(E, ...)                           EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
 #define assert(A, ...)                          EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})
 #define assert_raise(A, E, ...)                 EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
