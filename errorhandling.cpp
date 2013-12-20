@@ -72,7 +72,7 @@ void EH_printerrp(){
     Logger.print(F("Index")); break;
     Logger.print(F("Mem")); break;
   case ERR_CRITICAL:
-    Logger.print(F("CRITErr")); break;
+    Logger.print(F("CRIT")); break;
   
   case ERR_CLEARED:
     Logger.print(F("Clred")); break;

@@ -102,51 +102,53 @@ struct PT_data_str{
 class pthread
 {
 private:
-  PT_data *data;
-
   PT_data *get_end();
   PT_data *get_type(ptindex index, uint8_t type);
   
-  void put_data(void *putdata, uint8_t type);
-  void put_data(void *putdata, uint8_t type, uint16_t len);
+  void *put_data(void *putdata, uint8_t type);
+  void *put_data(void *putdata, uint8_t type, uint16_t len);
   void destroy_data(PT_data *pd, PT_data *prev);
-  
-  int32_t get_int(PT_data_int32 *pint);
   int32_t get_int_type(ptindex index, uint8_t type);
+  int32_t get_int(PT_data_int32 *pint);
+  
+  PT_data *get_temp(uint8_t type);
+  
+  char *get_str_type(ptindex index, uint8_t type);
   
 public:
   lc_t lc;
+  PT_data *data;
   // Constructors
   pthread();
   ~pthread();
   
   // Temp
-  void put_temp(uint16_t input);
-  void put_temp_pt();
-  PT_data *get_temp();
+  void *put_temp(uint16_t input);
+  void *put_temp_pt();
+  
   uint16_t get_int_temp();
   pthread *get_pt_temp();
   void clear_temp();
   
   // Input
-  void put_input(uint8_t input);
-  void put_input(int16_t input);
-  void put_input(uint16_t input);
-  void put_input(int32_t input);
-  void put_input(char *input, uint16_t len);
-  void put_input(char *input);
+  void *put_input(uint8_t input);
+  void *put_input(int16_t input);
+  void *put_input(uint16_t input);
+  void *put_input(int32_t input);
+  void *put_input(char *input, uint16_t len);
+  void *put_input(char *input);
   void clear_input();
   
   int32_t get_int_input(ptindex index);
   char *get_str_input(ptindex index);
   
   // Output
-  void put_output(uint8_t output);
-  void put_output(int16_t output);
-  void put_output(uint16_t output);
-  void put_output(int32_t output);
-  void put_output(char *output, uint16_t len);
-  void put_output(char *output);
+  void *put_output(uint8_t output);
+  void *put_output(int16_t output);
+  void *put_output(uint16_t output);
+  void *put_output(int32_t output);
+  void *put_output(char *output, uint16_t len);
+  void *put_output(char *output);
   void clear_output();
   
   int32_t get_int_output(ptindex index);
@@ -155,7 +157,15 @@ public:
   // General Destructors
   void clear_data();
   void clear_type(uint8_t type);
-  
+};
+
+struct PTsmall {
+  lc_t lc;
+};
+
+struct PTnorm {
+  lc_t lc;
+  PT_data *data;
 };
 
 // data for storing another pthread
@@ -165,13 +175,15 @@ struct PT_data_pt{
   pthread data;
 };
 
-
-#define PT_WAITING      0
-#define PT_YIELDED      1
-#define PT_HAD_ERROR    2
-#define PT_EXITED       3
-#define PT_ENDED        4
-#define PT_KILLED     5
+enum PTVALUES {
+  PT_WAITING    ,
+  PT_YIELDED    ,
+  PT_ERROR      ,
+  PT_EXITED     ,
+  PT_ENDED      ,
+  PT_KILLED     ,
+  PT_CRITICAL   
+};
 
 /**
  * \name Initialization
@@ -218,19 +230,6 @@ struct PT_data_pt{
  */
 
 /**
- * Calling base protothread
- *
- * This macro is used to call a base protothread. It takes
- * care of clearing errors, etc from the thread.
- 
- * \param thread The called thread.
- *
- * \hideinitializer
- */
-
-#define PT_BASE_CALL(thread) thread; clrerr();
-
-/**
  * Declare the start of a protothread inside the C function
  * implementing the protothread.
  *
@@ -243,12 +242,7 @@ struct PT_data_pt{
  *
  * \hideinitializer
  */
-#define PT_BEGIN(pt) { char PT_YIELD_FLAG = 1; LC_RESUME((pt)->lc)
-
-#define PT_LOCAL_BEGIN(PT)                                  \
-  static struct pthread pt_local_pointed;                   \
-  static struct pthread *(PT) = &pt_local_pointed;          \
-  PT_BEGIN(PT)
+#define PT_BEGIN(pt) { uint8_t PT_YIELD_FLAG = 1; LC_RESUME((pt)->lc)
 
 /**
  * Declare the end of a protothread.
@@ -303,18 +297,14 @@ struct PT_data_pt{
  
  #define PT_WAIT_MS(pt, ms)                                           \
   do {                                                                \
-  (pt)->put_temp((uint16_t)millis());                                   \
-  PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - (uint16_t)(pt)->get_int_temp() > ms);  \
+  LC_SET((pt)->lc);				                                            \
+  (pt)->put_temp((uint16_t)millis());                                 \
+  iferr_return(PT_CRITICAL);   /*mem error*/                          \
+  if(!(((uint16_t)millis()) - (uint16_t)(pt)->get_int_temp() > ms)) {	\
+      return PT_WAITING;			\
+    }						              \
   (pt)->clear_temp();                                                   \
   } while(0)
-    
-/*
-#define PT_WAIT_MS(pt, time, ms)                                  \
-  do {                                                      \
-  time = millis();                                      \
-  PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - time > ms);              \
-  } while(0)
-*/
 
 /**
  * Block and wait while condition is true.
@@ -361,25 +351,26 @@ struct PT_data_pt{
  * macro can only be used within a protothread.
  *
  * \param pt A pointer to the protothread control structure.
- * \param child A pointer to the child protothread's control structure.
- * \param thread The child protothread with arguments
+ * \param thread The child protothread function (not called)
+ * \param ... thread will be called as "thread(spawned_pt, additional_args)"
+ * 
+ * The temporary protothread can be gotten from pt.get_pt_temp()
+ * From that you can get the outputs 
+ *    Ex: myint = pt.get_pt_temp()->get_int_output(index)
+ * You should get the inputs and outputs you need and then call 
+ *  "pt.clear_temp()" to help conserve memory.
+ * 
+ * Note that this function automatically clears temp at the beggining
+ *   of it's call.
  *
  * \hideinitializer
  */
 #define PT_SPAWN(pt, thread, ...)		                              \
   do {						                                                \
-    (pt)->put_temp_pt();                                            \
-    PT_INIT(((pt)->get_pt_temp()));				                          \
-    PT_WAIT_THREAD(pt, thread((pt)->get_pt_temp(), __VA_ARGS__));		\
     (pt)->clear_temp();                                             \
+    (pt)->put_temp_pt();                                            \
+    PT_WAIT_THREAD(pt, thread((pt)->get_pt_temp(), __VA_ARGS__));		\
   } while(0)
- /*
-#define PT_SPAWN(pt, child, thread)		\
-  do {						\
-    PT_INIT((child));				\
-    PT_WAIT_THREAD((pt), (thread));		\
-  } while(0)
-*/
 
 /** @} */
 
@@ -467,6 +458,31 @@ struct PT_data_pt{
       return PT_YIELDED;			\
     }						\
   } while(0)
+
+    
+/**
+ * Yield from the current protothread, clearing output and putting the 
+ * specifid value into it.
+ * 
+ * output can be obtained from (for an integer):
+ *  Ex: mmyint = pt->get_int_output(0);
+ *
+ * This function will yield the protothread, thereby allowing other
+ * processing to take place in the system.
+ *
+ * \param pt A pointer to the protothread control structure.
+ * \param value The value you want to be put into the buffer
+ * 
+ * Note that this function only clears the output at the beggining (not the end)
+ * \hideinitializer
+ */
+#define PT_YIELD_VALUE(pt, value)               \
+  do{                                           \
+    (pt)->clear_output();                       \
+    (pt)->put_output(value);                    \
+    iferr_return(PT_CRITICAL); /*mem error*/    \
+    PT_YIELD(pt);                               \
+  }
 
 /**
  * \brief      Yield from the protothread until a condition occurs.

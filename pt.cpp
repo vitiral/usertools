@@ -2,8 +2,6 @@
 
 #include "pt.h"
 
-
-
 // commented = not supported, but may in future
 enum vtype{
   //vt_int8,
@@ -60,7 +58,7 @@ PT_data *pthread::get_end(){
   }
 }
 
-void pthread::put_data(void *putdata, uint8_t type){
+void *pthread::put_data(void *putdata, uint8_t type){
   return put_data(putdata, type, 0);
 }
   
@@ -190,9 +188,6 @@ error:
 }
 
 int32_t pthread::get_int_type(ptindex index, uint8_t type){
-  // note that integers are stored least value first
-  // so I just need to convert to uintX (to break off
-  // excess data) and then convert that value to int
   int32_t out;
   PT_data_int32 *mydata = (PT_data_int32 *)get_type(index, type);
   iferr_log_catch();
@@ -240,85 +235,78 @@ error:
 // * the memory limit anyway). 
 // *   - Users should not use temp functions, they are hard-coded into the 
 // *     macros.
-PT_data *pthread::get_temp(){
-  //assert_raise(data, ERR_INDEX);
-  //assert_raise(PTYPE(data->b.type) == TYPE_TEMP, ERR_INDEX);
+PT_data *pthread::get_temp(uint8_t type){
+  assert_raise(data, ERR_INDEX);
+  assert_raise(data->b.type == TYPE_TEMP bitor type, ERR_INDEX);
   return data;
-//error:
-//  return NULL;
+error:
+  return NULL;
 }
 
-void pthread::put_temp(uint16_t temp){
+void *pthread::put_temp(uint16_t temp){
   if(put_data(&temp, TYPE_TEMP bitor vt_uint16, 0) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
-    raise_return(ERR_CRITICAL);
+    raise_return(ERR_CRITICAL, NULL);
   }
 }
 
-void pthread::put_temp_pt(){
+void *pthread::put_temp_pt(){
   if(put_data(&pthread(), TYPE_TEMP bitor vt_pt, 0) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
-    raise_return(ERR_CRITICAL);
+    raise_return(ERR_CRITICAL, NULL);
   }
 }
 
 uint16_t pthread::get_int_temp(){
-  PT_data_int32 *temp = (PT_data_int32 *)get_temp();
-//  iferr_log_catch();
-//  assert_raise(VTYPE(temp->b.type) == vt_uint16, ERR_TYPE);
+  PT_data_int32 *temp = (PT_data_int32 *)get_temp(vt_uint16);
   return (uint16_t)(temp->data);
-//error:
-//  return 0;
 }
 
 pthread *pthread::get_pt_temp(){
-  PT_data_pt *temp = (PT_data_pt *)get_temp();
-//  iferr_log_catch();
-//  assert_raise(VTYPE(temp->b.type) == vt_pt, ERR_TYPE);
+  PT_data_pt *temp = (PT_data_pt *)get_temp(vt_pt);
   return &(temp->data);
-//error:
-//  return NULL;
 }
 
 void pthread::clear_temp(){
-  PT_data *temp = get_temp();
-//  iferr_log_return();
-  destroy_data(temp, NULL);
-  return;
+  if(data != NULL){
+    if(PTYPE(data->b.type) == TYPE_TEMP){
+      destroy_data(data, NULL);
+    }
+  }
 }
 
 // *****************************************************
 // **** Input
 
-void pthread::put_input(uint8_t input){
+void *pthread::put_input(uint8_t input){
   //1debug("Pui8");
   put_data(&input, TYPE_INPUT bitor vt_uint8, 0);
 }
 
-void pthread::put_input(int16_t input){
+void *pthread::put_input(int16_t input){
   //1debug("P_i16");
   put_data(&input, TYPE_INPUT bitor vt_int16, 0);
 }
 
-void pthread::put_input(uint16_t input){
+void *pthread::put_input(uint16_t input){
   //1debug("P_i16");
   put_data(&input, TYPE_INPUT bitor vt_uint16, 0);
 }
 
-//void pthread::put_input(int32_t input){
+//void *pthread::put_input(int32_t input){
 //  //1debug("P_i32");
 //  put_data(&input, TYPE_INPUT bitor vt_int32, 0);
 //}
 
-void pthread::put_input(char *input){
+void *pthread::put_input(char *input){
   return put_data(input, TYPE_INPUT bitor vt_str);
 }
 
-void pthread::put_input(char *input, uint16_t len){
+void *pthread::put_input(char *input, uint16_t len){
   return put_data(input, TYPE_INPUT bitor vt_str, len);
 }
 
-int32_t get_int_input(ptindex index){
+int32_t pthread::get_int_input(ptindex index){
   return get_int_type(index, TYPE_INPUT);
 }
 
@@ -334,31 +322,31 @@ void pthread::clear_input(){
 // *****************************************************
 // **** Output
 
-void pthread::put_output(uint8_t output){
+void *pthread::put_output(uint8_t output){
   //1debug("Pui8");
   put_data(&output, TYPE_OUTPUT bitor vt_uint8, 0);
 }
 
-void pthread::put_output(int16_t output){
+void *pthread::put_output(int16_t output){
   //1debug("P_i16");
   put_data(&output, TYPE_OUTPUT bitor vt_int16, 0);
 }
 
-void pthread::put_output(uint16_t output){
+void *pthread::put_output(uint16_t output){
   //1debug("P_i16");
   put_data(&output, TYPE_OUTPUT bitor vt_uint16, 0);
 }
 
-//void pthread::put_output(int32_t output){
+//void *pthread::put_output(int32_t output){
 //  //1debug("P_i32");
 //  put_data(&output, TYPE_OUTPUT bitor vt_int32, 0);
 //}
 
-void pthread::put_output(char *output){
+void *pthread::put_output(char *output){
   return put_data(output, TYPE_OUTPUT bitor vt_str);
 }
 
-void pthread::put_output(char *output, uint16_t len){
+void *pthread::put_output(char *output, uint16_t len){
   return put_data(output, TYPE_OUTPUT bitor vt_str, len);
 }
 

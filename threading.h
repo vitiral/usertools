@@ -46,6 +46,13 @@ typedef struct thread{
   uint16_t time;  // stores execution time in 10us increments
 };
 
+struct TH_fake_thread{
+  TH_element     el;
+  TH_thfunptr    fptr;
+  PTnorm         pt;
+  uint16_t time;  // stores execution time in 10us increments
+};
+
 
 
 typedef struct TH_Variables{
@@ -82,7 +89,7 @@ typedef struct TH_ThreadArray{
       static uint8_t UI__function_len = F;                              \
       UI__set_function_array(UI__function_array, UI__function_len);     \
                                                                         \
-      static thread UI__thread_array[T];                                \
+      static TH_fake_thread UI__thread_array[T];                                \
       static uint8_t UI__thread_len = T;                                \
       UI__set_thread_array(UI__thread_array, UI__thread_len);           \
     }while(0)
@@ -113,7 +120,7 @@ void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t 
 void UI__set_function_array(TH_function *fray, uint16_t len);
 void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 
-void UI__set_thread_array(thread *fray, uint16_t len);
+void UI__set_thread_array(TH_fake_thread *fray, uint16_t len);
 thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
 
 

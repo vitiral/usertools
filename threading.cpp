@@ -87,9 +87,9 @@ void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
 }
 
 // Thread Array
-void UI__set_thread_array(thread *fray, uint16_t len){
+void UI__set_thread_array(TH_fake_thread *fray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
-  TH__threads.array = fray;
+  TH__threads.array = (thread *)fray;
   TH__threads.len = len;
   for(uint8_t i = 0; i < len; i++){
     TH__threads.array[i].fptr = NULL;
@@ -309,10 +309,15 @@ uint8_t thread_loop(){
   uint8_t fout;
   uint16_t init_lc;
   thread *th;
-
-  PT_LOCAL_BEGIN(pt);
+  
+  // ***** don't try this at home kids ********
+  static struct PTsmall *pt = {0}; 
+  // So now "pt" will be (pthread *)(&pt)
+  // But if you do do this, don't use member functions!!!
+  // ******************************************
+  PT_BEGIN((pthread *)(&pt));
   while(true){
-    PT_YIELD(pt);
+    PT_YIELD((pthread *)(&pt));
     for(th_loop_index = 0; th_loop_index < TH__threads.index; th_loop_index++){
       th = &TH__threads.array[th_loop_index];
       init_lc = th->pt.lc;
@@ -349,10 +354,10 @@ uint8_t thread_loop(){
       }
 error:
       clrerr();
-      PT_YIELD(pt);
+      PT_YIELD((pthread *)(&pt));
     }
   }
-  PT_END(pt);
+  PT_END((pthread *)(&pt));
 }
 
 
