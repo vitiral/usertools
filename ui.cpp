@@ -204,13 +204,15 @@ void _print_monitor(uint16_t execution_time){
 }
 
 uint8_t system_monitor(pthread *pt, char *input){
-  static uint16_t time;
   PT_BEGIN(pt);
   while(true){
-    debug("doing wait");
-    PT_WAIT_MS(pt, 5000);
-    _print_monitor((uint16_t)millis() - time);
+    pt->put_temp((uint16_t)millis());
+    iferr_catch();
+    PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - pt->get_int_temp() > 5000);
+    _print_monitor((uint16_t)millis() - pt->get_int_temp());
+    pt->clear_temp();
   }
+error:
   PT_END(pt);
 }
 
@@ -261,6 +263,7 @@ uint8_t user_interface(pthread *pt, char *input){
   
   if(buffer == NULL){
     buffer = (char *)malloc(MAX_STR_LEN);
+    memcheck(buffer);
     buffer[0] = 0;
   }
   
@@ -285,8 +288,7 @@ uint8_t user_interface(pthread *pt, char *input){
   return PT_YIELDED;
 done:
 error:
-  free(buffer);
-  buffer = NULL;
+  memclr(buffer);
   i = 0;
   return PT_YIELDED;
 }

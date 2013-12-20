@@ -163,6 +163,13 @@ struct PTsmall {
   lc_t lc;
 };
 
+class ptsmall{
+public:
+  lc_t lc;
+  ptsmall();
+  void clear_data();
+};
+
 struct PTnorm {
   lc_t lc;
   PT_data *data;
@@ -254,8 +261,11 @@ enum PTVALUES {
  *
  * \hideinitializer
  */
-#define PT_END(pt) LC_END((pt)->lc); PT_YIELD_FLAG = 0; \
-                   PT_INIT(pt); return PT_ENDED; }
+ 
+ // note: the if(0){} is so you can have an "error:" definition right before
+ // this
+#define PT_END(pt) if(0){} LC_END((pt)->lc); PT_INIT(pt); PT_YIELD_FLAG = 0; \
+                   return PT_ENDED; }
 
 /** @} */
 

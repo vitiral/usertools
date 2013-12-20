@@ -398,6 +398,10 @@ void pthread::clear_type(uint8_t type){
   
 
 // *****************************************************
-// **** psthread (small pthread)
+// **** ptsmall (small protothread)
 
+ptsmall::ptsmall(){
+  lc = 0;
+}
 
+void ptsmall::clear_data(){}

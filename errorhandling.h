@@ -15,8 +15,6 @@
 #ifndef __errorhandling_h__
 #define __errorhandling_h__
 
-#include "usertools.h"
-
 #include <string.h>
 #include <errno.h>
 #include "logging.h"

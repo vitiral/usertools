@@ -311,9 +311,8 @@ uint8_t thread_loop(){
   thread *th;
   
   // ***** don't try this at home kids ********
-  static struct PTsmall *pt = {0}; 
-  // So now "pt" will be (pthread *)(&pt)
-  // But if you do do this, don't use member functions!!!
+  static struct PTsmall pt = {0};
+  // So now "pt" will be (ptsmall *)(&pt)
   // ******************************************
   PT_BEGIN((pthread *)(&pt));
   while(true){
@@ -354,10 +353,10 @@ uint8_t thread_loop(){
       }
 error:
       clrerr();
-      PT_YIELD((pthread *)(&pt));
+      PT_YIELD(  (ptsmall *)(&pt));
     }
   }
-  PT_END((pthread *)(&pt));
+  PT_END(  (ptsmall *)(&pt));
 }
 
 
