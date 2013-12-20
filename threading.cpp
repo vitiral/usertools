@@ -87,14 +87,18 @@ void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
 }
 
 // Thread Array
-void UI__set_thread_array(TH_fake_thread *fray, uint16_t len){
+void UI__set_thread_array(thread *fray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
-  TH__threads.array = (thread *)fray;
+  TH__threads.array = fray;
   TH__threads.len = len;
   for(uint8_t i = 0; i < len; i++){
     TH__threads.array[i].fptr = NULL;
     TH__threads.array[i].pt.lc = PT_INNACTIVE;
   }
+}
+
+void UI__set_sthread_array(sthread *fray, uint16_t len){
+  
 }
 
 thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr){
@@ -314,9 +318,9 @@ uint8_t thread_loop(){
   static struct PTsmall pt = {0};
   // So now "pt" will be (ptsmall *)(&pt)
   // ******************************************
-  PT_BEGIN((pthread *)(&pt));
+  PT_BEGIN((ptsmall *)(&pt));
   while(true){
-    PT_YIELD((pthread *)(&pt));
+    PT_YIELD((ptsmall *)(&pt));
     for(th_loop_index = 0; th_loop_index < TH__threads.index; th_loop_index++){
       th = &TH__threads.array[th_loop_index];
       init_lc = th->pt.lc;

@@ -7,8 +7,10 @@
  * and has other uses.
  */
  
+
 #ifndef logging_h
 #define logging_h
+
 #include <SoftwareSerial.h>
 #include <Stream.h>
 #include <string.h>

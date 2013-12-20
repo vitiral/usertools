@@ -38,15 +38,14 @@ typedef struct TH_function{
   TH_funptr      fptr;
 };
 
-// 12 bytes 
 typedef struct thread{
-  TH_element     el;
-  TH_thfunptr    fptr;
-  pthread      pt;
-  uint16_t time;  // stores execution time in 10us increments
+  TH_element    el;
+  TH_thfunptr   fptr;
+  pthread       pt;
+  uint16_t      time;  // stores execution time in 10us increments
 };
 
-struct TH_fake_thread{
+struct TH_fake_thread{  // used so that threads can be declared as static variables
   TH_element     el;
   TH_thfunptr    fptr;
   PTnorm         pt;
@@ -91,7 +90,7 @@ typedef struct TH_ThreadArray{
                                                                         \
       static TH_fake_thread UI__thread_array[T];                                \
       static uint8_t UI__thread_len = T;                                \
-      UI__set_thread_array(UI__thread_array, UI__thread_len);           \
+      UI__set_thread_array((thread *) UI__thread_array, UI__thread_len);           \
     }while(0)
                                        
 //#define thread_function(name, func)  do{static thread name; schedule_thread(name, func)}while(0) 
@@ -120,7 +119,7 @@ void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t 
 void UI__set_function_array(TH_function *fray, uint16_t len);
 void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 
-void UI__set_thread_array(TH_fake_thread *fray, uint16_t len);
+void UI__set_thread_array(thread *fray, uint16_t len);
 thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
 
 
