@@ -297,13 +297,12 @@ enum PTVALUES {
  
  #define PT_WAIT_MS(pt, ms)                                           \
   do {                                                                \
-  LC_SET((pt)->lc);				                                            \
+  (pt)->clear_temp();                                                 \
   (pt)->put_temp((uint16_t)millis());                                 \
   iferr_return(PT_CRITICAL);   /*mem error*/                          \
-  if(!(((uint16_t)millis()) - (uint16_t)(pt)->get_int_temp() > ms)) {	\
-      return PT_WAITING;			\
-    }						              \
-  (pt)->clear_temp();                                                   \
+  PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - (uint16_t)(pt)->get_int_temp() \
+    > ms);                                                            \
+  (pt)->clear_temp();                                                 \
   } while(0)
 
 /**
