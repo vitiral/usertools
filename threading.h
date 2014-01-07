@@ -45,14 +45,26 @@ typedef struct thread{
   uint16_t      time;  // stores execution time in 10us increments
 };
 
+// 11 bytes
 struct TH_fake_thread{  // used so that threads can be declared as static variables
-  TH_element     el;
-  TH_thfunptr    fptr;
-  PTnorm         pt;
-  uint16_t time;  // stores execution time in 10us increments
+  TH_element      el;
+  TH_thfunptr     fptr;
+  PTnorm          pt;
+  uint16_t        time;  // stores execution time in 10us increments
 };
 
+// 7 bytes
+typedef struct sthread{
+  uint8_t         el_num;
+  TH_thfunptr     fptr;
+  pthread         pt;
+};
 
+typedef struct TH_fake_sthread{
+  uint8_t         el_num;
+  TH_thfunptr     fptr;
+  PTnorm          pt;
+};
 
 typedef struct TH_Variables{
   TH_variable *array;
@@ -72,40 +84,55 @@ typedef struct TH_ThreadArray{
   uint16_t index;
 };
 
+typedef struct TH_sThreadArray{
+  struct sthread *array;
+  uint8_t len;
+  uint16_t index;
+};
+
 // #####################################################
 // ### Intended Exported Functions
 
 #define TH_MAX_NAME_LEN 10
 
 // Setup Macros
-
-#define thread_setup(V, F, T) do{                                       \
-      static TH_variable UI__variable_array[V];                         \
-      static uint8_t UI__variable_len = V;                              \
-      UI__set_variable_array(UI__variable_array, UI__variable_len);     \
-                                                                        \
-      static TH_function UI__function_array[F];                         \
-      static uint8_t UI__function_len = F;                              \
-      UI__set_function_array(UI__function_array, UI__function_len);     \
-                                                                        \
-      static TH_fake_thread UI__thread_array[T];                                \
-      static uint8_t UI__thread_len = T;                                \
-      UI__set_thread_array((thread *) UI__thread_array, UI__thread_len);           \
+// w/o user interface
+#define thread_setup(V, F, T) do{                                         \
+      static TH_fake_sthread TH__sthread_array[T];                        \
+      static uint8_t TH__sthread_len = T;                                 \
+      TH__set_thread_array((sthread *) TH__sthread_array, TH__sthread_len);  \
     }while(0)
+
+// for user interface, with names etc.
+#define thread_setup_ui(V, F, T) do{                                       \
+      static TH_variable TH__variable_array[V];                         \
+      static uint8_t TH__variable_len = V;                              \
+      TH__set_variable_array(TH__variable_array, TH__variable_len);     \
+                                                                        \
+      static TH_function TH__function_array[F];                         \
+      static uint8_t TH__function_len = F;                              \
+      TH__set_function_array(TH__function_array, TH__function_len);     \
+                                                                        \
+      static TH_fake_thread TH__thread_array[T];                            \
+      static uint8_t TH__thread_len = T;                                    \
+      TH__set_thread_array((thread *) TH__thread_array, TH__thread_len);    \
+    }while(0)
+
+
                                        
 //#define thread_function(name, func)  do{static thread name; schedule_thread(name, func)}while(0) 
 
 // Expose Macros
-#define expose_variable(name, var) UI__expose_variable(F(name), (void *)&(var), sizeof(var)) 
-#define expose_function(name, FUN) UI__expose_function(F(name), FUN)
-#define expose_thread(name, FUN)   UI__expose_thread(F(name), FUN)
-
+#define expose_variable(name, var) TH__expose_variable(F(name), (void *)&(var), sizeof(var)) 
+#define expose_function(name, FUN) TH__expose_function(F(name), FUN)
+#define expose_thread(name, FUN)   TH__expose_thread(name, FUN)
 #define start_thread(name, func) schedule_thread(F(name), func)
 
+uint8_t thread_ui_loop();
 uint8_t thread_loop();
 
 void kill_thread(thread *th);
-void kill_thread(uint8_t index);
+void kill_thread(uint8_t el_num);
 void kill_thread(char *name);
 void kill_thread(const __FlashStringHelper *name);
 
@@ -113,16 +140,15 @@ void kill_thread(const __FlashStringHelper *name);
 // #####################################################
 // ### Macro Helpers
 
-void UI__set_variable_array(TH_variable *vray, uint16_t len);
-void UI__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
+void TH__set_variable_array(TH_variable *vray, uint16_t len);
+void TH__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
 
-void UI__set_function_array(TH_function *fray, uint16_t len);
-void UI__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
+void TH__set_function_array(TH_function *fray, uint16_t len);
+void TH__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 
-void UI__set_thread_array(thread *fray, uint16_t len);
-thread *UI__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
-
-
+void TH__set_thread_array(thread *fray, uint16_t len);
+thread *TH__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
+sthread *TH__expose_thread(uint8_t el_num, TH_thfunptr fptr);
 
 // #####################################################
 // ### User Functions
@@ -147,5 +173,7 @@ thread *TH_get_thread(char *name);
 
 extern char *th_calling;
 extern uint8_t th_loop_index;
+
+extern TH_sThreadArray TH__sthreads;
 
 #endif

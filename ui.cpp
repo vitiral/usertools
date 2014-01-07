@@ -154,22 +154,6 @@ void cmd_kill(char *input){
   else{
     raise_return(ERR_INPUT);
   }
-  /*
-  else {
-    v = strtol(input, tailptr, 10);
-    debug(input);
-    debug((unsigned short)(*tailptr), HEX);
-    debug((unsigned long)input, HEX);
-    debug((unsigned long)*tailptr, HEX);
-    debug((unsigned long)**tailptr, HEX);
-    debug(tailptr == NULL);
-    sdebug(*tailptr == wordend); cdebug(F(" kill value ")); edebug(v);
-    assert_raise_return(*tailptr == wordend, ERR_INPUT);
-    //assert_raise_return(tailptr != NULL, ERR_INPUT);   //UNDOCUMENTED: apparently the value can be null! fun!
-    //assert_raise_return(**tailptr == 0, ERR_INPUT);
-    kill_thread(v);
-  }
-  */
   Logger.print(F("Killed:"));
   Logger.println(input);
 
@@ -301,7 +285,7 @@ void UI__setup_std(){
   debug(F("UiStdSetup:"));
   start_thread("*UI", user_interface);  // user interface. REQUIRED
   
-  expose_thread("mon", system_monitor); // system monitor
+  expose_thread(F("mon"), system_monitor); // system monitor
   
   expose_function("v", cmd_v);
   expose_function("?", print_options);
@@ -315,7 +299,7 @@ void ui_loop(){
   ui_pat_dog();
   
   Logger.wrote = false;
-  thread_loop();
+  thread_ui_loop();
   if(Logger.wrote){
     Logger.repeat('#', 5);
     Logger.println();

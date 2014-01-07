@@ -23,7 +23,7 @@
 
 #define UI__MIN_F 3
 #define UI__MIN_T 2
-#define ui_setup_std(V, F, T) do{thread_setup(V, (F) + UI__MIN_F, (T) + UI__MIN_T); UI__setup_std();}while(0)
+#define ui_setup_std(V, F, T) do{thread_setup_ui(V, (F) + UI__MIN_F, (T) + UI__MIN_T); UI__setup_std();}while(0)
 
 void UI__setup_std();
 #define UI_CMD_END_CHAR 0x0A
