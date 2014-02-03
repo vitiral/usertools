@@ -11,7 +11,6 @@
 #ifndef logging_h
 #define logging_h
 
-#include <SoftwareSerial.h>
 #include <Stream.h>
 #include <string.h>
 
@@ -24,6 +23,10 @@
   #ifndef LOGLEVEL
   #define LOGLEVEL LOG_DEBUG
   #endif
+#endif
+
+#ifndef LOGLEVEL
+#define LOGLEVEL 0
 #endif
 
 // Dynamic Logging, used in error handling
@@ -42,6 +45,13 @@
   #define set_loglevel(LL)
 #endif
 
+//#ifdef SoftwareSerial_h
+#if LOGLEVEL > 0
+
+#define LOG_STD_SERIAL 0
+#define LOG_SOFT_SERIAL 1
+
+#include <SoftwareSerial.h>
 class Logging : public Stream
 {
 private:
@@ -71,6 +81,40 @@ public:
   using Print::write;
 };
 
+#define L_set_silent(S)       Logger.silent = S
+#define L_silent              Logger.silent
+#define L_set_wrote(w)        Logger.wrote = w
+#define L_wrote               Logger.wrote
+#define L_config_std()        Logger.config_std()
+#define L_config_soft(...)    Logger.config_soft(__VA_ARGS__)
+#define L_peek()              Logger.peek()
+#define L_repeat(...)         Logger.repeat(__VA_ARGS__)
+#define L_write(c)            Logger.write(c)
+#define L_print(...)          Logger.print(__VA_ARGS__)
+#define L_println(...)        Logger.println(__VA_ARGS__)
+#define L_read()              Logger.read()
+#define L_available()         Logger.available()
+#define L_flush()             Logger.flush()
+
 extern Logging Logger;
+
+#else
+
+#define L_set_silent(S) 
+#define L_silent              true
+#define L_set_wrote(w)        
+#define L_wrote               false
+#define L_config_std()    
+#define L_config_soft(...) 
+#define L_peek()              0
+#define L_repeat(...)
+#define L_write(c)            0            
+#define L_print(...)          0  
+#define L_println(...)        0
+#define L_read()              0
+#define L_available()         false
+#define L_flush()
+
+#endif
 
 #endif

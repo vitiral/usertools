@@ -16,12 +16,12 @@
 
 #include "pt.h"
 
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 #include "errorhandling.h"
 
 #include "threading.h"
 #include "strtools.h"
-#include "ui.h"
+//#include "ui.h"
 
 #define MAX_STR_LEN 100
 #define MAX_ARRAY_LEN 256
@@ -123,13 +123,13 @@ void TH__set_thread_array(thread *fray, uint16_t len){
 // ### Internal Functions
 
 void log_thread_exit(thread *th){
-  Logger.print(F("[Th Exit]:"));
-  Logger.println(th->el.name);
+  L_print(F("[Th Exit]:"));
+  L_println(th->el.name);
 }
 
 void log_thread_start(thread *th){
-  Logger.print(F("[Th Start]:"));
-  Logger.println(th->el.name);
+  L_print(F("[Th Start]:"));
+  L_println(th->el.name);
   debug(th->pt.lc);
 }
 
@@ -181,60 +181,56 @@ error:
 // #####################################################
 // ### Exported Functions
 
-// scehdule an uninitilized function
-thread *schedule_thread(const __FlashStringHelper *name, TH_thfunptr fun){
-  sdebug(F("Sch Raw:"));
-  edebug(name);
-  clrerr();
-  thread *th = TH__expose_thread(name, fun);
-  iferr_log_return(NULL);
-  sdebug(F("Check name:"));
-  cdebug(th->el.name);
-  edebug(th->pt.lc);
-  schedule_thread(th, EH_EMPTY_STR);
-  return th;
-}
-
-
-uint8_t call_thread(char *name, char *input){
+thread *TH_get_thread(char *name){
   thread *th;
   int8_t n;
   uint8_t i;
   uint8_t name_len = strlen(name);
-
-  sdebug(F("cT name:")); cdebug(name); cdebug(F(" index=")); 
-  edebug(TH__threads.index);
+  sdebug(F("gt: "));
+  
   for(i = 0; i < TH__threads.index; i++){
     th = &TH__threads.array[i];
     if(cmp_str_elptr(name, name_len, th)){
-      sdebug("Match"); cdebug(name);
       edebug(th->el.name);
-      schedule_thread(th, input);
-      return true;
+      return th;
     }
   }
-  debug("rtn false");
-  return false; 
+  edebug("NotFound");
+  return NULL;
+}
+
+TH_function *TH_get_function(char *name){
+  TH_function *fun;
+  int8_t n;
+  uint8_t i;
+  uint8_t name_len = strlen(name);
+  sdebug(F("gf: "));
+  
+  for(i = 0; i < TH__functions.index; i++){
+    fun = &TH__functions.array[i];
+    if(cmp_str_elptr(name, name_len, fun)){
+      edebug(fun->el.name);
+      return fun;
+    }
+  }
+  edebug("NotFound");
+  return NULL;
+}
+
+uint8_t call_thread(char *name, char *input){
+  thread *th = TH_get_thread(name);
+  if(th == NULL) return false;
+  schedule_thread(th, input);
+  return true;
 }
 
 uint8_t call_function(char *name, char *input){
-  uint8_t name_len = strlen(name);
-  uint8_t out = 0;
-  TH_function *fun;
+  TH_function *fun = TH_get_function(name);
+  if(fun == NULL) return false;
   th_calling = name;
-  sdebug(F("cF name:")); cdebug(name); cdebug(F(" index=")); 
-  edebug(TH__functions.index);
-  for(uint8_t i = 0; i < TH__functions.index; i++){
-    fun = &TH__functions.array[i];
-    //debug(fun->el.name);
-    if(cmp_str_elptr(name, name_len, fun)){
-      fun->fptr(input);
-      out = true;
-    }
-  }
-error:
+  fun->fptr(input);
   th_calling = NULL;
-  return out;
+  return true;
 }
 
 uint8_t call_name(char *name, char *input){
@@ -259,24 +255,6 @@ TH_variable *TH_get_variable(char *name){
       return var;
     }
   }
-  return NULL;
-}
-
-thread *TH_get_thread(char *name){
-  thread *th;
-  int8_t n;
-  uint8_t i;
-  uint8_t name_len = strlen(name);
-  sdebug(F("gt: "));
-  
-  for(i = 0; i < TH__threads.index; i++){
-    th = &TH__threads.array[i];
-    if(cmp_str_elptr(name, name_len, th)){
-      edebug(th->el.name);
-      return th;
-    }
-  }
-  edebug("NotFound");
   return NULL;
 }
 
@@ -386,13 +364,13 @@ sthread *TH__expose_thread(uint8_t el_num, TH_thfunptr fptr){
 
 
 void log_thread_exit(sthread *th){
-  Logger.print(F("[Th Exit]:"));
-  Logger.println(th->el_num);
+  L_print(F("[Th Exit]:"));
+  L_println(th->el_num);
 }
 
 void log_thread_start(sthread *th){
-  Logger.print(F("[Th Start]:"));
-  Logger.println(th->el_num);
+  L_print(F("[Th Start]:"));
+  L_println(th->el_num);
   debug(th->pt.lc);
 }
 
@@ -402,7 +380,7 @@ void th_set_innactive(sthread *th){
   th->pt.lc = PT_INNACTIVE;
 }
 
-uint8_t schedule_thread(sthread *th) {
+uint8_t schedule_thread(sthread *th, char *input) {
   uint8_t out = false;
   
   sdebug(F("Calling:"));
@@ -423,7 +401,7 @@ error:
   return out;
 }
 
-sthread *schedule_thread(uint8_t el_num, TH_thfunptr fun){
+sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun, char *input){
   sdebug(F("Sch Raw:"));
   edebug(el_num);
   clrerr();
@@ -431,14 +409,18 @@ sthread *schedule_thread(uint8_t el_num, TH_thfunptr fun){
   iferr_log_return(NULL);
   sdebug(F("Check name:"));
   cdebug(th->el_num);
-  schedule_thread(th);
+  schedule_thread(th, input);
   return th;
+}
+
+
+sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun){
+  return expose_run_thread(el_num, fun, EH_EMPTY_STR);
 }
 
 sthread *TH_get_thread(uint8_t el_num){
   uint8_t i;
   sdebug(F("gt: "));
-  
   for(i = 0; i < TH__sthreads.index; i++){
     if(TH__sthreads.array[i].el_num == el_num){
       edebug(TH__sthreads.array[i].el_num);
@@ -457,6 +439,13 @@ void kill_thread(uint8_t el_num){
   sthread *th = TH_get_thread(el_num);
   assert_raise_return(th, ERR_VALUE);
   kill_thread(th);
+}
+
+uint8_t call_thread(uint8_t el_num, char *input){
+  sthread *th = TH_get_thread(el_num);
+  assert_raise_return(th, ERR_VALUE, false);
+  schedule_thread(th, input);
+  return true;
 }
 
 uint8_t thread_loop(){

@@ -8,6 +8,7 @@
  
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include "usertools.h"
 #include "errorhandling.h"
 #include "logging.h"
 #include "MemoryFree.h"
@@ -28,85 +29,85 @@ void printmem(){
   uint16_t time = micros();
   mem = freeMemory();
   time = micros() - time;
-  Logger.print("Mem:");
-  Logger.print(time);
-  Logger.print("us FM:");
-  Logger.print(mem);
+  L_print("Mem:");
+  L_print(time);
+  L_print("us FM:");
+  L_print(mem);
 #else
-  Logger.print(F("M:"));
-  Logger.print(freeMemory());
+  L_print(F("M:"));
+  L_print(freeMemory());
 #endif
 }
   
 void EH_printinfo(char *file, unsigned int line)
 {
-  Logger.print(errno); 
-  Logger.write(' '); 
-  Logger.print(file); 
-  Logger.write(':'); 
-  Logger.print(line);
+  L_print(errno); 
+  L_write(' '); 
+  L_print(file); 
+  L_write(':'); 
+  L_print(line);
 }
 
 void EH_printerrp(){
-  Logger.write('(');
-  Logger.print(errprint);
-  Logger.write(':');
+  L_write('(');
+  L_print(errprint);
+  L_write(':');
   
   switch(errprint){
   case ERR_NOERR:
-    Logger.print(F("No")); break;
+    L_print(F("No")); break;
   case ERR_TIMEOUT:
-    Logger.print(F("Timeout")); break;
+    L_print(F("Timeout")); break;
   case ERR_COM:
-    Logger.print(F("Com")); break;
+    L_print(F("Com")); break;
   case ERR_INPUT:
-    Logger.print(F("Input")); break;
+    L_print(F("Input")); break;
   
   case ERR_TYPE:
-    Logger.print(F("Type")); break;
+    L_print(F("Type")); break;
   case ERR_VALUE:
-    Logger.print(F("Value")); break;
+    L_print(F("Value")); break;
   case ERR_ASSERT:
-    Logger.print(F("Assert")); break;
+    L_print(F("Assert")); break;
   case ERR_INDEX:
-    Logger.print(F("Index")); break;
-    Logger.print(F("Mem")); break;
+    L_print(F("Index")); break;
+    L_print(F("Mem")); break;
   case ERR_CRITICAL:
-    Logger.print(F("CRIT")); break;
+    L_print(F("CRIT")); break;
   
   case ERR_CLEARED:
-    Logger.print(F("Clred")); break;
+    L_print(F("Clred")); break;
   case ERR_NONEW:
-    Logger.print(F("NoNew")); break;
+    L_print(F("NoNew")); break;
   case ERR_UNKNOWN:
   default:
-    Logger.print(F("Unknown")); break;
+    L_print(F("Unknown")); break;
   }
-  Logger.print(F("Err"));
-  Logger.write(')');
+  L_print(F("Err"));
+  L_write(')');
 }
 
 void EH_start_debug(char *file, unsigned int line){
-  Logger.print(EH_GEN_ST_MSG);
-  Logger.print(F("[DBG]:"));
+  L_print(EH_GEN_ST_MSG);
+  L_print(F("[DBG]:"));
   printmem();
-  Logger.print(F("(")); 
+  L_print(F("(")); 
   EH_printinfo(file, line); 
-  Logger.print(EH_GEN_END_MSG);
+  L_print(EH_GEN_END_MSG);
 }
 
 void EH_start_info(char *file, unsigned int line){
-  Logger.print(EH_GEN_ST_MSG);
-  Logger.print(F("[INFO]: ("));
+  L_print(EH_GEN_ST_MSG);
+  L_print(F("[INFO]: ("));
   EH_printinfo(file, line);
-  Logger.print(EH_GEN_END_MSG);
+  L_print(EH_GEN_END_MSG);
 }
 
 void EH_log_err(char *file, unsigned int line){
-  Logger.print(EH_GEN_ST_MSG);
-  Logger.print(F("[ERR](")); 
+  L_print(EH_GEN_ST_MSG);
+  L_print(F("[ERR](")); 
   EH_printinfo(file, line);
-  Logger.print(EH_GEN_END_MSG); 
+  L_print(EH_GEN_END_MSG); 
   EH_printerrp();
   if(errprint) errprint = ERR_NONEW;
 }
@@ -124,6 +125,6 @@ void seterr(uint8_t error){
 }
 
 void EH_test(){
-  Logger.println("Doing dbg test");
+  L_println("Doing dbg test");
 }
 

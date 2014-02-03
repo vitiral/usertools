@@ -41,15 +41,15 @@ uint16_t ui_loop_time = 0;
 // ### Interrupts
 
 void ui_watchdog(){
-  Logger.print("[CRITICAL] Timed out:");
+  L_print("[CRITICAL] Timed out:");
   if(th_calling){
-    Logger.println(th_calling);
+    L_println(th_calling);
   }
   else if(th_loop_index < 255){
-    Logger.println(TH__threads.array[th_loop_index].el.name);
+    L_println(TH__threads.array[th_loop_index].el.name);
   }
   else {
-      Logger.println("Unknown");
+      L_println("Unknown");
   }
   ui_loop_time = millis();
   //asm volatile ("  jmp 0"); 
@@ -94,23 +94,23 @@ ISR(WDT_vect) {
 void __print_row(String *row, uint8_t *col_widths){
   uint8_t si = 0, column = 0, ncolumn = 0;
   while((*row)[si] != 0){
-    Logger.write('|');
-    Logger.wrote = 0;
+    L_write('|');
+    L_set_wrote(0);
     while(column == ncolumn){
       switch((*row)[si]){
       case 0:
-        Logger.println();
+        L_println();
         return;
       case '\t':
         ncolumn += 1;
         break;
       default:
-        Logger.write((*row)[si]);
+        L_write((*row)[si]);
       }
       si++;
     }
-    while(Logger.wrote < col_widths[column]){
-      Logger.write(' ');
+    while(L_wrote < col_widths[column]){
+      L_write(' ');
     }
     column = ncolumn;
   }
@@ -154,16 +154,16 @@ void cmd_kill(char *input){
   else{
     raise_return(ERR_INPUT);
   }
-  Logger.print(F("Killed:"));
-  Logger.println(input);
+  L_print(F("Killed:"));
+  L_println(input);
 
 }
 
 void _print_monitor(uint16_t execution_time){
-  Logger.print(F("Total Time: "));
-  Logger.print(execution_time);
-  Logger.print(F("  Free Memory:"));
-  Logger.println(freeMemory());
+  L_print(F("Total Time: "));
+  L_print(execution_time);
+  L_print(F("  Free Memory:"));
+  L_println(freeMemory());
   
   
   char nameray[] = "Ind\tName\tt exec[ms]\tLine"; // also used for storing flash names
@@ -202,24 +202,24 @@ error:
 
 void print_options(char *input){
   uint8_t i = 0;
-  Logger.repeat('*', 5);
-  Logger.println(F("Threads"));
+  L_repeat('*', 5);
+  L_println(F("Threads"));
   for(i = 0; i < TH__threads.index; i++){
-    Logger.print(i);
-    Logger.write('\t');
-    Logger.println(TH__threads.array[i].el.name);
+    L_print(i);
+    L_write('\t');
+    L_println(TH__threads.array[i].el.name);
   }
   
-  Logger.repeat('*', 5);
-  Logger.println(F("\nVars"));
+  L_repeat('*', 5);
+  L_println(F("\nVars"));
   for(i = 0; i < TH__variables.index; i++){
-    Logger.println(TH__variables.array[i].el.name);
+    L_println(TH__variables.array[i].el.name);
   }
   
-  Logger.repeat('*', 5);
-  Logger.println(F("\nFuncs"));
+  L_repeat('*', 5);
+  L_println(F("\nFuncs"));
   for(i = 0; i < TH__functions.index; i++){
-    Logger.println(TH__functions.array[i].el.name);
+    L_println(TH__functions.array[i].el.name);
   }
 }
 
@@ -229,13 +229,13 @@ uint8_t print_variable(char *name){
   uint8_t i;
   var = TH_get_variable(name);
   assert_raise_return(var, ERR_INPUT, false);
-  Logger.print(F("v=x"));
+  L_print(F("v=x"));
   for(n = var->size - 1; n >= 0; n--){
     uint8_t *chptr = (uint8_t*)(var->vptr);  // works
-    if(chptr[n] < 0x10) Logger.write('0');
-    Logger.print(chptr[n], HEX);
+    if(chptr[n] < 0x10) L_write('0');
+    L_print(chptr[n], HEX);
   }
-  Logger.println();
+  L_println();
   return true;
 }
 
@@ -251,12 +251,12 @@ uint8_t user_interface(pthread *pt, char *input){
     buffer[0] = 0;
   }
   
-  if(Logger.available()){
-    while(Logger.available()){
-      c = Logger.read();
+  if(L_available()){
+    while(L_available()){
+      c = L_read();
       buffer[i] = c;
       if(i > MAX_STR_LEN){
-        while(Logger.available()) Logger.read();
+        while(L_available()) L_read();
         raise(ERR_COM, F("Size"));
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
@@ -278,7 +278,7 @@ error:
 }
 
 void ui_std_greeting(){
-  Logger.println(F("!!!Make sure you are sending NL + CR\n?=help\n"));
+  L_println(F("!!!Make sure you are sending NL + CR\n?=help\n"));
 }
 
 void UI__setup_std(){
@@ -298,11 +298,11 @@ void UI__setup_std(){
 void ui_loop(){
   ui_pat_dog();
   
-  Logger.wrote = false;
+  L_set_wrote(false);
   thread_ui_loop();
-  if(Logger.wrote){
-    Logger.repeat('#', 5);
-    Logger.println();
+  if(L_wrote){
+    L_repeat('#', 5);
+    L_println();
   }
 }
 

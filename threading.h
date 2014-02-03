@@ -97,10 +97,9 @@ typedef struct TH_sThreadArray{
 
 // Setup Macros
 // w/o user interface
-#define thread_setup(V, F, T) do{                                         \
+#define thread_setup(T) do{                                         \
       static TH_fake_sthread TH__sthread_array[T];                        \
-      static uint8_t TH__sthread_len = T;                                 \
-      TH__set_thread_array((sthread *) TH__sthread_array, TH__sthread_len);  \
+      TH__set_thread_array((sthread *) TH__sthread_array, T);  \
     }while(0)
 
 // for user interface, with names etc.
@@ -127,6 +126,7 @@ typedef struct TH_sThreadArray{
 #define expose_function(name, FUN) TH__expose_function(F(name), FUN)
 #define expose_thread(name, FUN)   TH__expose_thread(name, FUN)
 #define start_thread(name, func) schedule_thread(F(name), func)
+#define expose_run_thread(name, func, ...) TH_expose_run_thread(name, func, ##__VA_ARGS__)
 
 uint8_t thread_ui_loop();
 uint8_t thread_loop();
@@ -147,8 +147,14 @@ void TH__set_function_array(TH_function *fray, uint16_t len);
 void TH__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 
 void TH__set_thread_array(thread *fray, uint16_t len);
+void TH__set_thread_array(sthread *fray, uint16_t len);
+
 thread *TH__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
 sthread *TH__expose_thread(uint8_t el_num, TH_thfunptr fptr);
+
+
+sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun, char *input);
+sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun);
 
 // #####################################################
 // ### User Functions
