@@ -16,7 +16,6 @@
 
 #include "pt.h"
 
-//#include <SoftwareSerial.h>
 #include "errorhandling.h"
 
 #include "threading.h"
@@ -362,7 +361,7 @@ sthread *TH__expose_thread(uint8_t el_num, TH_thfunptr fptr){
   return &(TH__sthreads.array[TH__sthreads.index - 1]);
 }
 
-
+/*
 void log_thread_exit(sthread *th){
   L_print(F("[Th Exit]:"));
   L_println(th->el_num);
@@ -373,6 +372,7 @@ void log_thread_start(sthread *th){
   L_println(th->el_num);
   debug(th->pt.lc);
 }
+*/
 
 void th_set_innactive(sthread *th){
   sdebug(F("Set Th InA:"));
@@ -394,7 +394,7 @@ uint8_t schedule_thread(sthread *th, char *input) {
     out = true;
   }
   else{
-    log_thread_start(th);
+    //log_thread_start(th);
     out = true;
   }
 error:
@@ -474,7 +474,7 @@ uint8_t thread_loop(){
           log_err(F("NoDie"));
         }
         th_set_innactive(th);
-        log_thread_exit(th);
+        //log_thread_exit(th);
       }
 error:
       clrerr();

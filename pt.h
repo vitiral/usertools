@@ -210,7 +210,8 @@ enum PTVALUES {
  * \hideinitializer
  */
 #define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_data();} while(0)
-
+//#define PT_INIT(pt)   LC_INIT((pt)->lc)
+  
 /** @} */
 
 /**
@@ -264,7 +265,7 @@ enum PTVALUES {
  
  // note: the if(0){} is so you can have an "error:" definition right before
  // this
-#define PT_END(pt) if(0){} LC_END((pt)->lc); PT_INIT(pt); PT_YIELD_FLAG = 0; \
+#define PT_END(pt) if(0){} LC_END((pt)->lc); PT_INIT(pt); \
                    return PT_ENDED; }
 
 /** @} */

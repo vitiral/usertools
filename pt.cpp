@@ -151,7 +151,7 @@ error:
 }
 
 void pthread::destroy_data(PT_data *pd, PT_data *prev){
-  assert(pd);
+  if(pd == NULL) return; //assert(pd);
   if(prev == NULL)  data = pd->b.next;
   else              prev->b.next = pd->b.next;
   
@@ -162,8 +162,6 @@ void pthread::destroy_data(PT_data *pd, PT_data *prev){
   }
   
   free(pd);
-  return;
-error:
   return;
 }
 
@@ -227,14 +225,6 @@ error:
   return NULL;
 }
 
-
-// *****************************************************
-// **** Temporary
-// * Temp functions do not have error checking. If a temp functions fails
-// * to get memory, it will simply crash a system (it will be approaching
-// * the memory limit anyway). 
-// *   - Users should not use temp functions, they are hard-coded into the 
-// *     macros.
 PT_data *pthread::get_temp(uint8_t type){
   assert_raise(data, ERR_INDEX);
   assert_raise(data->b.type == TYPE_TEMP bitor type, ERR_INDEX);
