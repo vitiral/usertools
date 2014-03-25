@@ -48,7 +48,7 @@ void TH__set_variable_array(TH_variable *vray, uint16_t len){
   TH__variables.index = 0;
 }
 
-void TH__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize){
+void expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize){
   assert_return(TH__variables.index <= TH__variables.len);
   assert_return(flash_len(name) <= TH_MAX_NAME_LEN);
   assert_raise_return(TH__variables.array, ERR_VALUE); // assert not null
@@ -72,7 +72,7 @@ void TH__set_function_array(TH_function *fray, uint16_t len){
   TH__functions.index = 0;
 }
 
-void TH__expose_function(const __FlashStringHelper *name, TH_funptr fptr){
+void expose_function(const __FlashStringHelper *name, TH_funptr fptr){
   assert_return(TH__functions.index <= TH__functions.len);
   assert_return(flash_len(name) <= TH_MAX_NAME_LEN);
   assert_raise_return(TH__functions.array, ERR_VALUE); // assert not null
@@ -330,7 +330,7 @@ error:
       PT_YIELD(  (ptsmall *)(&pt));
     }
   }
-  PT_END(  (ptsmall *)(&pt));
+  PT_END((ptsmall *)(&pt));
 }
 
 
@@ -347,7 +347,7 @@ void TH__set_thread_array(sthread *fray, uint16_t len){
   }
 }
 
-sthread *TH__expose_thread(uint8_t el_num, TH_thfunptr fptr){
+sthread *expose_thread(uint8_t el_num, TH_thfunptr fptr){
   debug(F("ExpSTh"));
   assert_return(TH__sthreads.index <= TH__sthreads.len, NULL);
   assert_raise_return(TH__sthreads.array, ERR_VALUE, NULL); // assert not null
@@ -405,7 +405,7 @@ sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun, char *input){
   sdebug(F("Sch Raw:"));
   edebug(el_num);
   clrerr();
-  sthread *th = TH__expose_thread(el_num, fun);
+  sthread *th = expose_thread(el_num, fun);
   iferr_log_return(NULL);
   sdebug(F("Check name:"));
   cdebug(th->el_num);

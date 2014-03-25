@@ -167,7 +167,8 @@ class ptsmall{
 public:
   lc_t lc;
   ptsmall();
-  void clear_data();
+  //void clear_data();
+  void clear_output();
 };
 
 struct PTnorm {
@@ -209,9 +210,9 @@ enum PTVALUES {
  *
  * \hideinitializer
  */
-#define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_data();} while(0)
+#define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_output();} while(0)
 //#define PT_INIT(pt)   LC_INIT((pt)->lc)
-  
+
 /** @} */
 
 /**

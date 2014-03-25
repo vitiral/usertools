@@ -287,10 +287,9 @@ void UI__setup_std(){
   
   expose_thread(F("mon"), system_monitor); // system monitor
   
-  expose_function("v", cmd_v);
-  expose_function("?", print_options);
-  expose_function("kill", cmd_kill);
-  
+  expose_function(F("v"), cmd_v);
+  expose_function(F("?"), print_options);
+  expose_function(F("kill"), cmd_kill);
   
   ui_watchdog_setup();
 }

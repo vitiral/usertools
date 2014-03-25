@@ -117,16 +117,14 @@ typedef struct TH_sThreadArray{
       TH__set_thread_array((thread *) TH__thread_array, TH__thread_len);    \
     }while(0)
 
-
-                                       
 //#define thread_function(name, func)  do{static thread name; schedule_thread(name, func)}while(0) 
 
 // Expose Macros
-#define expose_variable(name, var) TH__expose_variable(F(name), (void *)&(var), sizeof(var)) 
-#define expose_function(name, FUN) TH__expose_function(F(name), FUN)
-#define expose_thread(name, FUN)   TH__expose_thread(name, FUN)
-#define start_thread(name, func) schedule_thread(F(name), func)
-#define expose_run_thread(name, func, ...) TH_expose_run_thread(name, func, ##__VA_ARGS__)
+//#define expose_variable(name, var) TH__expose_variable(F(name), (void *)&(var), sizeof(var)) 
+//#define expose_function(name, FUN) TH__expose_function(F(name), FUN)
+//#define expose_thread(name, FUN)   TH__expose_thread(name, FUN)
+//#define start_thread(name, func) schedule_thread(F(name), func)
+//#define expose_run_thread(name, func, ...) TH_expose_run_thread(name, func, ##__VA_ARGS__)
 
 uint8_t thread_ui_loop();
 uint8_t thread_loop();
@@ -141,17 +139,16 @@ void kill_thread(const __FlashStringHelper *name);
 // ### Macro Helpers
 
 void TH__set_variable_array(TH_variable *vray, uint16_t len);
-void TH__expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
+void expose_variable(const __FlashStringHelper *name, void *varptr, uint8_t varsize);
 
 void TH__set_function_array(TH_function *fray, uint16_t len);
-void TH__expose_function(const __FlashStringHelper *name, TH_funptr fptr);
+void expose_function(const __FlashStringHelper *name, TH_funptr fptr);
 
 void TH__set_thread_array(thread *fray, uint16_t len);
 void TH__set_thread_array(sthread *fray, uint16_t len);
 
-thread *TH__expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
-sthread *TH__expose_thread(uint8_t el_num, TH_thfunptr fptr);
-
+thread *expose_thread(const __FlashStringHelper *name, TH_thfunptr fptr);
+sthread *expose_thread(uint8_t el_num, TH_thfunptr fptr);
 
 sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun, char *input);
 sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun);
@@ -161,10 +158,11 @@ sthread *TH_expose_run_thread(uint8_t el_num, TH_thfunptr fun);
 
 thread *schedule_thread(const __FlashStringHelper *name, TH_thfunptr fun);
 uint8_t call_thread(char *name, char *input);
+uint8_t call_thread(uint8_t el_num, char *input);
+
 uint8_t call_function(char *name, char *input);
 uint8_t call_name(char *name, char *input);
 uint8_t restart_thread(thread *th);
-
 
 // #####################################################
 // ### Package Access
