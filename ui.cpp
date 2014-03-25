@@ -112,7 +112,22 @@ void __print_row(String *row, uint8_t *col_widths){
   }
 }
 
-void call_thread(char *name, char *input){
+void UI_call_function(char *name, char *input){
+  uint8_t el_num;
+  char *c;
+  
+  clrerr();
+  // check if name is a number
+  el_num = get_int(name);
+  if(not errno){
+    call_function(el_num, input);
+    return;
+  }
+  
+  //TODO: search through the thread names.
+}
+
+void UI_call_thread(char *name, char *input){
   uint8_t el_num;
   char *c;
   
@@ -125,7 +140,6 @@ void call_thread(char *name, char *input){
   }
   
   //TODO: search through the thread names.
-  
 }
 
 void ui_process_command(char *c){
@@ -141,7 +155,7 @@ void ui_process_command(char *c){
   sdebug(F("Calling Name:"));
   cdebug(c2); cdebug(':');
   edebug(c);
-  call_name(c2, c); // name, input
+  UI_call_function(c2, c); // name, input
 }
 
 void cmd_v(char *input){
@@ -204,6 +218,7 @@ uint8_t system_monitor(pthread *pt, char *input){
   while(true){
     pt->put_temp((uint16_t)millis());
     iferr_catch();
+    PT_WAIT_MS(5000);
     PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - pt->get_int_temp() > 5000);
     _print_monitor((uint16_t)millis() - pt->get_int_temp());
     pt->clear_temp();
