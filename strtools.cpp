@@ -105,13 +105,18 @@ char *_get_word(char **c){
   return word;
 }
 
+long int get_int(char *c){
+  if (*c < '0' or *c > '9'){        // the strtol documentation doesn't seem to be working!!!
+      raise_return(ERR_INPUT, 0);   // it won't tell me if there has been an error (I've tried with the pointer)
+  }
+  return strtol(c, NULL, 0);
+}
+
 long int _get_int(char **c){
   char *word = _get_word(c);
-  iferr_log_return(0);
-  if (*word < '0' or *word > '9'){ // the strtol documentation doesn't seem to be working!!!
-      raise_return(ERR_INPUT, 0);  // it won't tell me if there has been an error (I've tried with the pointer)
-  }
-  return strtol(word, NULL, 0);
+  return get_int(word);
 }
+
+
 
 

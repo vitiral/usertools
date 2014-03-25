@@ -71,6 +71,9 @@ typedef struct TH_sThreadArray{
 
 extern const __FlashStringHelper **TH__thread_names;
 
+// do funcitons and variables
+
+
 // Setup Macros
 // w/o user interface
 #define thread_setup(T) do{                                         \

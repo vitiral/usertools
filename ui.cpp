@@ -9,7 +9,7 @@
  * See UserGuide_ui.html for more information.
  */
  
-/*
+
 #include "usertools.h"
 
 #include <Arduino.h>
@@ -46,9 +46,9 @@ void ui_watchdog(){
   if(th_calling){
     L_println(th_calling);
   }
-  else if(th_loop_index < 255){
-    L_println(TH__threads.array[th_loop_index].el.name);
-  }
+//  else if(th_loop_index < 255){
+//    L_println(TH__threads.array[th_loop_index].el.name);
+//  }
   else {
       L_println("Unknown");
   }
@@ -112,6 +112,22 @@ void __print_row(String *row, uint8_t *col_widths){
   }
 }
 
+void call_thread(char *name, char *input){
+  uint8_t el_num;
+  char *c;
+  
+  clrerr();
+  // check if name is a number
+  el_num = get_int(name);
+  if(not errno){
+    schedule_thread(el_num, input);
+    return;
+  }
+  
+  //TODO: search through the thread names.
+  
+}
+
 void ui_process_command(char *c){
   char *c2;
   char *word;
@@ -125,7 +141,7 @@ void ui_process_command(char *c){
   sdebug(F("Calling Name:"));
   cdebug(c2); cdebug(':');
   edebug(c);
-  call_name(c2, c);
+  call_name(c2, c); // name, input
 }
 
 void cmd_v(char *input){
@@ -196,6 +212,9 @@ error:
   PT_END(pt);
 }
 
+/*
+// This needs to be completely redesigned to print options from
+// the variable names.
 void print_options(char *input){
   uint8_t i = 0;
   L_repeat('*', 5);
@@ -218,7 +237,9 @@ void print_options(char *input){
     L_println(TH__functions.array[i].el.name);
   }
 }
+*/
 
+/*
 uint8_t print_variable(char *name){
   TH_variable *var;
   int8_t n;
@@ -234,6 +255,7 @@ uint8_t print_variable(char *name){
   L_println();
   return true;
 }
+*/
 
 uint8_t user_interface(pthread *pt, char *input){
   uint8_t v;
@@ -301,6 +323,5 @@ void ui_loop(){
   }
 }
 
-*/
 
 
