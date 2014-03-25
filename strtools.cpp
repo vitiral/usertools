@@ -14,7 +14,7 @@
 #include "threading.h"
 #include "strtools.h"
 
-/*
+
 // #####################################################
 // ### Useful Functions
 uint16_t flash_len(const __FlashStringHelper *ifsh){
@@ -65,29 +65,6 @@ uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHel
   return true;
 }
 
-// cmp_str_el(string, len, element) -- compares the string with length len to the element
-uint8_t __cmp_str_elptr(char *name, uint16_t name_len, TH_element *el){
-  //debug(String("cmp:") + name);
-  //debug(el->name);
-  //debug(String(name_len) + String(" ") + String(el->name_len));
-  if(el->name_len != name_len) return false;
-  //debug("len same");
-  if(cmp_str_flash(name, el->name)) return true; 
-  else return false;
-}
-
-//compare flash helper with element pointer
-uint8_t cmp_flash_elptr(const __FlashStringHelper *flph, uint8_t len, TH_element *el){
-  //debug("cmp flhp");
-  //debug(flph);
-  //debug(el->name);
-  if(el->name_len != len) return false;
-  if(!cmp_flash_flash(flph, el->name)) return false;
-  //debug("equal");
-  return true;
-}
-
-
 char *pass_ws(char *c){
   while(true) {
     switch(*c){
@@ -136,5 +113,5 @@ long int _get_int(char **c){
   }
   return strtol(word, NULL, 0);
 }
-*/
+
 
