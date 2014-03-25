@@ -10,6 +10,7 @@
  */
  
 #ifndef ui_h
+/*
 #define ui_h
 
 #include "usertools.h"
@@ -50,6 +51,6 @@ void __print_row(String *row, uint8_t *col_widths);
 // ### Other Module Functions
 //void ui_process_command(char *c);
 void user_interface();
-
+*/
 #endif
 

@@ -9,6 +9,7 @@
  * See UserGuide_ui.html for more information.
  */
  
+/*
 #include "usertools.h"
 
 #include <Arduino.h>
@@ -82,11 +83,11 @@ void ui_pat_dog(){
   ui_loop_time = millis(); // pet the custom dog.
 }
 
-/*
-ISR(WDT_vect) {
-   ui_watchdog();
-}
- */
+////Activating watchdog UI
+//ISR(WDT_vect) {
+//   ui_watchdog();
+//}
+
 
 // #####################################################
 // ### Functions
@@ -304,6 +305,7 @@ void ui_loop(){
     L_println();
   }
 }
+*/
 
 
 

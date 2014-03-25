@@ -14,7 +14,7 @@
 #include "threading.h"
 #include "strtools.h"
 
-
+/*
 // #####################################################
 // ### Useful Functions
 uint16_t flash_len(const __FlashStringHelper *ifsh){
@@ -136,4 +136,5 @@ long int _get_int(char **c){
   }
   return strtol(word, NULL, 0);
 }
+*/
 
