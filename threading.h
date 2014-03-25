@@ -60,9 +60,19 @@ typedef struct TH_sThreadArray{
 };
 
 // #####################################################
-// ### Intended Exported Functions
+// ### Initialization Macros
 
 #define TH_MAX_NAME_LEN 10
+
+#define set_thread_names(...)    do{  \
+        PROGMEM const __FlashStringHelper *TH__THREAD_NAMES[] = {__VA_ARGS__};     \
+        TH__thread_names = TH__THREAD_NAMES;                                       \
+      }while(0)
+
+extern const __FlashStringHelper **TH__thread_names;
+
+#define FUNCTION_NAMES  PROGMEM const __FlashStringHelper *TH__FUNCTION_NAMES[]
+#define VARIABLE_NAMES  PROGMEM const __FlashStringHelper *TH__VARIABLE_NAMES[]
 
 // Setup Macros
 // w/o user interface
@@ -132,10 +142,8 @@ void kill_thread(uint8_t el_num);
 
 void set_thread_innactive(sthread *f);
 
-
 extern TH_Variables TH__variables;
 extern TH_Functions TH__functions;
-extern TH_sThreadArray TH__sthreads;
 
 extern uint8_t th_calling;
 extern uint8_t th_loop_index;

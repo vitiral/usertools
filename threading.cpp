@@ -31,7 +31,9 @@ TH_Variables TH__variables = {0, 0, 0};
 TH_Functions TH__functions = {0, 0, 0};
 TH_sThreadArray TH__sthreads = {0, 0, 0};
 
-uint8_t th_calling = NULL;
+const __FlashStringHelper **TH__thread_names;
+
+uint8_t th_calling = 255;
 uint8_t th_loop_index = 255;
 
 

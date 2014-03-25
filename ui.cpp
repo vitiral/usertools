@@ -58,7 +58,7 @@ void ui_watchdog(){
   wdt_enable(WDTO_250MS);
 }
 
-void ui_wdt_enable(void)
+void ui_wdt_setup(void)
 {
     //disable interrupts
     cli();
@@ -71,11 +71,6 @@ void ui_wdt_enable(void)
     //wdt_enable(WDTO_2S);  // can NOT use this -- must use custom
     //Enable global interrupts
     sei();
-}
-
-void ui_watchdog_setup()
-{
-    ui_wdt_enable();
 }
 
 void ui_pat_dog(){
@@ -305,7 +300,7 @@ void ui_loop(){
     L_println();
   }
 }
-*/
 
+*/
 
 
