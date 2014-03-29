@@ -139,7 +139,6 @@ void UI_call_thread(char *name, char *input){
     return;
   }
   
-  
   //TODO: search through the thread names.
 }
 
