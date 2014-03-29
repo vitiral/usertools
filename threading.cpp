@@ -27,9 +27,9 @@
 
 // #####################################################
 // ### Globals
-TH_Variables TH__variables = {0, 0, 0};
-TH_Functions TH__functions = {0, 0, 0};
-TH_sThreadArray TH__sthreads = {0, 0, 0};
+TH_VariableArray TH__variables = {0, 0, 0};
+TH_FunctionArray TH__functions = {0, 0, 0};
+TH_ThreadArray TH__threads = {0, 0, 0};
 
 const __FlashStringHelper **TH__thread_names;
 
@@ -137,13 +137,13 @@ void TH__set_variable_array(TH_variable *vray, uint16_t len);
 
 void TH__set_function_array(TH_function *fray, uint16_t len);
 
-void TH__set_thread_array(sthread *fray, uint16_t len){
+void TH__set_thread_array(thread *fray, uint16_t len){
   assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
-  TH__sthreads.array = fray;
-  TH__sthreads.len = len;
+  TH__threads.array = fray;
+  TH__threads.len = len;
   for(uint8_t i = 0; i < len; i++){
-    TH__sthreads.array[i].fptr = NULL;
-    TH__sthreads.array[i].pt.lc = PT_INNACTIVE;
+    TH__threads.array[i].fptr = NULL;
+    TH__threads.array[i].pt.lc = PT_INNACTIVE;
   }
 }
 
@@ -166,23 +166,23 @@ void call_function(uint8_t el_num, char *input);
 // expose_variable = macro
 // expose_function = macro
 
-sthread *expose_thread(TH_thfunptr fptr){
+thread *expose_thread(TH_thfunptr fptr){
   debug(F("ExpSTh"));
-  assert_return(TH__sthreads.index < TH__sthreads.len, NULL);
-  assert_raise_return(TH__sthreads.array, ERR_VALUE, NULL); // assert not null
+  assert_return(TH__threads.index < TH__threads.len, NULL);
+  assert_raise_return(TH__threads.array, ERR_VALUE, NULL); // assert not null
 
-  TH__sthreads.array[TH__sthreads.index].fptr = fptr;
-  TH__sthreads.array[TH__sthreads.index].pt.lc = PT_INNACTIVE;
-  TH__sthreads.index++;
-  sdebug(F("Added T:")); cdebug(TH__sthreads.index); edebug(F(" len:"));
-  return &(TH__sthreads.array[TH__sthreads.index - 1]);
+  TH__threads.array[TH__threads.index].fptr = fptr;
+  TH__threads.array[TH__threads.index].pt.lc = PT_INNACTIVE;
+  TH__threads.index++;
+  sdebug(F("Added T:")); cdebug(TH__threads.index); edebug(F(" len:"));
+  return &(TH__threads.array[TH__threads.index - 1]);
 }
 
-void set_thread_innactive(sthread *th){
+void set_thread_innactive(thread *th){
   th->pt.lc = PT_INNACTIVE;
 }
 
-uint8_t schedule_thread(sthread *th, char *input){
+uint8_t schedule_thread(thread *th, char *input){
   uint8_t out = false;
   
   sdebug(F("Calling:"));
@@ -203,35 +203,35 @@ error:
 }
 
 uint8_t schedule_thread(uint8_t el_num, char *input){
-  sthread *th = get_thread(el_num);
+  thread *th = get_thread(el_num);
   assert_raise_return(th, ERR_VALUE, false);
   schedule_thread(th, input);
   return true;
 }
 
-sthread *expose_run_thread(TH_thfunptr fun, char *input){
-  sthread *th = expose_thread(fun);
+thread *expose_run_thread(TH_thfunptr fun, char *input){
+  thread *th = expose_thread(fun);
   iferr_log_return(NULL);
   schedule_thread(th, input);
   return th;
 }
 
-sthread *expose_run_thread(TH_thfunptr fun){
+thread *expose_run_thread(TH_thfunptr fun){
   return expose_run_thread(fun, EH_EMPTY_STR);
 }
 
-sthread *get_thread(uint8_t el_num){
+thread *get_thread(uint8_t el_num){
   uint8_t i;
-  assert_raise_return(el_num < TH__sthreads.len, ERR_INDEX, NULL);
-  return &TH__sthreads.array[el_num];
+  assert_raise_return(el_num < TH__threads.len, ERR_INDEX, NULL);
+  return &TH__threads.array[el_num];
 }
 
-void kill_thread(sthread *th){
+void kill_thread(thread *th){
   th->pt.lc = PT_KILL_VALUE;
 }
 
 void kill_thread(uint8_t el_num){
-  sthread *th = get_thread(el_num);
+  thread *th = get_thread(el_num);
   assert_raise_return(th, ERR_VALUE);
   kill_thread(th);
 }
@@ -239,7 +239,7 @@ void kill_thread(uint8_t el_num){
 uint8_t thread_loop(){
   uint16_t init_lc;
   uint8_t fout;
-  sthread *th;
+  thread *th;
   
   // ***** don't try this at home kids ********
   static struct PTsmall pt = {0};
@@ -248,8 +248,8 @@ uint8_t thread_loop(){
   PT_BEGIN((ptsmall *)(&pt));
   while(true){
     PT_YIELD((ptsmall *)(&pt));
-    for(th_loop_index = 0; th_loop_index < TH__sthreads.index; th_loop_index++){
-      th = &TH__sthreads.array[th_loop_index];
+    for(th_loop_index = 0; th_loop_index < TH__threads.index; th_loop_index++){
+      th = &TH__threads.array[th_loop_index];
       init_lc = th->pt.lc;
       if(init_lc == PT_INNACTIVE) continue;
       assert(th->fptr, th_loop_index);    // NOT NULL PTR

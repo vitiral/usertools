@@ -9,7 +9,7 @@
  * See UserGuide_ui.html for more information.
  */
  
-
+/*
 #include "usertools.h"
 
 #include <Arduino.h>
@@ -37,6 +37,27 @@
 #define MAX_STR_LEN 100
 
 uint16_t ui_loop_time = 0;
+
+// #####################################################
+// ## Helper functions
+
+thread *TH_get_thread(char *name){
+  thread *th;
+  int8_t n;
+  uint8_t i;
+  uint8_t name_len = strlen(name);
+  sdebug(F("gt: "));
+  
+  for(i = 0; i < TH__threads.index; i++){
+    th = &TH__threads.array[i];
+    if(cmp_str_elptr(name, name_len, th)){
+      edebug(th->el.name);
+      return th;
+    }
+  }
+  edebug("NotFound");
+  return NULL;
+}
 
 // #####################################################
 // ### Interrupts
@@ -198,6 +219,7 @@ void _print_monitor(uint16_t execution_time){
   
   String myStr;
   
+  // TODO: Update with correct threads
   print_row(String(nameray), column_widths);
   for(int i = 0; i < TH__threads.index; i++){
     th = &TH__threads.array[i];
@@ -226,6 +248,20 @@ uint8_t system_monitor(pthread *pt, char *input){
 error:
   PT_END(pt);
 }
+
+
+
+
+*/
+
+
+
+
+
+
+
+
+
 
 /*
 // This needs to be completely redesigned to print options from
@@ -271,6 +307,16 @@ uint8_t print_variable(char *name){
   return true;
 }
 */
+
+
+
+
+
+
+
+
+
+/*
 
 uint8_t user_interface(pthread *pt, char *input){
   uint8_t v;
@@ -338,5 +384,5 @@ void ui_loop(){
   }
 }
 
-
+*/
 

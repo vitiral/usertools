@@ -31,30 +31,30 @@ typedef struct TH_function{
 };
 
 // 7 bytes
-typedef struct sthread{
+typedef struct thread{
   TH_thfunptr     fptr;
   pthread         pt;
 };
 
-typedef struct TH_fake_sthread{
+typedef struct TH_fake_thread{
   TH_thfunptr     fptr;
   PTnorm          pt;
 };
 
-typedef struct TH_Variables{
+typedef struct TH_VariableArray{
   TH_variable *array;
   uint8_t len;
   uint16_t index;
 };
 
-typedef struct TH_Functions{
+typedef struct TH_FunctionArray{
   TH_function *array;
   uint8_t len;
   uint16_t index;
 };
 
-typedef struct TH_sThreadArray{
-  struct sthread *array;
+typedef struct TH_ThreadArray{
+  struct thread *array;
   uint8_t len;
   uint16_t index;
 };
@@ -77,8 +77,8 @@ extern const __FlashStringHelper **TH__thread_names;
 // Setup Macros
 // w/o user interface
 #define thread_setup(T) do{                                         \
-      static TH_fake_sthread TH__sthread_array[T];                        \
-      TH__set_thread_array((sthread *) TH__sthread_array, T);  \
+      static TH_fake_thread TH__thread_array[T];                        \
+      TH__set_thread_array((thread *) TH__thread_array, T);  \
     }while(0)
 
 // for user interface, with names etc.
@@ -89,8 +89,8 @@ extern const __FlashStringHelper **TH__thread_names;
       static TH_function TH__function_array[F];                         \
       TH__set_function_array(TH__function_array, F);                    \
                                                                         \
-      static TH_fake_sthread TH__sthread_array[T];                       \
-      TH__set_thread_array((sthread *) TH__sthread_array, T);           \
+      static TH_fake_thread TH__thread_array[T];                       \
+      TH__set_thread_array((thread *) TH__thread_array, T);           \
     }while(0)
 
 //#define thread_function(name, func)  do{static thread name; schedule_thread(name, func)}while(0) 
@@ -109,7 +109,7 @@ void TH__set_variable_array(TH_variable *vray, uint16_t len);
 
 void TH__set_function_array(TH_function *fray, uint16_t len);
 
-void TH__set_thread_array(sthread *fray, uint16_t len);
+void TH__set_thread_array(thread *fray, uint16_t len);
 
 
 
@@ -127,23 +127,24 @@ void call_function(uint8_t el_num, char *input);
 
 //void TH__expose_variable(void *varptr, uint8_t varsize);
 //void TH__expose_function(TH_funptr fptr);
-sthread *expose_thread(TH_thfunptr fptr);
+thread *expose_thread(TH_thfunptr fptr);
 
-sthread *expose_run_thread(TH_thfunptr fun, char *input);
-sthread *expose_run_thread(TH_thfunptr fun);
+thread *expose_run_thread(TH_thfunptr fun, char *input);
+thread *expose_run_thread(TH_thfunptr fun);
 
-sthread *get_thread(uint8_t el_num);
+thread *get_thread(uint8_t el_num);
 
-uint8_t schedule_thread(sthread *th, char *input);
+uint8_t schedule_thread(thread *th, char *input);
 uint8_t schedule_thread(uint8_t el_num, char *input);
 
-void kill_thread(sthread *th);
+void kill_thread(thread *th);
 void kill_thread(uint8_t el_num);
 
-void set_thread_innactive(sthread *f);
+void set_thread_innactive(thread *f);
 
-extern TH_Variables TH__variables;
-extern TH_Functions TH__functions;
+extern TH_VariableArray TH__variables;
+extern TH_FunctionArray TH__functions;
+extern TH_ThreadArray TH__threads;
 
 extern uint8_t th_calling;
 extern uint8_t th_loop_index;

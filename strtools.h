@@ -20,9 +20,13 @@ uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHel
 
 char *get_word_end(char *c);
 char *pass_ws(char *c);
+
 #define get_word(C) _get_word(&(C))
-#define get_int(C) _get_int(&(C))
 char *_get_word(char **c);
+
+//#define get_int(C) _get_int(&(C))
+
+
 long int _get_int(char **c);
 
 
