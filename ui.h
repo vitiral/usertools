@@ -79,22 +79,22 @@ void call_function(uint8_t el_num);
 
 #define UI__MIN_T 1
 extern const __FlashStringHelper **UI__thread_names;
-#define set_thread_names(...)  PROGMEM const __FlashStringHelper *UI__THREAD_NAMES[] = {__VA_ARGS__, F("ui")};     \
+#define set_thread_names(...)  static const __FlashStringHelper *UI__THREAD_NAMES[] = {__VA_ARGS__, F("ui")};     \
         UI__thread_names = UI__THREAD_NAMES
 
 #define UI__MIN_F 4
 extern const __FlashStringHelper **UI__function_names;
-#define set_function_names(...) PROGMEM const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
+#define set_function_names(...) static const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
         {__VA_ARGS__, F("?"), F("t"), F("v"), F("k")};            \
         UI__function_names = UI__FUNCTION_NAMES
 
-#define default_function_names_only() PROGMEM const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
+#define default_function_names_only() static const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
         {F("?"), F("t"), F("v"), F("k")};             \
         UI__function_names = UI__FUNCTION_NAMES
 
 
 extern const __FlashStringHelper **UI__variable_names;
-#define set_variable_names(...) PROGMEM const __FlashStringHelper *UI__VARIABLE_NAMES[] = {__VA_ARGS__};     \
+#define set_variable_names(...) static const __FlashStringHelper *UI__VARIABLE_NAMES[] = {__VA_ARGS__};     \
         UI__variable_names = UI__VARIABLE_NAMES
 
 #define ui_setup_std(V, F, T) do{                             \

@@ -396,14 +396,21 @@ void print_option_name(const __FlashStringHelper *name){
   L_println(']');
 }
 
-void print_option_line(uint8_t i, const __FlashStringHelper **name_array){
+#define PRINT_IGNORE PT_KILL_VALUE - 1
+
+void print_option_line(uint8_t i, const __FlashStringHelper **name_array, uint16_t pt_line){
   L_print(i);
   if(name_array){
     L_write('\t');
-    L_println(name_array[i]);
+    L_print(name_array[i]);
   }
-  else L_println();
+  if(pt_line != PRINT_IGNORE){
+    L_repeat('\t', 2);
+    L_print(pt_line);
+  }
+  L_println();
 }
+
 uint8_t cmd_print_options(pthread *pt){
   ui_print_options();
   return 1;
@@ -413,17 +420,17 @@ void ui_print_options(){
   uint8_t i = 0;
   print_option_name(F("f"));
   for(i = 0; i < UI__functions.index; i++){
-    print_option_line(i, UI__function_names);
+    print_option_line(i, UI__function_names, PRINT_IGNORE);
   }
   
   print_option_name(F("t"));
   for(i = 0; i < TH__threads.index; i++){
-    print_option_line(i, UI__thread_names);
+    print_option_line(i, UI__thread_names, TH__threads.array[i].pt.lc);
   }
   
   print_option_name(F("v"));
   for(i = 0; i < UI__variables.index; i++){
-    print_option_line(i, UI__variable_names);
+    print_option_line(i, UI__variable_names, PRINT_IGNORE);
   }
 }
 
