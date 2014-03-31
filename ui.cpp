@@ -170,10 +170,10 @@ void put_inputs(pthread *pt, char *input){
   float myfloat;
   char *word;
   
-  sdebug(F("PutIn:")); 
+  sdebug(F("PutIn:")); edebug(*input);
   while(true){
     clrerr();
-    edebug(*input);
+    
     word = get_word(input);
     
     if(errno or (not input or not word)) {
@@ -369,7 +369,7 @@ error:
 }
 
 uint8_t cmd_kill(pthread *pt){
-  debug("killing");
+  debug(F("UI_kill"));
   char *thname = pt->get_str_input(0);
   thread *th;
   assert_raise(thname, ERR_INPUT);
@@ -484,7 +484,6 @@ void ui_loop(){
   }
 }
 
-
 // #####################################################
 // ### Setup
 void ui_std_greeting(){
@@ -504,7 +503,7 @@ void UI__setup_std(){
   
   cmd_print_options((pthread *) 10);
   
-  //ui_watchdog_setup();
+  ui_wdt_setup();
 }
 
 

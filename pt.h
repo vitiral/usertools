@@ -429,8 +429,8 @@ enum PTVALUES {
  * \hideinitializer
  */
 #define PT_RESTART(pt)				\
-  do {						\
-    PT_INIT(pt);				\
+  do {						          \
+    PT_INIT(pt);				    \
     return PT_WAITING;			\
   } while(0)
 

@@ -47,7 +47,7 @@ typedef struct UI_FunctionArray{
 // ## GLOBALS
 
 // for user interface, with names etc.
-#define thread_setup_ui(V, F, T) do{                                       \
+#define thread_setup_ui(T, F, V) do{                                       \
       static UI_variable UI__variable_array[V];                         \
       UI__set_variable_array(UI__variable_array, V);                    \
                                                                         \
@@ -97,8 +97,8 @@ extern const __FlashStringHelper **UI__variable_names;
 #define set_variable_names(...) static const __FlashStringHelper *UI__VARIABLE_NAMES[] = {__VA_ARGS__};     \
         UI__variable_names = UI__VARIABLE_NAMES
 
-#define ui_setup_std(V, F, T) do{                             \
-    thread_setup_ui(V, (F) + UI__MIN_F, (T) + UI__MIN_T);     \
+#define ui_setup_std(T, F, V) do{                             \
+    thread_setup_ui((T) + UI__MIN_T, (F) + UI__MIN_F, V);     \
   }while(0)
 
 #define ui_end_setup() UI__setup_std();
