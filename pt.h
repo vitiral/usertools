@@ -123,6 +123,7 @@ class pthread
 private:
   PT_data *get_end();
   PT_data *get_type(ptindex index, uint8_t type);
+  uint8_t get_type_type(ptindex index, uint8_t type);
   
   void *put_data(void *putdata, uint8_t type);
   void *put_data(void *putdata, uint8_t type, uint16_t len);
@@ -160,6 +161,7 @@ public:
   
   int32_t get_int_input(ptindex index);
   char *get_str_input(ptindex index);
+  uint8_t get_type_input(ptindex index);
   
   // Output
   void *put_output(uint8_t output);
@@ -172,6 +174,7 @@ public:
   
   int32_t get_int_output(ptindex index);
   char *get_str_output(ptindex index);
+  uint8_t get_type_output(ptindex index);
   
   // General Destructors
   void clear_data();

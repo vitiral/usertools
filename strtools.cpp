@@ -119,6 +119,7 @@ long int get_int(char *c){
   return strtol(c, NULL, 0);
 }
 
+/*
 float get_float(char *c){
   uint8_t subt = 0;
   switch(*c){
@@ -136,6 +137,7 @@ float get_float(char *c){
   c = c - subt;
   return strtof((c+2), NULL, 0);
 }
+*/
 
 long int _get_int(char **c){
   char *word = _get_word(c);

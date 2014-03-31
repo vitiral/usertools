@@ -113,8 +113,6 @@ void UI__setup_std();
 
 // #####################################################
 // ### Functions
-uint8_t print_variable(char *name);
-
 void ui_watchdog();
 void ui_pat_dog();
 void system_monitor(char *input);

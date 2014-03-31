@@ -215,6 +215,19 @@ void schedule_thread(char *name, char *input){
   schedule_thread(th);
 }
 
+uint8_t print_variable(UI_variable *var){
+  int8_t n;
+  uint8_t i;
+  L_print(F("=0x"));
+  for(n = var->size - 1; n >= 0; n--){
+    if(((uint8_t *)var->vptr)[n] < 0x10) L_write('0');
+    L_print(((uint8_t *)var->vptr)[n], HEX);
+  }
+  L_println();
+  return true;
+}
+
+
 // #####################################################
 // ### Interrupts
 
@@ -278,37 +291,82 @@ void ui_process_command(char *c){
 }
 
 uint8_t cmd_t(pthread *pt){
+  uint8_t i = 0;
+  uint8_t type;
+  thread *th;
   // Calling thread from command
   char *thname = pt->get_str_input(0);
-  iferr_log_return();
-  schedule_thread(word, thname);
+  iferr_log_return(0);
+  th = get_thread(thname);
+  th->pt.clear_data();
+  while(true){
+    type = pt->get_type_input(0);
+    if(errno){
+      if(i == 0){
+        raise(ERR_INPUT);
+      }
+      break;
+    }
+    if(i == 0){
+      if(type <= vt_uint16) th = get_thread(pt->get_int_input(0));
+      else th = get_thread(pt->get_str_input(0));
+    }
+    else{
+      if(type <= vt_uint16) th->pt.put_input((int16_t)pt->get_int_input(i));
+      else th->pt.put_input(pt->get_str_input(i));
+    }
+  }
+  schedule_thread(th);
+  return 1;
+error:
+  return 0;
 }
 
 uint8_t cmd_v(pthread *pt){
   // Printing variable from command
-  if(pt->get_type_input(0) == vt_int16){
-    
+  UI_variable *var;
+  int32_t vint;
+  
+  if(pt->get_type_input(0) <= vt_uint16){
+    var = get_variable(pt->get_int_input(0));
   }
-  char *vname = pt->get_str_input(0);
-  char *word = get_word(input);
-  iferr_log_return();
-  print_variable(word);
+  else{
+    var = get_variable(pt->get_str_input(0));
+  }
+  iferr_log_catch();
+  
+  vint = pt->get_int_input(1);
+  if(errno){
+    // there is no input or input is a character array -- just print variable
+    print_variable(var);
+  }
+  else {
+    // set variable -- NOT SUPPORTED YET
+    assert(0);
+  }
+  return 1;
+error:
+  return 0;
 }
 
-void cmd_kill(pthread *pt){
+uint8_t cmd_kill(pthread *pt){
   char *thname = pt->get_str_input(0);
-  assert_raise_return(thname, ERR_INPUT);
+  thread *th;
+  assert_raise(thname, ERR_INPUT);
   sdebug(F("k:")); edebug(thname);
-  thread *th = get_thread(thname);
+  th = get_thread(thname);
   if(th) {
     // print name
     kill_thread(th);
   }
   else{
-    raise_return(ERR_INPUT);
+    raise(ERR_INPUT);
   }
   L_print(F("Killed:"));
   L_println(thname);
+  return 1;
+error:
+  return 0;
 }
 
 void print_option_name(const __FlashStringHelper *name){
@@ -318,7 +376,7 @@ void print_option_name(const __FlashStringHelper *name){
   L_println(']');
 }
 
-void print_options(pthread *pt){
+uint8_t cmd_print_options(pthread *pt){
   uint8_t i = 0;
   print_option_name(F("f"));
   for(i = 0; i < UI__functions.index; i++){
@@ -336,6 +394,7 @@ void print_options(pthread *pt){
   for(i = 0; i < UI__variables.index; i++){
     L_println(UI__variable_names[i]);
   }
+  return 1;
 }
 
 // #####################################################
@@ -403,7 +462,7 @@ void UI__setup_std(){
   
   expose_function(cmd_t);
   expose_function(cmd_v);
-  expose_function(print_options);
+  expose_function(cmd_print_options);
   expose_function(cmd_kill);
   
   //ui_watchdog_setup();

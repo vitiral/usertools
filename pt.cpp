@@ -204,6 +204,12 @@ error:
   return NULL;
 }
 
+uint8_t pthread::get_type_type(ptindex index, uint8_t ptype){
+  PT_data *cdata;
+  cdata = get_type(index, ptype);
+  return cdata->b.type;
+}
+
 PT_data *pthread::get_temp(uint8_t type){
   assert_raise(data, ERR_INDEX);
   assert_raise(data->b.type == TYPE_TEMP bitor type, ERR_INDEX);
@@ -284,7 +290,7 @@ char *pthread::get_str_input(ptindex index){
 }
 
 uint8_t pthread::get_type_input(ptindex index){
-  return get_type(index, TYPE_INPUT);
+  return get_type_type(index, TYPE_INPUT);
 }
 
 void pthread::clear_input(){
@@ -335,7 +341,7 @@ char *pthread::get_str_output(ptindex index){
 }
 
 uint8_t pthread::get_type_output(ptindex index){
-  return get_type(index, TYPE_OUTPUT);
+  return get_type_type(index, TYPE_OUTPUT);
 }
 
 void pthread::clear_output(){
