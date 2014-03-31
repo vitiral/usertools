@@ -23,7 +23,6 @@
 //#include "ui.h"
 
 #define MAX_STR_LEN 100
-#define MAX_ARRAY_LEN 256
 
 // #####################################################
 // ### Globals
@@ -75,12 +74,8 @@ TH_variable *TH_get_variable(char *name){
 
 // *******************************
 // **** Macro Helpers
-void TH__set_variable_array(TH_variable *vray, uint16_t len);
-
-void TH__set_function_array(TH_function *fray, uint16_t len);
-
 void TH__set_thread_array(thread *fray, uint16_t len){
-  assert_raise_return(len < MAX_ARRAY_LEN, ERR_VALUE);
+  assert_raise_return(len < TH__MAX_ARRAY_LEN, ERR_VALUE);
   TH__threads.array = fray;
   TH__threads.len = len;
   for(uint8_t i = 0; i < len; i++){

@@ -21,7 +21,7 @@
 
 
 // 6 bytes
-typedef struct TH_variable {
+typedef struct UI_variable {
   void        *vptr;
   uint8_t     size;
 };
@@ -31,8 +31,8 @@ typedef struct UI_function{
   TH_funptr      fptr;
 };
 
-typedef struct TH_VariableArray{
-  TH_variable *array;
+typedef struct UI_VariableArray{
+  UI_variable *array;
   uint8_t len;
   uint16_t index;
 };
@@ -63,17 +63,17 @@ typedef struct UI_FunctionArray{
 // ## Functions and Variables
 // Expose Macros
 
-extern TH_VariableArray UI__variables;
-extern TH_FunctionArray UI__functions;
+extern UI_VariableArray UI__variables;
+extern UI_FunctionArray UI__functions;
 
-void UI__expose_variable(void *varptr, uint8_t varsize);
+UI_variable *UI__expose_variable(void *varptr, uint8_t varsize);
 #define expose_variable(var) UI__expose_variable((void *)&(var), sizeof(var)) 
-void expose_function(H_funptr fptr);
+UI_function *expose_function(TH_funptr fptr);
 
-void UI__set_variable_array(TH_variable *vray, uint16_t len);
+void UI__set_variable_array(UI_variable *vray, uint16_t len);
 void UI__set_function_array(UI_function *fray, uint16_t len);
 
-TH_variable *get_variable(uint8_t el_num);
+UI_variable *get_variable(uint8_t el_num);
 UI_function *get_function(uint8_t el_num);
 
 void call_function(uint8_t el_num);

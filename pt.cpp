@@ -1,25 +1,4 @@
-
-
 #include "pt.h"
-
-// commented = not supported, but may in future
-enum vtype{
-  //vt_int8,
-  vt_uint8,
-  
-  vt_int16,
-  vt_uint16,
-  
-  //vt_int32,
-  //vt_uint32,
-  
-  vt_uint8ray,  // 8 bit uint arrays
-  vt_int16ray,  // 16 bit int arrays
-  
-  vt_str,       // storing character arrays
-  
-  vt_pt,        // storing protothreads
-};
 
 #define TYPE_BITSHIFT 6
 #define TYPE_ERROR    0 << TYPE_BITSHIFT
@@ -304,6 +283,10 @@ char *pthread::get_str_input(ptindex index){
   return get_str_type(index, TYPE_INPUT);
 }
 
+uint8_t pthread::get_type_input(ptindex index){
+  return get_type(index, TYPE_INPUT);
+}
+
 void pthread::clear_input(){
   clear_type(TYPE_INPUT);
 }
@@ -349,6 +332,10 @@ int32_t pthread::get_int_output(ptindex index){
 
 char *pthread::get_str_output(ptindex index){
   return get_str_type(index, TYPE_OUTPUT);
+}
+
+uint8_t pthread::get_type_output(ptindex index){
+  return get_type(index, TYPE_OUTPUT);
 }
 
 void pthread::clear_output(){

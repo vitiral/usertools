@@ -60,6 +60,25 @@
 
 #define PT_DATA_BYTES 3
 
+// commented = not supported, but may in future
+enum vtype{
+  //vt_int8,
+  vt_uint8,
+  
+  vt_int16,
+  vt_uint16,
+  
+  //vt_int32,
+  //vt_uint32,
+  
+  vt_uint8ray,  // 8 bit uint arrays
+  vt_int16ray,  // 16 bit int arrays
+  
+  vt_str,       // storing character arrays
+  
+  vt_pt,        // storing protothreads
+};
+
 typedef uint8_t ptindex;
 struct PT_data;
 class pthread;

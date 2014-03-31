@@ -42,116 +42,60 @@ const __FlashStringHelper **UI__thread_names = NULL;
 const __FlashStringHelper **UI__function_names = NULL;
 const __FlashStringHelper **UI__variable_names = NULL;
 
-TH_VariableArray UI__variables = {0, 0, 0};
+UI_VariableArray UI__variables = {0, 0, 0};
 UI_FunctionArray UI__functions = {0, 0, 0};
 
-void UI__expose_variable(void *varptr, uint8_t varsize){
+// *******************************
+// **** Macro Helpers
+
+void UI__set_variable_array(UI_variable *vray, uint16_t len){
+  assert_raise_return(len < TH__MAX_ARRAY_LEN, ERR_VALUE);
+  UI__variables.array = vray;
+  UI__variables.len = len;
+}
+
+void UI__set_function_array(UI_function *fray, uint16_t len){
+  assert_raise_return(len < TH__MAX_ARRAY_LEN, ERR_VALUE);
+  UI__functions.array = fray;
+  UI__functions.len = len;
+  for(uint8_t i = 0; i < len; i++){
+    UI__functions.array[i].fptr = NULL;
+  }
+}
+
+UI_variable *UI__expose_variable(void *varptr, uint8_t varsize){
   debug(F("ExpV"));
   assert_return(UI__variables.index < UI__variables.len, NULL);
   assert_raise_return(UI__variables.array, ERR_VALUE, NULL); // assert not null
-
-  UI__variables.array[UI__variables.index].fptr = fptr;
-  UI__variables.array[UI__variables.index].pt.lc = PT_INNACTIVE;
   UI__variables.index++;
-  sdebug(F("Added T:")); cdebug(UI__variables.index); edebug(F(" len:"));
+  sdebug(F("v:")); cdebug(UI__variables.index); edebug(F(" l:"));
   return &(UI__variables.array[UI__variables.index - 1]);
 }
 
-UI_function expose_function(TH_funptr fptr){
+UI_function *expose_function(TH_funptr fptr){
   debug(F("ExpF"));
   assert_return(UI__functions.index < UI__functions.len, NULL);
   assert_raise_return(UI__functions.array, ERR_VALUE, NULL); // assert not null
 
   UI__functions.array[UI__functions.index].fptr = fptr;
-  UI__functions.array[UI__functions.index].pt.lc = PT_INNACTIVE;
   UI__functions.index++;
-  sdebug(F("Added T:")); cdebug(UI__functions.index); edebug(F(" len:"));
+  sdebug(F("t:")); cdebug(UI__functions.index); edebug(F(" l:"));
   return &(UI__functions.array[UI__functions.index - 1]);
 }
 
 // #####################################################
 // ## Helper functions
 
-enum UI_TYPES{
+typedef enum UI_TYPES{
   UI_THREAD_TYPE,
   UI_FUNCTION_TYPE,
   UI_VARIABLE_TYPE
 };
 
-void *get_object(char *name, uint8_t type){
-  uint8_t i, el_num;
-  const __FlashStringHelper **type_names;
-  
-  sdebug(F("gt: "));
-  clrerr();
-
-  uint8_t len;
-  switch(type){
-    case UI_THREAD_TYPE:
-      len = TH__threads.index;
-      break;
-    case UI_FUNCTION_TYPE:
-      len = UI__functions.index;
-      break;
-    case UI_VARIABLE_TYPE:
-      len = UI__variables.index;
-      break;
-    default:
-      assert(0);
-  }
-    
-  // check if name is a number
-  el_num = get_int(name);
-  if(not errno){
-    edebug();
-    
-    assert_raise(el_num < len, ERR_INDEX);
-    switch(type){
-    case UI_THREAD_TYPE:
-      return (void *)get_thread(el_num);
-    case UI_FUNCTION_TYPE:
-      return (void *)get_function(el_num);
-    case UI_VARIABLE_TYPE:
-      return (void *)get_variable(el_num);
-    default:
-      assert(0);
-    }
-  }
-  
-  clrerr();
-  switch(type){
-  case UI_THREAD_TYPE:
-    type_names = UI__thread_names;
-  case UI_FUNCTION_TYPE:
-    type_names = UI__function_names;
-  case UI_VARIABLE_TYPE:
-    type_names = UI__variable_names;
-  default:
-    assert(0);
-  }
-  assert_raise(type_names, ERR_INPUT); // not null
-  
-  for(i = 0; i < len; i++){
-    if(cmp_str_flash(name, type_names[i])){
-      edebug(type_names[i]);
-      switch(type){
-      case UI_THREAD_TYPE:
-        return &TH__threads.array[i];
-      case UI_FUNCTION_TYPE:
-        return &UI__functions.array[i];
-      case UI_VARIABLE_TYPE:
-        return &UI__variables.array[i];
-      }
-    }
-  }
-  edebug();
-  raise(ERR_INPUT);
-error:
-  return NULL;
-}
+typedef void *(*GET_OBJECT)(uint8_t index);
 
 // Get from index
-TH_variable *get_variable(uint8_t el_num){
+UI_variable *get_variable(uint8_t el_num){
   assert_raise_return(el_num < UI__variables.len, ERR_INDEX, NULL);
   return &UI__variables.array[el_num];
 }
@@ -162,16 +106,49 @@ UI_function *get_function(uint8_t el_num){
 }
 
 // Get from name
+
+void *get_object(char *name, uint8_t len, 
+    const __FlashStringHelper **type_names, void *objarray, uint8_t size){
+  uint8_t i, el_num;
+
+  sdebug(F("gt: "));
+  clrerr();
+
+  // check if name is a number
+  el_num = get_int(name);
+  if(not errno){
+    edebug();
+    
+    assert_raise(el_num < len, ERR_INDEX);
+    //return getobj(el_num);
+    return (void *)((char *)objarray + el_num*size);
+  }
+  
+  clrerr();
+  assert_raise(type_names, ERR_INPUT); // not null
+  
+  for(i = 0; i < len; i++){
+    if(cmp_str_flash(name, type_names[i])){
+      edebug(type_names[i]);
+      return (void *)((char *)objarray + el_num*size);
+    }
+  }
+  edebug();
+  raise(ERR_INPUT);
+error:
+  return NULL;
+}
+
 thread *get_thread(char *name){
-  return (thread *)get_object(name, UI_THREAD_TYPE);
+  return (thread *)get_object(name, TH__threads.index, UI__thread_names, TH__threads.array, sizeof(thread));
 }
 
 UI_function *get_function(char *name){
-  return (UI_function *)get_object(name, UI_FUNCTION_TYPE);
+  return (UI_function *)get_object(name, UI__functions.index, UI__function_names, UI__functions.array, sizeof(UI_function));
 }
 
-TH_variable *get_variable(char *name){
-  return (TH_variable *)get_object(name, UI_VARIABLE_TYPE);
+UI_variable *get_variable(char *name){
+  return (UI_variable *)get_object(name, UI__variables.index, UI__variable_names, UI__variables.array, sizeof(UI_variable));
 }
 
 void put_inputs(pthread *pt, char *input){
@@ -246,10 +223,10 @@ void ui_watchdog(){
   log_err("TO");
 
   L_print(th_loop_index);
-  if(UI__)
-  L_println(TH__threads.array[th_loop_index].el.name);
-
-  ui_loop_time = millis();
+  if(UI__thread_names){
+    L_print(UI__thread_names[th_loop_index]);
+  }
+  L_println();
   //asm volatile ("  jmp 0"); 
   wdt_reset();
   wdt_enable(WDTO_250MS);
@@ -300,15 +277,19 @@ void ui_process_command(char *c){
   call_function(c2, c); // name, input
 }
 
-void cmd_t(char *input){
+uint8_t cmd_t(pthread *pt){
   // Calling thread from command
-  char *word = get_word(input);
+  char *thname = pt->get_str_input(0);
   iferr_log_return();
-  schedule_thread(word, input);
+  schedule_thread(word, thname);
 }
 
-void cmd_v(char *input){
+uint8_t cmd_v(pthread *pt){
   // Printing variable from command
+  if(pt->get_type_input(0) == vt_int16){
+    
+  }
+  char *vname = pt->get_str_input(0);
   char *word = get_word(input);
   iferr_log_return();
   print_variable(word);

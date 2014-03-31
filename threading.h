@@ -20,6 +20,8 @@
 //typedef void (*TH_funptr)(char *input);
 typedef uint8_t (*TH_funptr)(pthread *pt);
 
+#define TH__MAX_ARRAY_LEN 256
+
 // 7 bytes
 typedef struct thread{
   TH_funptr     fptr;
