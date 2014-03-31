@@ -139,9 +139,6 @@ void *get_object(char *name, uint8_t len,
     debug(type_names[i]);
     if(cmp_str_flash(name, type_names[i])){
       edebug(type_names[i]);
-      debug("TESTING");
-      cmd_print_options((pthread *) 10);
-      debug("NOW LET'S SEE");
       return (void *)((uint8_t *)objarray + i*size);
     }
   }
@@ -189,7 +186,10 @@ void put_inputs(pthread *pt, char *input){
     //myfloat = get_float(word);
     //AND DO ERROR CHECKING
     
+    L_silent += 1;
     myint = get_int(word);
+    L_silent -= 1;
+    
     if(not errno){
       cdebug(myint); cdebug("\t\t");
       pt->put_input(myint);

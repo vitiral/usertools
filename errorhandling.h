@@ -38,6 +38,8 @@
 #define EH_config_std            L_config_std()
 #define EH_config_soft(soft)     L_config_soft(&soft)
 
+void EH_void_fun(void *input);
+
 void EH_test();
 extern uint8_t errprint;
 extern char *EH_EMPTY_STR;
@@ -46,7 +48,7 @@ void clrerr();
 void seterr(uint8_t error);
 
 #define EH_DW(code) do{code}while(0) //wraps in a do while(0) so that the syntax is correct.
-    
+
 #define raise(E, ...)                           EH_DW(EH_ST_raisem(E, __VA_ARGS__); goto error;)
 #define assert(A, ...)                          EH_DW(if(!(A)) {seterr(ERR_ASSERT); log_err(__VA_ARGS__); EH_FLUSH(); goto error;})
 #define assert_raise(A, E, ...)                 EH_DW(if(!(A)) {raise((E), __VA_ARGS__);})
@@ -96,6 +98,7 @@ void EH_start_info(char *file, unsigned int line);
 #endif
 
 #if LOGLEVEL >= LOG_ERROR
+  //#define TRY(stuff)               EH_DW((L_silent += 1; L_silent -= 1;))
   void EH_log_err(char *file, unsigned int line);
   #define slog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
   #define clog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, Serial.print(M); EH_FLUSH();))

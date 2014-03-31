@@ -48,6 +48,8 @@ void EH_printinfo(char *file, unsigned int line)
   L_print(line);
 }
 
+void EH_void_fun(void *input){}
+
 void EH_printerrp(){
   L_write('(');
   L_print(errprint);
