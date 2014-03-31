@@ -25,7 +25,8 @@ char *pass_ws(char *c);
 char *_get_word(char **c);
 
 //#define get_int(C) _get_int(&(C))
-
+long int get_int(char *c);
+float get_float(char *c);
 
 long int _get_int(char **c);
 

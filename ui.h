@@ -10,7 +10,7 @@
  */
  
 #ifndef ui_h
-/*
+
 #define ui_h
 
 #include "usertools.h"
@@ -19,12 +19,91 @@
 #include "threading.h"
 #include "strtools.h"
 
-// Helpful for String Parsing
+
+// 6 bytes
+typedef struct TH_variable {
+  void        *vptr;
+  uint8_t     size;
+};
+
+// 5 bytes
+typedef struct UI_function{
+  TH_funptr      fptr;
+};
+
+typedef struct TH_VariableArray{
+  TH_variable *array;
+  uint8_t len;
+  uint16_t index;
+};
+
+typedef struct UI_FunctionArray{
+  UI_function *array;
+  uint8_t len;
+  uint16_t index;
+};
+
+// ####################################
+// ## GLOBALS
+
+// for user interface, with names etc.
+#define thread_setup_ui(V, F, T) do{                                       \
+      static TH_variable TH__variable_array[V];                         \
+      TH__set_variable_array(TH__variable_array, V);                    \
+                                                                        \
+      static UI_function TH__function_array[F];                         \
+      TH__set_function_array(TH__function_array, F);                    \
+                                                                        \
+      static TH_fake_thread TH__thread_array[T];                       \
+      TH__set_thread_array((thread *) TH__thread_array, T);           \
+    }while(0)
+
+      
+// ##############################################
+// ## Functions and Variables
+// Expose Macros
+
+extern TH_VariableArray UI__variables;
+extern TH_FunctionArray UI__functions;
+
+void UI__expose_variable(void *varptr, uint8_t varsize);
+#define expose_variable(var) UI__expose_variable((void *)&(var), sizeof(var)) 
+void expose_function(H_funptr fptr);
+
+void TH__set_variable_array(TH_variable *vray, uint16_t len);
+void TH__set_function_array(UI_function *fray, uint16_t len);
+
+TH_variable *get_variable(uint8_t el_num);
+UI_function *get_function(uint8_t el_num);
+
+void call_function(uint8_t el_num);
 
 
-#define UI__MIN_F 3
-#define UI__MIN_T 2
-#define ui_setup_std(V, F, T) do{thread_setup_ui(V, (F) + UI__MIN_F, (T) + UI__MIN_T); UI__setup_std();}while(0)
+#define UI__MIN_T 1
+extern const __FlashStringHelper **TH__thread_names;
+#define set_thread_names(...)    do{          \
+        PROGMEM const __FlashStringHelper *TH__THREAD_NAMES[] = {F("ui"), __VA_ARGS__};     \
+        TH__thread_names = TH__THREAD_NAMES;                                       \
+      }while(0)
+
+#define UI__MIN_F 4
+extern const __FlashStringHelper **TH__function_names;
+#define set_function_names(...)    do{          \
+        PROGMEM const __FlashStringHelper *TH__FUNCTION_NAMES[] = \
+        {F("t"), F("v"), F("k"), F("?"), __VA_ARGS__};            \
+        TH__function_names = TH__FUNCTION_NAMES;                  \
+      }while(0)
+
+extern const __FlashStringHelper **TH__variable_names;
+#define set_variable_names(...)    do{          \
+        PROGMEM const __FlashStringHelper *TH__VARIABLE_NAMES[] = {__VA_ARGS__};     \
+        TH__variable_names = TH__VARIABLE_NAMES;                                       \
+      }while(0)
+
+#define ui_setup_std(V, F, T) do{                             \
+    thread_setup_ui(V, (F) + UI__MIN_F, (T) + UI__MIN_T);     \
+    UI__setup_std();                                          \
+  }while(0)
 
 void UI__setup_std();
 #define UI_CMD_END_CHAR 0x0A
@@ -51,6 +130,6 @@ void __print_row(String *row, uint8_t *col_widths);
 // ### Other Module Functions
 //void ui_process_command(char *c);
 void user_interface();
-*/
+
 #endif
 

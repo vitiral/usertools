@@ -95,6 +95,7 @@ char *get_word_end(char *c){
 //char *word = get_word(c); // get first word
 //char *word2 = get_word(c); // get next word
 char *_get_word(char **c){
+  // AFFECTS INPUT
   *c = pass_ws(*c);
   char *word = *c;
   char *ce = get_word_end(*c);
@@ -106,10 +107,34 @@ char *_get_word(char **c){
 }
 
 long int get_int(char *c){
-  if (*c < '0' or *c > '9'){        // the strtol documentation doesn't seem to be working!!!
-      raise_return(ERR_INPUT, 0);   // it won't tell me if there has been an error (I've tried with the pointer)
+  switch(*c){
+    case '-':
+    case '+':
+      break;
+    default:
+      if (*c < '0' or *c > '9'){        // the strtol documentation doesn't seem to be working!!!
+        raise_return(ERR_INPUT, 0);   // it won't tell me if there has been an error (I've tried with the pointer)
+      }
   }
   return strtol(c, NULL, 0);
+}
+
+float get_float(char *c){
+  uint8_t subt = 0;
+  switch(*c){
+    case '-':
+    case '+':
+      c = c+1;
+      subt = 1;
+  default:
+    if (not (*c == '0' and *(c+1) == 'f' and 
+          (*(c+2) < '0' or *(c+2) > '9'))
+      ) {
+      raise_return(ERR_INPUT, 0);
+    }
+  }
+  c = c - subt;
+  return strtof((c+2), NULL, 0);
 }
 
 long int _get_int(char **c){

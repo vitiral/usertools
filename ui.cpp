@@ -9,7 +9,7 @@
  * See UserGuide_ui.html for more information.
  */
  
-/*
+ 
 #include "usertools.h"
 
 #include <Arduino.h>
@@ -34,36 +34,216 @@
 // #####################################################
 // ### Globals
 
-#define MAX_STR_LEN 100
+#define MAX_STR_LEN 25
 
 uint16_t ui_loop_time = 0;
+
+const __FlashStringHelper **TH__thread_names = NULL;
+const __FlashStringHelper **TH__function_names = NULL;
+const __FlashStringHelper **TH__variable_names = NULL;
+
+TH_VariableArray UI__variables = {0, 0, 0};
+UI_FunctionArray UI__functions = {0, 0, 0};
+
+void UI__expose_variable(void *varptr, uint8_t varsize){
+  debug(F("ExpV"));
+  assert_return(UI__variables.index < UI__variables.len, NULL);
+  assert_raise_return(UI__variables.array, ERR_VALUE, NULL); // assert not null
+
+  UI__variables.array[UI__variables.index].fptr = fptr;
+  UI__variables.array[UI__variables.index].pt.lc = PT_INNACTIVE;
+  UI__variables.index++;
+  sdebug(F("Added T:")); cdebug(UI__variables.index); edebug(F(" len:"));
+  return &(UI__variables.array[UI__variables.index - 1]);
+}
+
+UI_function expose_function(TH_funptr fptr){
+  debug(F("ExpF"));
+  assert_return(UI__functions.index < UI__functions.len, NULL);
+  assert_raise_return(UI__functions.array, ERR_VALUE, NULL); // assert not null
+
+  UI__functions.array[UI__functions.index].fptr = fptr;
+  UI__functions.array[UI__functions.index].pt.lc = PT_INNACTIVE;
+  UI__functions.index++;
+  sdebug(F("Added T:")); cdebug(UI__functions.index); edebug(F(" len:"));
+  return &(UI__functions.array[UI__functions.index - 1]);
+}
 
 // #####################################################
 // ## Helper functions
 
-thread *TH_get_thread(char *name){
-  thread *th;
-  int8_t n;
-  uint8_t i;
-  uint8_t name_len = strlen(name);
-  sdebug(F("gt: "));
+enum UI_TYPES{
+  UI_THREAD_TYPE,
+  UI_FUNCTION_TYPE,
+  UI_VARIABLE_TYPE
+};
+
+void *get_object(char *name, uint8_t type){
+  uint8_t i, el_num;
+  const __FlashStringHelper **type_names;
   
-  for(i = 0; i < TH__threads.index; i++){
-    th = &TH__threads.array[i];
-    if(cmp_str_elptr(name, name_len, th)){
-      edebug(th->el.name);
-      return th;
+  sdebug(F("gt: "));
+  clrerr();
+
+  uint8_t len;
+  switch(type){
+    case UI_THREAD_TYPE:
+      len = TH__threads.index;
+      break;
+    case UI_FUNCTION_TYPE:
+      len = UI__functions.index;
+      break;
+    case UI_VARIABLE_TYPE:
+      len = UI__variables.index;
+      break;
+    default:
+      assert(0);
+  }
+    
+  // check if name is a number
+  el_num = get_int(name);
+  if(not errno){
+    edebug();
+    
+    assert_raise(el_num < len, ERR_INDEX);
+    switch(type){
+    case UI_THREAD_TYPE:
+      return (void *)get_thread(el_num);
+    case UI_FUNCTION_TYPE:
+      return (void *)get_function(el_num);
+    case UI_VARIABLE_TYPE:
+      return (void *)get_variable(el_num);
+    default:
+      assert(0);
     }
   }
-  edebug("NotFound");
+  
+  clrerr();
+  switch(type){
+  case UI_THREAD_TYPE:
+    type_names = TH__thread_names;
+  case UI_FUNCTION_TYPE:
+    type_names = TH__function_names;
+  case UI_VARIABLE_TYPE:
+    type_names = TH__variable_names;
+  default:
+    assert(0);
+  }
+  assert_raise(type_names, ERR_INPUT); // not null
+  
+  for(i = 0; i < len; i++){
+    if(cmp_str_flash(name, type_names[i])){
+      edebug(type_names[i]);
+      switch(type){
+      case UI_THREAD_TYPE:
+        return &TH__threads.array[i];
+      case UI_FUNCTION_TYPE:
+        return &UI__functions.array[i];
+      case UI_VARIABLE_TYPE:
+        return &UI__variables.array[i];
+      }
+    }
+  }
+  edebug();
+  raise(ERR_INPUT);
+error:
   return NULL;
+}
+
+// Get from index
+TH_variable *get_variable(uint8_t el_num){
+  assert_raise_return(el_num < UI__variables.len, ERR_INDEX, NULL);
+  return &UI__variables.array[el_num];
+}
+
+UI_function *get_function(uint8_t el_num){
+  assert_raise_return(el_num < UI__functions.len, ERR_INDEX, NULL);
+  return &UI__functions.array[el_num];
+}
+
+// Get from name
+thread *get_thread(char *name){
+  return (thread *)get_object(name, UI_THREAD_TYPE);
+}
+
+UI_function *get_function(char *name){
+  return (UI_function *)get_object(name, UI_FUNCTION_TYPE);
+}
+
+TH_variable *get_variable(char *name){
+  return (TH_variable *)get_object(name, UI_VARIABLE_TYPE);
+}
+
+void put_inputs(pthread *pt, char *input){
+  // loads the inputs into a protothread.
+  uint16_t myint;
+  float myfloat;
+  char *word;
+  
+  sdebug(F("PutIn:"));
+  while(true){
+    clrerr();
+    edebug(*input);
+    word = get_word(input);
+    
+    //myfloat = get_float(word);
+    //AND DO ERROR CHECKING
+    
+    myint = get_int(word);
+    if(not errno){
+      cdebug(myint); cdebug("\t\t");
+      pt->put_input(myint);
+      continue;
+    }
+    
+    if(errno or (not input or not word)) {
+      // no more words left
+      clrerr();
+      return;
+    }
+    
+    cdebug(word); cdebug("\t\t");
+    pt->put_input(word);
+  }
+}
+
+uint8_t call_function(UI_function *fun, char *input){
+  // Can raise error
+  pthread pt;
+  uint8_t out;
+  put_inputs(&pt, input);
+  if(errno){
+    out = 0;
+    goto done;
+  }
+  out = (*fun->fptr)(&pt);
+done:
+  pt.clear_data();
+  return out;
+}
+
+uint8_t call_function(char *name, char *input){
+  return call_function(get_function(name), input);
+}
+
+void schedule_thread(char *name, char *input){
+  uint8_t el_num;
+  thread *th;
+  char *c;
+  
+  th = get_thread(name);
+  assert_raise_return(th, ERR_INPUT);
+  
+  put_inputs(&th->pt, input);
+  schedule_thread(th);
 }
 
 // #####################################################
 // ### Interrupts
 
 void ui_watchdog(){
-  L_print("[CRITICAL] Timed out:");
+  seterr(ERR_CRITICAL);
+  log_err("TO");
   if(th_calling){
     L_println(th_calling);
   }
@@ -71,12 +251,17 @@ void ui_watchdog(){
 //    L_println(TH__threads.array[th_loop_index].el.name);
 //  }
   else {
-      L_println("Unknown");
+      L_println(F("Unknown"));
   }
   ui_loop_time = millis();
   //asm volatile ("  jmp 0"); 
   wdt_reset();
   wdt_enable(WDTO_250MS);
+}
+
+//Activating watchdog UI
+ISR(WDT_vect) {
+   ui_watchdog();
 }
 
 void ui_wdt_setup(void)
@@ -99,69 +284,8 @@ void ui_pat_dog(){
   ui_loop_time = millis(); // pet the custom dog.
 }
 
-////Activating watchdog UI
-//ISR(WDT_vect) {
-//   ui_watchdog();
-//}
-
-
 // #####################################################
-// ### Functions
-
-void __print_row(String *row, uint8_t *col_widths){
-  uint8_t si = 0, column = 0, ncolumn = 0;
-  while((*row)[si] != 0){
-    L_write('|');
-    L_set_wrote(0);
-    while(column == ncolumn){
-      switch((*row)[si]){
-      case 0:
-        L_println();
-        return;
-      case '\t':
-        ncolumn += 1;
-        break;
-      default:
-        L_write((*row)[si]);
-      }
-      si++;
-    }
-    while(L_wrote < col_widths[column]){
-      L_write(' ');
-    }
-    column = ncolumn;
-  }
-}
-
-void UI_call_function(char *name, char *input){
-  uint8_t el_num;
-  char *c;
-  
-  clrerr();
-  // check if name is a number
-  el_num = get_int(name);
-  if(not errno){
-    call_function(el_num, input);
-    return;
-  }
-  
-  //TODO: search through the thread names.
-}
-
-void UI_call_thread(char *name, char *input){
-  uint8_t el_num;
-  char *c;
-  
-  clrerr();
-  // check if name is a number
-  el_num = get_int(name);
-  if(not errno){
-    schedule_thread(el_num, input);
-    return;
-  }
-  
-  //TODO: search through the thread names.
-}
+// ### User Commands
 
 void ui_process_command(char *c){
   char *c2;
@@ -176,149 +300,70 @@ void ui_process_command(char *c){
   sdebug(F("Calling Name:"));
   cdebug(c2); cdebug(':');
   edebug(c);
-  UI_call_function(c2, c); // name, input
+  
+  call_function(c2, c); // name, input
+}
+
+void cmd_t(char *input){
+  // Calling thread from command
+  char *word = get_word(input);
+  iferr_log_return();
+  schedule_thread(word, input);
 }
 
 void cmd_v(char *input){
+  // Printing variable from command
   char *word = get_word(input);
   iferr_log_return();
   print_variable(word);
 }
 
-void cmd_kill(char *input){
-  input = pass_ws(input);
-  char *wordend = get_word_end(input);
-  *wordend = 0;
-  uint16_t v;
-  char **tailptr;
-  iferr_log_return();
-  sdebug(F("killing:")); edebug(input);
-  thread *th = TH_get_thread(input);
+void cmd_kill(pthread *pt){
+  char *thname = pt->get_str_input(0);
+  assert_raise_return(thname, ERR_INPUT);
+  sdebug(F("k:")); edebug(thname);
+  thread *th = get_thread(thname);
   if(th) {
-    debug(th->el.name);
+    // print name
     kill_thread(th);
   }
   else{
     raise_return(ERR_INPUT);
   }
   L_print(F("Killed:"));
-  L_println(input);
-
+  L_println(thname);
 }
 
-void _print_monitor(uint16_t execution_time){
-  L_print(F("Total Time: "));
-  L_print(execution_time);
-  L_print(F("  Free Memory:"));
-  L_println(freeMemory());
-  
-  
-  char nameray[] = "Ind\tName\tt exec[ms]\tLine"; // also used for storing flash names
-  thread *th;
-  uint8_t column_widths[] = {4, 12, 12, 12};
-  
-  String myStr;
-  
-  // TODO: Update with correct threads
-  print_row(String(nameray), column_widths);
-  for(int i = 0; i < TH__threads.index; i++){
-    th = &TH__threads.array[i];
-    if(th->pt.lc >= PT_KILL_VALUE)continue;
-    flash_to_str(th->el.name, nameray);
-    myStr = String(i)                                               + String('\t') + 
-      String(nameray)                                               + String('\t') + 
-      String(th->time / 100) + String('.') + String(th->time %100)  + String('\t') +
-      String((unsigned int)th->pt.lc);
-    print_row(myStr, column_widths);
-    ui_pat_dog();
-    th->time = 0; // reset time
-  }
-}
-
-uint8_t system_monitor(pthread *pt, char *input){
-  PT_BEGIN(pt);
-  while(true){
-    pt->put_temp((uint16_t)millis());
-    iferr_catch();
-    PT_WAIT_MS(5000);
-    PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - pt->get_int_temp() > 5000);
-    _print_monitor((uint16_t)millis() - pt->get_int_temp());
-    pt->clear_temp();
-  }
-error:
-  PT_END(pt);
-}
-
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-/*
-// This needs to be completely redesigned to print options from
-// the variable names.
-void print_options(char *input){
-  uint8_t i = 0;
+void print_option_name(const __FlashStringHelper *name){
   L_repeat('*', 5);
-  L_println(F("Threads"));
+  L_print('[');
+  L_print(name);
+  L_println(']');
+}
+
+void print_options(pthread *pt){
+  uint8_t i = 0;
+  print_option_name(F("f"));
+  for(i = 0; i < UI__functions.index; i++){
+    L_println(TH__function_names[i]);
+  }
+  
+  print_option_name(F("t"));
   for(i = 0; i < TH__threads.index; i++){
     L_print(i);
     L_write('\t');
-    L_println(TH__threads.array[i].el.name);
+    L_println(TH__thread_names[i]);
   }
   
-  L_repeat('*', 5);
-  L_println(F("\nVars"));
-  for(i = 0; i < TH__variables.index; i++){
-    L_println(TH__variables.array[i].el.name);
-  }
-  
-  L_repeat('*', 5);
-  L_println(F("\nFuncs"));
-  for(i = 0; i < TH__functions.index; i++){
-    L_println(TH__functions.array[i].el.name);
+  print_option_name(F("v"));
+  for(i = 0; i < UI__variables.index; i++){
+    L_println(TH__variable_names[i]);
   }
 }
-*/
 
-/*
-uint8_t print_variable(char *name){
-  TH_variable *var;
-  int8_t n;
-  uint8_t i;
-  var = TH_get_variable(name);
-  assert_raise_return(var, ERR_INPUT, false);
-  L_print(F("v=x"));
-  for(n = var->size - 1; n >= 0; n--){
-    uint8_t *chptr = (uint8_t*)(var->vptr);  // works
-    if(chptr[n] < 0x10) L_write('0');
-    L_print(chptr[n], HEX);
-  }
-  L_println();
-  return true;
-}
-*/
-
-
-
-
-
-
-
-
-
-/*
-
-uint8_t user_interface(pthread *pt, char *input){
+// #####################################################
+// ### UI Loop
+PT_THREAD user_interface(pthread *pt){
   uint8_t v;
   static uint8_t i = 0;
   char c;
@@ -356,33 +401,36 @@ error:
   return PT_YIELDED;
 }
 
-void ui_std_greeting(){
-  L_println(F("!!!Make sure you are sending NL + CR\n?=help\n"));
-}
-
-void UI__setup_std(){
-  debug(F("UiStdSetup:"));
-  start_thread("*UI", user_interface);  // user interface. REQUIRED
-  
-  expose_thread(F("mon"), system_monitor); // system monitor
-  
-  expose_function(F("v"), cmd_v);
-  expose_function(F("?"), print_options);
-  expose_function(F("kill"), cmd_kill);
-  
-  ui_watchdog_setup();
-}
-
 void ui_loop(){
   ui_pat_dog();
-  
   L_set_wrote(false);
-  thread_ui_loop();
+  thread_loop();
   if(L_wrote){
     L_repeat('#', 5);
     L_println();
   }
 }
 
-*/
+
+// #####################################################
+// ### Setup
+void ui_std_greeting(){
+  L_println(F("!!!Make sure you are sending NL + CR\n?=help\n"));
+}
+
+void UI__setup_std(){
+  debug(F("UiS:"));
+  expose_schedule_thread(user_interface);  // user interface. REQUIRED
+  
+  //expose_thread(system_monitor); // system monitor
+  
+  expose_function(cmd_t);
+  expose_function(cmd_v);
+  expose_function(print_options);
+  expose_function(cmd_kill);
+  
+  //ui_watchdog_setup();
+}
+
+
 

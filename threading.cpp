@@ -27,15 +27,11 @@
 
 // #####################################################
 // ### Globals
-TH_VariableArray TH__variables = {0, 0, 0};
-TH_FunctionArray TH__functions = {0, 0, 0};
-TH_ThreadArray TH__threads = {0, 0, 0};
 
-const __FlashStringHelper **TH__thread_names;
+TH_ThreadArray TH__threads = {0, 0, 0};
 
 uint8_t th_calling = 255;
 uint8_t th_loop_index = 255;
-
 
 // #####################################################
 // ### Exported Functions
@@ -69,61 +65,7 @@ TH_variable *TH_get_variable(char *name){
   return NULL;
 }
 
-uint8_t thread_ui_loop(){
-  uint64_t time;
-  uint16_t timeus;
-  uint8_t fout;
-  uint16_t init_lc;
-  thread *th;
-  
-  // ***** don't try this at home kids ********
-  static struct PTsmall pt = {0};
-  // So now "pt" will be (ptsmall *)(&pt)
-  // ******************************************
-  PT_BEGIN((ptsmall *)(&pt));
-  while(true){
-    PT_YIELD((ptsmall *)(&pt));
-    for(th_loop_index = 0; th_loop_index < TH__threads.index; th_loop_index++){
-      th = &TH__threads.array[th_loop_index];
-      init_lc = th->pt.lc;
-      if(init_lc == PT_INNACTIVE) continue;
-      time = millis();
-      timeus = micros();
-      assert(th->fptr, th_loop_index);    // NOT NULL PTR
-      fout = th->fptr(&(th->pt), EH_EMPTY_STR);
-      timeus = (uint16_t)micros() - timeus;
-      time = (uint64_t)millis() - time;
 
-      if(time > 10){ // too long, disregard microseconds
-        time = th->time + time * 100;
-      }
-      else{
-        if(timeus > 1000){
-          time = th->time + time * 100 + (timeus / 10);
-        }
-        else{
-          // time too short for millis
-          time = th->time + (timeus / 10);
-        }
-      }
-      if(time > 65535) th->time = 65535;
-      else th->time = time;
-
-      if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){
-        if(fout < PT_EXITED){
-          seterr(ERR_TYPE);
-          log_err(F("NoDie"));
-        }  
-        set_thread_innactive(th);
-        log_thread_exit(th);
-      }
-error:
-      clrerr();
-      PT_YIELD(  (ptsmall *)(&pt));
-    }
-  }
-  PT_END((ptsmall *)(&pt));
-}
 */
 
 
@@ -147,26 +89,11 @@ void TH__set_thread_array(thread *fray, uint16_t len){
   }
 }
 
-//void TH__expose_variable(void *varptr, uint8_t varsize);
-
-//void TH__expose_function(H_funptr fptr);
-
-// #####################################################
-// ### User Functions
-TH_variable *get_variable(uint8_t el_num);
-
-TH_function *get_function(uint8_t el_num);
-
-void call_function(uint8_t el_num, char *input);
-
 
 // #####################################################
 // ### Package Access
 
-// expose_variable = macro
-// expose_function = macro
-
-thread *expose_thread(TH_thfunptr fptr){
+thread *expose_thread(TH_funptr fptr){
   debug(F("ExpSTh"));
   assert_return(TH__threads.index < TH__threads.len, NULL);
   assert_raise_return(TH__threads.array, ERR_VALUE, NULL); // assert not null
@@ -182,14 +109,14 @@ void set_thread_innactive(thread *th){
   th->pt.lc = PT_INNACTIVE;
 }
 
-uint8_t schedule_thread(thread *th, char *input){
+uint8_t schedule_thread(thread *th){
   uint8_t out = false;
   
   sdebug(F("Calling:"));
   assert_raise(th->pt.lc == PT_INNACTIVE, ERR_VALUE, 0);
   PT_INIT(&(th->pt));
   assert(th->fptr);
-  out = th->fptr(&(th->pt), EH_EMPTY_STR);
+  out = th->fptr(&(th->pt));
   if(out >= PT_EXITED){
     set_thread_innactive(th);
     out = true;
@@ -202,26 +129,21 @@ error:
   return out;
 }
 
-uint8_t schedule_thread(uint8_t el_num, char *input){
+uint8_t schedule_thread(uint8_t el_num){
   thread *th = get_thread(el_num);
   assert_raise_return(th, ERR_VALUE, false);
-  schedule_thread(th, input);
+  schedule_thread(th);
   return true;
 }
 
-thread *expose_run_thread(TH_thfunptr fun, char *input){
+thread *expose_schedule_thread(TH_funptr fun){
   thread *th = expose_thread(fun);
   iferr_log_return(NULL);
-  schedule_thread(th, input);
+  schedule_thread(th);
   return th;
 }
 
-thread *expose_run_thread(TH_thfunptr fun){
-  return expose_run_thread(fun, EH_EMPTY_STR);
-}
-
 thread *get_thread(uint8_t el_num){
-  uint8_t i;
   assert_raise_return(el_num < TH__threads.len, ERR_INDEX, NULL);
   return &TH__threads.array[el_num];
 }
@@ -254,7 +176,7 @@ uint8_t thread_loop(){
       if(init_lc == PT_INNACTIVE) continue;
       assert(th->fptr, th_loop_index);    // NOT NULL PTR
       
-      fout = th->fptr(&(th->pt), EH_EMPTY_STR);
+      fout = th->fptr(&(th->pt));
 
       if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){
         if(fout < PT_EXITED){
