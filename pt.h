@@ -62,6 +62,8 @@
 
 // commented = not supported, but may in future
 enum vtype{
+  vt_minint,
+  // Integers
   //vt_int8,
   vt_uint8,
   
@@ -70,6 +72,12 @@ enum vtype{
   
   //vt_int32,
   //vt_uint32,
+  
+  vt_uint64,
+  vt_maxint,
+  
+  //Float
+  vt_float64_t,
   
   vt_uint8ray,  // 8 bit uint arrays
   vt_int16ray,  // 16 bit int arrays
@@ -331,9 +339,7 @@ enum PTVALUES {
  
  #define PT_WAIT_MS(pt, ms)                                           \
   do {                                                                \
-  (pt)->clear_temp();                                                 \
   (pt)->put_temp((uint16_t)millis());                                 \
-  iferr_return(PT_CRITICAL);   /*mem error*/                          \
   PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - (uint16_t)(pt)->get_int_temp() \
     > ms);                                                            \
   (pt)->clear_temp();                                                 \
@@ -400,9 +406,9 @@ enum PTVALUES {
  */
 #define PT_SPAWN(pt, thread, ...)		                              \
   do {						                                                \
-    (pt)->clear_temp();                                             \
     (pt)->put_temp_pt();                                            \
     PT_WAIT_THREAD(pt, thread((pt)->get_pt_temp(), __VA_ARGS__));		\
+    (pt)->clear_temp();                                             \
   } while(0)
 
 /** @} */

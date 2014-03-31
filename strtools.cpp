@@ -92,6 +92,9 @@ char *get_word_end(char *c){
   }
 }
 
+
+// This function works with the macro get_word to modify the input string
+// as you run it.
 //char *word = get_word(c); // get first word
 //char *word2 = get_word(c); // get next word
 char *_get_word(char **c){
@@ -119,31 +122,17 @@ long int get_int(char *c){
   return strtol(c, NULL, 0);
 }
 
-/*
-float get_float(char *c){
+double get_float(char *c){
   uint8_t subt = 0;
-  switch(*c){
-    case '-':
-    case '+':
-      c = c+1;
-      subt = 1;
-  default:
-    if (not (*c == '0' and *(c+1) == 'f' and 
-          (*(c+2) < '0' or *(c+2) > '9'))
-      ) {
-      raise_return(ERR_INPUT, 0);
-    }
+  if(c[0] == '0' and c[1] == 'f' and 
+     ((c[2] >= '0' and c[2] <= '9') or
+     (c[2] == '-' or c[2] == '+'))
+    ){
+    c = c - subt;
+    return atof((c+2));
   }
-  c = c - subt;
-  return strtof((c+2), NULL, 0);
+  raise_return(ERR_VALUE, 0);
 }
-*/
-
-long int _get_int(char **c){
-  char *word = _get_word(c);
-  return get_int(word);
-}
-
 
 
 

@@ -88,26 +88,32 @@ void TH__set_thread_array(thread *fray, uint16_t len){
 // #####################################################
 // ### Package Access
 
+uint8_t get_index(thread *th){
+  return ((uint8_t *)th - (uint8_t *)TH__threads.array) / sizeof(thread);
+}
+
 thread *expose_thread(TH_funptr fptr){
-  debug(F("ExpSTh"));
+  debug(F("ExpTh"));
   assert_return(TH__threads.index < TH__threads.len, NULL);
   assert_raise_return(TH__threads.array, ERR_VALUE, NULL); // assert not null
 
   TH__threads.array[TH__threads.index].fptr = fptr;
   TH__threads.array[TH__threads.index].pt.lc = PT_INNACTIVE;
+  sdebug(F("Added T:")); edebug(TH__threads.index);
   TH__threads.index++;
-  sdebug(F("Added T:")); cdebug(TH__threads.index); edebug(F(" len:"));
   return &(TH__threads.array[TH__threads.index - 1]);
 }
 
 void set_thread_innactive(thread *th){
   th->pt.lc = PT_INNACTIVE;
+  th->pt.clear_data();
+  slog_info("TK:"); elog_info(get_index(th));
 }
 
 uint8_t schedule_thread(thread *th){
   uint8_t out = false;
   
-  sdebug(F("Calling:"));
+  sdebug(F("schT:")); edebug(get_index(th));
   assert_raise(th->pt.lc == PT_INNACTIVE, ERR_VALUE, 0);
   PT_INIT(&(th->pt));
   assert(th->fptr);
@@ -117,7 +123,7 @@ uint8_t schedule_thread(thread *th){
     out = true;
   }
   else{
-    //log_thread_start(th);
+    sdebug("Ts:"); edebug(get_index(th));
     out = true;
   }
 error:
@@ -142,6 +148,8 @@ thread *get_thread(uint8_t el_num){
   assert_raise_return(el_num < TH__threads.len, ERR_INDEX, NULL);
   return &TH__threads.array[el_num];
 }
+
+
 
 void kill_thread(thread *th){
   th->pt.lc = PT_KILL_VALUE;
@@ -178,7 +186,6 @@ uint8_t thread_loop(){
           log_err(F("NoDie"));
         }
         set_thread_innactive(th);
-        //log_thread_exit(th);
       }
 error:
       clrerr();

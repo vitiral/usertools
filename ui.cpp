@@ -31,6 +31,8 @@
 #define LEDPIN 2
 
 
+uint8_t cmd_print_options(pthread *pt);
+
 // #####################################################
 // ### Globals
 
@@ -67,8 +69,11 @@ UI_variable *UI__expose_variable(void *varptr, uint8_t varsize){
   debug(F("ExpV"));
   assert_return(UI__variables.index < UI__variables.len, NULL);
   assert_raise_return(UI__variables.array, ERR_VALUE, NULL); // assert not null
+  
+  UI__variables.array[UI__variables.index].vptr = varptr;
+  UI__variables.array[UI__variables.index].size = varsize;
   UI__variables.index++;
-  sdebug(F("v:")); cdebug(UI__variables.index); edebug(F(" l:"));
+  sdebug(F("v:")); edebug(UI__variables.index);
   return &(UI__variables.array[UI__variables.index - 1]);
 }
 
@@ -79,7 +84,7 @@ UI_function *expose_function(TH_funptr fptr){
 
   UI__functions.array[UI__functions.index].fptr = fptr;
   UI__functions.index++;
-  sdebug(F("t:")); cdebug(UI__functions.index); edebug(F(" l:"));
+  sdebug(F("f:")); edebug(UI__functions.index);
   return &(UI__functions.array[UI__functions.index - 1]);
 }
 
@@ -101,7 +106,8 @@ UI_variable *get_variable(uint8_t el_num){
 }
 
 UI_function *get_function(uint8_t el_num){
-  assert_raise_return(el_num < UI__functions.len, ERR_INDEX, NULL);
+  sdebug("Gf:"); edebug(el_num);
+  assert_raise_return(el_num < UI__functions.index, ERR_INDEX, NULL);
   return &UI__functions.array[el_num];
 }
 
@@ -109,31 +115,36 @@ UI_function *get_function(uint8_t el_num){
 
 void *get_object(char *name, uint8_t len, 
     const __FlashStringHelper **type_names, void *objarray, uint8_t size){
-  uint8_t i, el_num;
+  
+  uint8_t i;
 
-  sdebug(F("gt: "));
+  sdebug(F("Gobj: ")); edebug(name);
   clrerr();
 
   // check if name is a number
-  el_num = get_int(name);
+  i = get_int(name);
   if(not errno){
-    edebug();
-    
-    assert_raise(el_num < len, ERR_INDEX);
-    //return getobj(el_num);
-    return (void *)((char *)objarray + el_num*size);
+    assert_raise(i < len, ERR_INDEX);
+    //return getobj(i);
+    sdebug("elnum:"); edebug(i);
+    return (void *)((char *)objarray + i*size);
   }
   
   clrerr();
+  
   assert_raise(type_names, ERR_INPUT); // not null
   
   for(i = 0; i < len; i++){
+    sdebug("i="); edebug(i);
+    debug(type_names[i]);
     if(cmp_str_flash(name, type_names[i])){
       edebug(type_names[i]);
-      return (void *)((char *)objarray + el_num*size);
+      debug("TESTING");
+      cmd_print_options((pthread *) 10);
+      debug("NOW LET'S SEE");
+      return (void *)((uint8_t *)objarray + i*size);
     }
   }
-  edebug();
   raise(ERR_INPUT);
 error:
   return NULL;
@@ -151,17 +162,29 @@ UI_variable *get_variable(char *name){
   return (UI_variable *)get_object(name, UI__variables.index, UI__variable_names, UI__variables.array, sizeof(UI_variable));
 }
 
+uint8_t get_index(UI_function *fun){
+  //sdebug((uint16_t)fun); cdebug(" "); edebug((uint16_t)UI__functions.array);
+  return ((uint8_t *)fun - (uint8_t *)UI__functions.array) / sizeof(UI_function);
+}
+
 void put_inputs(pthread *pt, char *input){
   // loads the inputs into a protothread.
   uint16_t myint;
   float myfloat;
   char *word;
   
-  sdebug(F("PutIn:"));
+  sdebug(F("PutIn:")); 
   while(true){
     clrerr();
     edebug(*input);
     word = get_word(input);
+    
+    if(errno or (not input or not word)) {
+      // no more words left
+      clrerr();
+      edebug();
+      return;
+    }
     
     //myfloat = get_float(word);
     //AND DO ERROR CHECKING
@@ -173,15 +196,12 @@ void put_inputs(pthread *pt, char *input){
       continue;
     }
     
-    if(errno or (not input or not word)) {
-      // no more words left
-      clrerr();
-      return;
-    }
+    clrerr();
     
     cdebug(word); cdebug("\t\t");
     pt->put_input(word);
   }
+  edebug("None");
 }
 
 uint8_t call_function(UI_function *fun, char *input){
@@ -193,6 +213,7 @@ uint8_t call_function(UI_function *fun, char *input){
     out = 0;
     goto done;
   }
+  sdebug("CF:"); edebug(get_index(fun));
   out = (*fun->fptr)(&pt);
 done:
   pt.clear_data();
@@ -273,21 +294,19 @@ void ui_pat_dog(){
 // #####################################################
 // ### User Commands
 
-void ui_process_command(char *c){
-  char *c2;
+void ui_process_command(char *input){
   char *word;
   
   sdebug(F("Parse CMD:"));
-  edebug(*c);
-  c = pass_ws(c);
-  c2 = get_word(c);
+  edebug(*input);
+  word = get_word(input);
   iferr_log_return();
-  assert_return(c); assert_return(c2);
+  assert_return(input); assert_return(word);
   sdebug(F("Calling Name:"));
-  cdebug(c2); cdebug(':');
-  edebug(c);
+  cdebug(word); cdebug(':');
+  edebug(input);
   
-  call_function(c2, c); // name, input
+  call_function(word, input); // name, input
 }
 
 uint8_t cmd_t(pthread *pt){
@@ -308,11 +327,11 @@ uint8_t cmd_t(pthread *pt){
       break;
     }
     if(i == 0){
-      if(type <= vt_uint16) th = get_thread(pt->get_int_input(0));
+      if(type < vt_maxint) th = get_thread(pt->get_int_input(0));
       else th = get_thread(pt->get_str_input(0));
     }
     else{
-      if(type <= vt_uint16) th->pt.put_input((int16_t)pt->get_int_input(i));
+      if(type < vt_maxint) th->pt.put_input((int16_t)pt->get_int_input(i));
       else th->pt.put_input(pt->get_str_input(i));
     }
   }
@@ -326,34 +345,35 @@ uint8_t cmd_v(pthread *pt){
   // Printing variable from command
   UI_variable *var;
   int32_t vint;
+  int8_t i = 0;
   
-  if(pt->get_type_input(0) <= vt_uint16){
+  if(pt->get_type_input(0) < vt_maxint){
     var = get_variable(pt->get_int_input(0));
   }
   else{
     var = get_variable(pt->get_str_input(0));
   }
   iferr_log_catch();
-  
   vint = pt->get_int_input(1);
-  if(errno){
-    // there is no input or input is a character array -- just print variable
-    print_variable(var);
+  if(not errno){
+    for(i = 1; i <= var->size; i++){
+      // move the values at the end onto the variable. Truncate rest.
+      ((uint8_t *)var->vptr)[var->size - i] = ((uint8_t *)vint)[sizeof(vint) - i];
+    }
   }
-  else {
-    // set variable -- NOT SUPPORTED YET
-    assert(0);
-  }
+  // always print the variable when done
+  print_variable(var);
   return 1;
 error:
   return 0;
 }
 
 uint8_t cmd_kill(pthread *pt){
+  debug("killing");
   char *thname = pt->get_str_input(0);
   thread *th;
   assert_raise(thname, ERR_INPUT);
-  sdebug(F("k:")); edebug(thname);
+  slog_info(F("k:")); elog_info(thname);
   th = get_thread(thname);
   if(th) {
     // print name
@@ -421,7 +441,7 @@ PT_THREAD user_interface(pthread *pt){
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
         buffer[i + 1] = 0;
-        sdebug(F("Command:"));
+        sdebug(F("Command:"));  
         edebug(buffer);
         ui_process_command(buffer);
         goto done;
@@ -460,10 +480,12 @@ void UI__setup_std(){
   
   //expose_thread(system_monitor); // system monitor
   
+  expose_function(cmd_print_options);
   expose_function(cmd_t);
   expose_function(cmd_v);
-  expose_function(cmd_print_options);
   expose_function(cmd_kill);
+  
+  cmd_print_options((pthread *) 10);
   
   //ui_watchdog_setup();
 }

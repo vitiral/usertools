@@ -48,7 +48,7 @@ typedef struct UI_FunctionArray{
 
 // for user interface, with names etc.
 #define thread_setup_ui(V, F, T) do{                                       \
-      static TH_variable UI__variable_array[V];                         \
+      static UI_variable UI__variable_array[V];                         \
       UI__set_variable_array(UI__variable_array, V);                    \
                                                                         \
       static UI_function UI__function_array[F];                         \
@@ -59,8 +59,6 @@ typedef struct UI_FunctionArray{
     }while(0)
 
       
-// ##############################################
-// ## Functions and Variables
 // Expose Macros
 
 extern UI_VariableArray UI__variables;
@@ -82,15 +80,21 @@ void call_function(uint8_t el_num);
 #define UI__MIN_T 1
 extern const __FlashStringHelper **UI__thread_names;
 #define set_thread_names(...)    do{          \
-        PROGMEM const __FlashStringHelper *UI__THREAD_NAMES[] = {F("ui"), __VA_ARGS__};     \
+        PROGMEM const __FlashStringHelper *UI__THREAD_NAMES[] = {__VA_ARGS__, F("ui")};     \
         UI__thread_names = UI__THREAD_NAMES;                                       \
       }while(0)
 
 #define UI__MIN_F 4
 extern const __FlashStringHelper **UI__function_names;
-#define set_function_names(...)    do{          \
+#define set_function_names(...)    do{                            \
         PROGMEM const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
-        {F("t"), F("v"), F("k"), F("?"), __VA_ARGS__};            \
+        {__VA_ARGS__, F("?"), F("t"), F("v"), F("k")};            \
+        UI__function_names = UI__FUNCTION_NAMES;                  \
+      }while(0)
+
+#define default_function_names_only()  do{                            \
+        PROGMEM const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
+        {F("?"), F("t"), F("v"), F("k")};            \
         UI__function_names = UI__FUNCTION_NAMES;                  \
       }while(0)
 
@@ -102,14 +106,20 @@ extern const __FlashStringHelper **UI__variable_names;
 
 #define ui_setup_std(V, F, T) do{                             \
     thread_setup_ui(V, (F) + UI__MIN_F, (T) + UI__MIN_T);     \
-    UI__setup_std();                                          \
   }while(0)
+
+#define ui_end_setup() UI__setup_std();
+
 
 void UI__setup_std();
 #define UI_CMD_END_CHAR 0x0A
 #define UI_CMD_PEND_CHAR 0x0D  // may be right before the end.
 
 #define UI_TABLE_SEP F(" \t ")
+
+// #####################################################
+// ### Used for Testing
+void ui_process_command(char *c);
 
 // #####################################################
 // ### Functions

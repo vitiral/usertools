@@ -72,7 +72,6 @@ void TH__set_thread_array(thread *fray, uint16_t len);
 thread *expose_thread(TH_funptr fptr);
 
 thread *expose_schedule_thread(TH_funptr fun);
-thread *expose_schedule_thread(TH_funptr fun);
 
 thread *get_thread(uint8_t el_num);
 

@@ -205,9 +205,8 @@ error:
 }
 
 uint8_t pthread::get_type_type(ptindex index, uint8_t ptype){
-  PT_data *cdata;
-  cdata = get_type(index, ptype);
-  return cdata->b.type;
+  debug(get_type(index, ptype)->b.type);
+  return VTYPE(get_type(index, ptype)->b.type);
 }
 
 PT_data *pthread::get_temp(uint8_t type){
@@ -219,6 +218,7 @@ error:
 }
 
 void *pthread::put_temp(uint16_t temp){
+  clear_temp();
   if(put_data(&temp, TYPE_TEMP bitor vt_uint16, 0) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
     raise_return(ERR_CRITICAL, NULL);
@@ -226,6 +226,7 @@ void *pthread::put_temp(uint16_t temp){
 }
 
 void *pthread::put_temp_pt(){
+  clear_temp();
   if(put_data(&pthread(), TYPE_TEMP bitor vt_pt, 0) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
     raise_return(ERR_CRITICAL, NULL);
