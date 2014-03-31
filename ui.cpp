@@ -396,25 +396,35 @@ void print_option_name(const __FlashStringHelper *name){
   L_println(']');
 }
 
+void print_option_line(uint8_t i, const __FlashStringHelper **name_array){
+  L_print(i);
+  if(name_array){
+    L_write('\t');
+    L_println(name_array[i]);
+  }
+  else L_println();
+}
 uint8_t cmd_print_options(pthread *pt){
+  ui_print_options();
+  return 1;
+}
+
+void ui_print_options(){
   uint8_t i = 0;
   print_option_name(F("f"));
   for(i = 0; i < UI__functions.index; i++){
-    L_println(UI__function_names[i]);
+    print_option_line(i, UI__function_names);
   }
   
   print_option_name(F("t"));
   for(i = 0; i < TH__threads.index; i++){
-    L_print(i);
-    L_write('\t');
-    L_println(UI__thread_names[i]);
+    print_option_line(i, UI__thread_names);
   }
   
   print_option_name(F("v"));
   for(i = 0; i < UI__variables.index; i++){
-    L_println(UI__variable_names[i]);
+    print_option_line(i, UI__variable_names);
   }
-  return 1;
 }
 
 // #####################################################
