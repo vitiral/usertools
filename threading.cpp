@@ -175,7 +175,6 @@ uint8_t thread_loop(){
       init_lc = th->pt.lc;
       if(init_lc == PT_INNACTIVE) continue;
       assert(th->fptr, th_loop_index);    // NOT NULL PTR
-      
       fout = th->fptr(&(th->pt));
 
       if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){

@@ -48,11 +48,11 @@ typedef struct UI_FunctionArray{
 
 // for user interface, with names etc.
 #define thread_setup_ui(V, F, T) do{                                       \
-      static TH_variable TH__variable_array[V];                         \
-      TH__set_variable_array(TH__variable_array, V);                    \
+      static TH_variable UI__variable_array[V];                         \
+      UI__set_variable_array(UI__variable_array, V);                    \
                                                                         \
-      static UI_function TH__function_array[F];                         \
-      TH__set_function_array(TH__function_array, F);                    \
+      static UI_function UI__function_array[F];                         \
+      UI__set_function_array(UI__function_array, F);                    \
                                                                         \
       static TH_fake_thread TH__thread_array[T];                       \
       TH__set_thread_array((thread *) TH__thread_array, T);           \
@@ -70,8 +70,8 @@ void UI__expose_variable(void *varptr, uint8_t varsize);
 #define expose_variable(var) UI__expose_variable((void *)&(var), sizeof(var)) 
 void expose_function(H_funptr fptr);
 
-void TH__set_variable_array(TH_variable *vray, uint16_t len);
-void TH__set_function_array(UI_function *fray, uint16_t len);
+void UI__set_variable_array(TH_variable *vray, uint16_t len);
+void UI__set_function_array(UI_function *fray, uint16_t len);
 
 TH_variable *get_variable(uint8_t el_num);
 UI_function *get_function(uint8_t el_num);
@@ -80,24 +80,24 @@ void call_function(uint8_t el_num);
 
 
 #define UI__MIN_T 1
-extern const __FlashStringHelper **TH__thread_names;
+extern const __FlashStringHelper **UI__thread_names;
 #define set_thread_names(...)    do{          \
-        PROGMEM const __FlashStringHelper *TH__THREAD_NAMES[] = {F("ui"), __VA_ARGS__};     \
-        TH__thread_names = TH__THREAD_NAMES;                                       \
+        PROGMEM const __FlashStringHelper *UI__THREAD_NAMES[] = {F("ui"), __VA_ARGS__};     \
+        UI__thread_names = UI__THREAD_NAMES;                                       \
       }while(0)
 
 #define UI__MIN_F 4
-extern const __FlashStringHelper **TH__function_names;
+extern const __FlashStringHelper **UI__function_names;
 #define set_function_names(...)    do{          \
-        PROGMEM const __FlashStringHelper *TH__FUNCTION_NAMES[] = \
+        PROGMEM const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
         {F("t"), F("v"), F("k"), F("?"), __VA_ARGS__};            \
-        TH__function_names = TH__FUNCTION_NAMES;                  \
+        UI__function_names = UI__FUNCTION_NAMES;                  \
       }while(0)
 
-extern const __FlashStringHelper **TH__variable_names;
+extern const __FlashStringHelper **UI__variable_names;
 #define set_variable_names(...)    do{          \
-        PROGMEM const __FlashStringHelper *TH__VARIABLE_NAMES[] = {__VA_ARGS__};     \
-        TH__variable_names = TH__VARIABLE_NAMES;                                       \
+        PROGMEM const __FlashStringHelper *UI__VARIABLE_NAMES[] = {__VA_ARGS__};     \
+        UI__variable_names = UI__VARIABLE_NAMES;                                       \
       }while(0)
 
 #define ui_setup_std(V, F, T) do{                             \

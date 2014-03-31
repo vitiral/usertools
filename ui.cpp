@@ -38,9 +38,9 @@
 
 uint16_t ui_loop_time = 0;
 
-const __FlashStringHelper **TH__thread_names = NULL;
-const __FlashStringHelper **TH__function_names = NULL;
-const __FlashStringHelper **TH__variable_names = NULL;
+const __FlashStringHelper **UI__thread_names = NULL;
+const __FlashStringHelper **UI__function_names = NULL;
+const __FlashStringHelper **UI__variable_names = NULL;
 
 TH_VariableArray UI__variables = {0, 0, 0};
 UI_FunctionArray UI__functions = {0, 0, 0};
@@ -121,11 +121,11 @@ void *get_object(char *name, uint8_t type){
   clrerr();
   switch(type){
   case UI_THREAD_TYPE:
-    type_names = TH__thread_names;
+    type_names = UI__thread_names;
   case UI_FUNCTION_TYPE:
-    type_names = TH__function_names;
+    type_names = UI__function_names;
   case UI_VARIABLE_TYPE:
-    type_names = TH__variable_names;
+    type_names = UI__variable_names;
   default:
     assert(0);
   }
@@ -244,15 +244,11 @@ void schedule_thread(char *name, char *input){
 void ui_watchdog(){
   seterr(ERR_CRITICAL);
   log_err("TO");
-  if(th_calling){
-    L_println(th_calling);
-  }
-//  else if(th_loop_index < 255){
-//    L_println(TH__threads.array[th_loop_index].el.name);
-//  }
-  else {
-      L_println(F("Unknown"));
-  }
+
+  L_print(th_loop_index);
+  if(UI__)
+  L_println(TH__threads.array[th_loop_index].el.name);
+
   ui_loop_time = millis();
   //asm volatile ("  jmp 0"); 
   wdt_reset();
@@ -345,19 +341,19 @@ void print_options(pthread *pt){
   uint8_t i = 0;
   print_option_name(F("f"));
   for(i = 0; i < UI__functions.index; i++){
-    L_println(TH__function_names[i]);
+    L_println(UI__function_names[i]);
   }
   
   print_option_name(F("t"));
   for(i = 0; i < TH__threads.index; i++){
     L_print(i);
     L_write('\t');
-    L_println(TH__thread_names[i]);
+    L_println(UI__thread_names[i]);
   }
   
   print_option_name(F("v"));
   for(i = 0; i < UI__variables.index; i++){
-    L_println(TH__variable_names[i]);
+    L_println(UI__variable_names[i]);
   }
 }
 

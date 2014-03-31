@@ -39,12 +39,10 @@ typedef struct TH_ThreadArray{
 
 // #####################################################
 // ### Initialization Macros
+extern TH_ThreadArray TH__threads;
 
-// do funcitons and variables
+extern uint8_t th_loop_index;
 
-
-// Setup Macros
-// w/o user interface
 #define thread_setup(T) do{                                         \
       static TH_fake_thread TH__thread_array[T];                        \
       TH__set_thread_array((thread *) TH__thread_array, T);  \
@@ -83,11 +81,6 @@ void kill_thread(thread *th);
 void kill_thread(uint8_t el_num);
 
 void set_thread_innactive(thread *f);
-
-extern TH_ThreadArray TH__threads;
-
-extern uint8_t th_calling;
-extern uint8_t th_loop_index;
 
 
 
