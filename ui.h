@@ -74,7 +74,8 @@ void UI__set_function_array(UI_function *fray, uint16_t len);
 UI_variable *get_variable(uint8_t el_num);
 UI_function *get_function(uint8_t el_num);
 
-void call_function(uint8_t el_num);
+uint8_t call_function(UI_function *fun, char *input);
+uint8_t call_function(char *name, char *input);
 
 
 #define UI__MIN_T 1
@@ -113,6 +114,7 @@ void UI__setup_std();
 // #####################################################
 // ### Used for Testing
 void ui_process_command(char *c);
+void put_inputs(pthread *pt, char *input);
 
 // #####################################################
 // ### Functions
@@ -129,7 +131,6 @@ void ui_print_options();
 
 // #####################################################
 // ### Other Module Functions
-//void ui_process_command(char *c);
 void user_interface();
 
 #endif

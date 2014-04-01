@@ -118,9 +118,10 @@ void *get_object(char *name, uint8_t len,
   
   uint8_t i;
 
-  sdebug(F("Gobj: ")); edebug(name);
+  sdebug(F("Gobj:")); edebug(name);
   clrerr();
-
+  
+  
   // check if name is a number
   i = get_int(name);
   if(not errno){
@@ -169,14 +170,16 @@ void put_inputs(pthread *pt, char *input){
   uint16_t myint;
   float myfloat;
   char *word;
+  assert_return(input);
   
   sdebug(F("PutIn:")); edebug(*input);
   while(true){
     clrerr();
     
+    debug("gw");
     word = get_word(input);
     
-    if(errno or (not input or not word)) {
+    if(errno) {
       // no more words left
       clrerr();
       edebug();
@@ -186,19 +189,20 @@ void put_inputs(pthread *pt, char *input){
     //myfloat = get_float(word);
     //AND DO ERROR CHECKING
     
+    debug("gi");
     L_silent += 1;
     myint = get_int(word);
     L_silent -= 1;
     
     if(not errno){
-      cdebug(myint); cdebug("\t\t");
+      cdebug("Pi:"); cdebug(myint); cdebug("\t\t");
       pt->put_input(myint);
       continue;
     }
     
     clrerr();
     
-    cdebug(word); cdebug("\t\t");
+    cdebug("Pw:"); cdebug(word); cdebug("\t\t");
     pt->put_input(word);
   }
   edebug("None");
@@ -266,10 +270,13 @@ void ui_watchdog(){
   wdt_enable(WDTO_250MS);
 }
 
+
+/*
 //Activating watchdog UI
 ISR(WDT_vect) {
    ui_watchdog();
 }
+*/
 
 void ui_wdt_setup(void)
 {
@@ -297,14 +304,13 @@ void ui_pat_dog(){
 void ui_process_command(char *input){
   char *word;
   
-  sdebug(F("Parse CMD:"));
-  edebug(*input);
+  sdebug(F("Parse CMD:")); edebug(input);
+  Serial.println(input);
   word = get_word(input);
   iferr_log_return();
   assert_return(input); assert_return(word);
   sdebug(F("Calling Name:"));
-  cdebug(word); cdebug(':');
-  edebug(input);
+  cdebug(word); cdebug(':'); edebug(input);
   
   call_function(word, input); // name, input
 }

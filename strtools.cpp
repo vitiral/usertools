@@ -68,6 +68,8 @@ uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHel
 char *pass_ws(char *c){
   while(true) {
     switch(*c){
+    case 0x0A:
+    case 0x0D:
     case ' ':
     case '\t':
       c++;
