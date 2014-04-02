@@ -121,10 +121,12 @@ void *get_object(char *name, uint8_t len,
   sdebug(F("Gobj:")); edebug(name);
   clrerr();
   
-  
   // check if name is a number
   TRY(i = get_int(name));
-  if(not errno){
+  debug(i);
+  CATCH{}
+  else{
+    clrerr();
     assert_raise(i < len, ERR_INDEX);
     //return getobj(i);
     sdebug("elnum:"); edebug(i);
@@ -172,7 +174,7 @@ void put_inputs(pthread *pt, char *input){
   char *word;
   assert_return(input);
   
-  sdebug(F("PutIn:")); edebug(*input);
+  sdebug(F("PutIn:")); edebug(input);
   while(true){
     clrerr();
     
@@ -318,22 +320,35 @@ void ui_pat_dog(){
 
 uint8_t cmd_t(pthread *pt){
   uint8_t i = 0;
+  char *thname = NULL;
   uint8_t type;
   thread *th;
   // Calling thread from command
-  char *thname = pt->get_str_input(0);
-  iferr_log_return(0);
-  th = get_thread(thname);
+  sdebug(F("T:"));
+  TRY(type = th->pt.get_int_input(0));
+  debug(type);
+  CATCH(ERR_TYPE){
+    char *thname = pt->get_str_input(0);
+    iferr_log_return(0);
+    th = get_thread(thname);
+  }
+  else{
+    th = get_thread(type);
+  }
+  clrerr();
+  edebug(get_index(th));
+  
+  assert_raise_return(not is_active(th), ERR_VALUE, 0);
   th->pt.clear_data();
   while(true){
-    type = pt->get_type_input(0);
-    if(errno){
+    TRY(type = pt->get_type_input(0));
+    CATCH{
       if(i == 0){
         raise(ERR_INPUT);
       }
       break;
     }
-    if(i == 0){
+    if(i == 0){ // first iteration is the thread itself
       if(type < vt_maxint) th = get_thread(pt->get_int_input(0));
       else th = get_thread(pt->get_str_input(0));
     }
@@ -342,6 +357,7 @@ uint8_t cmd_t(pthread *pt){
       else th->pt.put_input(pt->get_str_input(i));
     }
   }
+  debug(F("Scheduling Thread"));
   schedule_thread(th);
   return 1;
 error:

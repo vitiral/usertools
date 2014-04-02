@@ -104,6 +104,11 @@ thread *expose_thread(TH_funptr fptr){
   return &(TH__threads.array[TH__threads.index - 1]);
 }
 
+uint8_t is_active(thread *th){
+  if (th->pt.lc == PT_INNACTIVE) return false;
+  else return true;
+}
+
 void set_thread_innactive(thread *th){
   th->pt.lc = PT_INNACTIVE;
   th->pt.clear_data();
@@ -114,7 +119,7 @@ uint8_t schedule_thread(thread *th){
   uint8_t out = false;
   
   sdebug(F("schT:")); edebug(get_index(th));
-  assert_raise(th->pt.lc == PT_INNACTIVE, ERR_VALUE, 0);
+  assert_raise(not is_active(th), ERR_VALUE, 0);
   PT_INIT(&(th->pt));
   assert(th->fptr);
   out = th->fptr(&(th->pt));
@@ -148,8 +153,6 @@ thread *get_thread(uint8_t el_num){
   assert_raise_return(el_num < TH__threads.len, ERR_INDEX, NULL);
   return &TH__threads.array[el_num];
 }
-
-
 
 void kill_thread(thread *th){
   th->pt.lc = PT_KILL_VALUE;

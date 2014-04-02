@@ -45,7 +45,10 @@ void EH_test();
 extern uint8_t errprint;
 extern char *EH_EMPTY_STR;
 
-void clrerr();
+uint8_t clrerr();
+uint8_t clrerr_if(uint8_t iferr);
+uint8_t clrerr_ifn(uint8_t ifnerr);
+
 void seterr(uint8_t error);
 
 #define EH_DW(code) do{code}while(0) //wraps in a do while(0) so that the syntax is correct.
@@ -98,20 +101,30 @@ void EH_start_info(char *file, unsigned int line);
   #define log_info(...) 
 #endif
 
+// Used with TRY
+#define CATCH                    if(clrerr())
+#define CATCH(E)                 if(clrerr_if(E))
+#define CATCH_N(E)               if(clrerr_ifn(E))
+#define ELSE_CATCH(E)            else if(clrerr_if(E))
+#define ELSE_CATCH_N(E)          else if(clrerr_ifn(E))
+
 #if LOGLEVEL >= LOG_ERROR
   #define TRY(stuff)               EH_DW(L_silent += 1; EH_void_fun((void *) (stuff)); L_silent -= 1;)
+  
   void EH_log_err(char *file, unsigned int line);
   #define slog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
   #define clog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, Serial.print(M); EH_FLUSH();))
   #define elog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, Serial.println(M); EH_FLUSH();))
   
-  #define log_err(...)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH(); ))
-  #define EH_ST_raisem(E, ...) seterr(E); EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH(); ))
-  #define clrerr_log()              EH_DW(LOG_IFLL(LOG_ERROR, seterr(ERR_CLEARED); log_err(); EH_FLUSH(); clrerr();))
+  #define log_err(...)            EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH(); ))
+  #define EH_ST_raisem(E, ...)    seterr(E); EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH(); ))
+  #define clrerr_log()            EH_DW(LOG_IFLL(LOG_ERROR, seterr(ERR_CLEARED); log_err(); EH_FLUSH(); clrerr();))
+  
   void EH_printerrp();
   void EH_printinfo(char *file, unsigned int line);
   
 #else
+  #define TRY(stuff)              EH_void_fun((void *) (stuff))
   #define slog_err(M)
   #define clog_err(M)
   #define elog_err(M)

@@ -119,10 +119,25 @@ void EH_log_err(char *file, unsigned int line){
   if(errprint) errprint = ERR_NONEW;
 }
 
-void clrerr(){
+uint8_t clrerr(){
+  uint8_t err = errno;
   errno = 0; 
   errprint = 0; 
+  return err;
+}
 
+uint8_t clrerr_if(uint8_t iferr){
+  if(errno = iferr){
+    return clrerr();
+  }
+  return false;
+}
+
+uint8_t clrerr_ifn(uint8_t ifnerr){
+  if((errno != 0) and errno != ifnerr){
+    return clrerr();
+  }
+  return false;
 }
 
 void seterr(uint8_t error){
