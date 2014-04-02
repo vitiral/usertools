@@ -19,6 +19,8 @@ Memproblem:
 #include <Arduino.h>
 #include <inttypes.h>
 
+//#define UT_USE_SOFTSERIAL
+
 //#define DEBUG_FLUSH
 #define DEBUG
 //#define LOGLEVEL 40

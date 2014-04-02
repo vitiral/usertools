@@ -127,7 +127,7 @@ uint8_t clrerr(){
 }
 
 uint8_t clrerr_if(uint8_t iferr){
-  if(errno = iferr){
+  if(errno == iferr){
     return clrerr();
   }
   return false;

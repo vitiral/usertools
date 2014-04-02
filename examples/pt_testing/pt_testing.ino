@@ -7,6 +7,7 @@
  * 
  * Code to test the errorhandling library
  */
+ // 12452 -> 9968 without debug
 #define DEBUG
 
 #include <SoftwareSerial.h>
@@ -24,7 +25,7 @@ ByteBuffer failbuffer;
 void setup(){
   failbuffer.init(100);
   Serial.begin(57600);
-  log_info("setup");
+  log_info(F("setup"));
 }
 
 PT_THREAD test_simple(pthread *pt, uint16_t *value){
@@ -53,11 +54,10 @@ PT_THREAD test_spawn(pthread *pt){
   time = millis();
   PT_SPAWN(pt, test_wait_ms, 250);
   time = millis() - time;
-  assert_return(245 < time and time < 255, PT_HAD_ERROR);
-  sdebug("Waited:"); edebug(time);
+  assert_return(245 < time and time < 255, PT_ERROR);
+  sdebug(F("Waited:")); edebug(time);
   PT_END(pt);
 }
-
 
 pthread ptstuff;
 #define T1_TESTS 5
@@ -68,7 +68,6 @@ PT_THREAD test1(pthread *pt_l, unsigned short tp){
   uint16_t mem = freeMemory();
   switch(tp){
   case 0:
-
     // test simple threading.
   case 1:
     PT_INIT(pt);
@@ -94,29 +93,39 @@ PT_THREAD test1(pthread *pt_l, unsigned short tp){
     value = ((uint16_t)millis()) - value;
     debug(value);
     assert(245 < value and value < 255);
-    pt->get_temp();
+    pt->get_int_temp();
     assert(errno == ERR_INDEX);
     clrerr();
     break;
 
   case 4:
     // test data access
+    slog_info(F("Before Clear:")); elog_info(mem);
     pt->put_input((uint8_t)142);
     pt->put_input(-42);
     pt->put_input("hello");
     pt->put_input(-30000);
+    slog_info(F("after put:")); clog_info(freeMemory()); clog_info(F(" dif:"));
+    elog_info(mem - freeMemory()); 
     assert(pt->get_int_input(0) == 142);
+    //sdebug(pt->get_type_input(0));cdebug(" "); cdebug(vt_uint8); cdebug(" "); edebug(vt_maxint);
+    assert(pt->get_type_input(0) < vt_maxint);
+    
     assert(pt->get_int_input(1) == -42);
+    assert(pt->get_type_input(1) < vt_maxint);
+    
     assert(strcmp(pt->get_str_input(2), "hello") == 0);
+    assert(pt->get_type_input(2) == vt_str);
+    
     assert(pt->get_int_input(3) == -30000);
-    //Serial.println("memtest");
-    //slog_info("Mem before:"); clog_info(mem); 
-    //clog_info(" after:"); elog_info(freeMemory());
+    assert(pt->get_type_input(3) < vt_maxint);
+    //Serial.println(F("memtest"));
+    //slog_info(F("Mem before:")); clog_info(mem); 
+    //clog_info(F(" after:")); elog_info(freeMemory());
     pt->clear_data();
-    slog_info("after clear:"); 
-    elog_info(freeMemory());
-
+    slog_info(F("after clear:")); elog_info(freeMemory());
     break;
+    
   case 5:
     PT_INIT(pt);
     value = PT_WAITING;
@@ -126,6 +135,7 @@ PT_THREAD test1(pthread *pt_l, unsigned short tp){
     iferr_log_catch();
     assert(mem == freeMemory());
     break;
+  
   }
   assert(mem == freeMemory()); // always make sure there are no memory leaks
   return 0;
@@ -139,35 +149,36 @@ void loop(){
   int failures = 0;
   PT_INIT(&gpt);
 
-  Logger.println("\n\n\n\n");
-  Logger.println("Testing Standard:");
+  Logger.println(F("\n\n\n\n"));
+  Logger.println(F("Testing Standard:"));
   for(int n = 0; n <= T1_TESTS; n++){
     Logger.flush();
-    Logger.print("Testcase:");
+    Logger.print(F("Testcase:"));
     Logger.println(n);
 
     clrerr();
     test1(&gpt, n);
     if(errno){
-      Logger.println("*** FAILURE ***");
+      Logger.println(F("*** FAILURE ***"));
       log_err();
       failures++;
       failbuffer.put(n);
     }
     else{
-      Logger.println("*** Success ***");
+      Logger.println(F("*** Success ***"));
     }
   }
 
-  Logger.println("##### Tests Done #####");
-  Logger.println(String("Results: ") + String(failures) + String(" failures out of: ") + String(T1_TESTS));
+  Logger.println(F("##### Tests Done #####"));
+  Logger.print(F("Results:  ")); Logger.print(failures); Logger.print(F(" failures out of: ")); 
+  Logger.println(T1_TESTS);
   if(failbuffer.getSize()) {
-    Logger.println(String("Failed cases:"));
+    Logger.println(F("Failed cases:"));
   }
 
   while(failbuffer.getSize() > 0){
     Logger.print((unsigned short)failbuffer.get());
-    Logger.print(", ");
+    Logger.print(F(", "));
   } 
   while(true);
 }

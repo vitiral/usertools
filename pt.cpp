@@ -145,6 +145,7 @@ void pthread::destroy_data(PT_data *pd, PT_data *prev){
 }
 
 int32_t pthread::get_int(PT_data_int32 *pint){
+  debug(VTYPE(pint->b.type));
   switch(VTYPE(pint->b.type)){
     case(vt_uint8):
       return (uint8_t) pint->data;
@@ -166,9 +167,11 @@ error:
 
 int32_t pthread::get_int_type(ptindex index, uint8_t type){
   int32_t out;
-  PT_data_int32 *mydata = (PT_data_int32 *)get_type(index, type);
+  debug(type);
+  PT_data *mydata = get_type(index, type);
+  debug(mydata->b.type);
   iferr_log_catch();
-  out = get_int(mydata);
+  out = get_int((PT_data_int32 *)mydata);
   iferr_log_catch();
   return out;
 error:
@@ -177,7 +180,8 @@ error:
 
 char *pthread::get_str_type(ptindex index, uint8_t type){
   PT_data_str *mydata = (PT_data_str *)get_type(index, type);
-  iferr_catch();
+  iferr_log_catch();
+  debug(mydata->b.type);
   assert_raise(VTYPE(mydata->b.type) == vt_str, ERR_TYPE);
   return mydata->data;
 error:
@@ -187,12 +191,16 @@ error:
 PT_data *pthread::get_type(ptindex index, uint8_t ptype){
   ptindex cur_index = 0;
   PT_data *cdata;
+  sdebug("gi:"); cdebug(index); cdebug(" t="); edebug(ptype);
+  assert(VTYPE(ptype) == 0);
   assert_raise(data, ERR_INDEX);
   cdata  = data;
+  sdebug("PT_DATA="); edebug((uint16_t) data);
   
   while(true){
     if(PTYPE(cdata->b.type) == ptype) {
       if(index == cur_index){
+        sdebug(F("p=")); edebug((uint16_t) cdata);
         return cdata;
       }
       cur_index++;
@@ -380,6 +388,42 @@ void pthread::clear_type(uint8_t type){
 }
 
   
+void pthread::print(){
+  PT_data *cdata;
+  cdata  = data;
+  while(cdata){
+    L_print((uint16_t) cdata); L_write('\t');
+    switch(PTYPE(cdata->b.type)){
+      case TYPE_TEMP:
+        L_print(F("Temp"));
+        break;
+      case TYPE_OUTPUT:
+        L_print(F("Out"));
+        break;
+      case TYPE_INPUT:
+        L_print(F("In"));
+        break;
+      default:
+        L_print(F("T_ERR"));
+    }
+    L_print(F("\t"));
+    if(VTYPE(cdata->b.type) < vt_maxint){
+      L_print("0x"); L_print(cdata->b.type, HEX); L_write(' ');
+      L_print(F("INT\t="));
+      L_print(get_int((PT_data_int32 *)cdata));
+    }
+    else if(VTYPE(cdata->b.type) == vt_str){
+      L_print(F("STR\t="));
+      L_print(((PT_data_str *)cdata)->data);
+    }
+    else{
+      L_print(F("NK"));
+    }
+    L_println();
+    
+    cdata = cdata->b.next;
+  }
+}
 
 // *****************************************************
 // **** ptsmall (small protothread)

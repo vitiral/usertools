@@ -5,6 +5,7 @@
  * 
  * Code to test the errorhandling library
  */
+#define LOG_DYNAMIC
 #define DEBUG
 
 #include <SoftwareSerial.h>
@@ -19,7 +20,7 @@ ByteBuffer failbuffer;
 void setup(){
   failbuffer.init(100);
   //setup_std();
-  log_setup_soft(SoftSerial);
+  setup_soft();
   log_info("setup");
   debug("Testing Debug");
   

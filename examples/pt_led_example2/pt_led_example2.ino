@@ -23,15 +23,14 @@
 // work on their own.
 // It also uses the PT_BEGIN_LOCAL function so you don't have to declare
 // your own protothreads
-#include <pt.h>   // include protothread library
+
+#define DEBUG
+#include <SoftwareSerial.h>
+#include <threading.h>           // include protothread library
 
 #define LEDPIN 13  // LEDPIN is a constant 
 
 //static struct pt pt1, pt2; // each protothread needs one of these
-
-void setup() {
-  pinMode(LEDPIN, OUTPUT); // LED init
-}
 
 void toggleLED() {
   boolean ledstate = digitalRead(LEDPIN); // get LED state
@@ -40,30 +39,55 @@ void toggleLED() {
 }
 
 /* This function toggles the LED after 'interval' ms passed */
-static int protothread1(int interval) {
-  static uint16_t time; // needs to be static because the function is left every run
-  PT_LOCAL_BEGIN(pt);
+PT_THREAD blinky_thread(pthread *pt) {
+  // Notice that this function doesn't require any static integers. Everything
+  // is stored inside of pt.
+  PT_BEGIN(pt);
   while(1) {
-    //* Use PT_WAIT_MS instead of the timestamp, etc. 
-    PT_WAIT_MS(pt, time, interval); // macro to do "wait for milliseconds"
+    //* Use PT_WAIT_MS instead of the timestamp, etc.
+    PT_WAIT_MS(pt, pt->get_int_input(0)); // macro to do "wait for milliseconds"
     toggleLED();
   }
   PT_END(pt);
 }
 
-/* exactly the same as the protothread1 function */
-static int protothread2(int interval) {
-  static uint16_t time;
-  PT_LOCAL_BEGIN(pt);
-  while(1) {
-    PT_WAIT_MS(pt, time, interval);
-    toggleLED();
-  }
-  PT_END(pt);
+enum MYTHREADS{
+  PT1, 
+  PT2, 
+  NUM_THREADS
+};
+
+void setup() {
+  //PROGMEM const __FlashStringHelper *TH__THREAD_NAMES[] = {F("HELLO"), F("YOU 2")}; // use this form
+
+  //set_thread_names(F("HELLO"), F("YOU 2"));
+  //Serial.println(TH__thread_names[0]);
+  //Serial.println(TH__thread_names[1]);
+
+  pinMode(LEDPIN, OUTPUT); // LED init
+  Serial.begin(57600);
+
+  thread_setup(NUM_THREADS);
+  thread *pt1 = expose_thread(blinky_thread);
+  thread *pt2 = expose_thread(blinky_thread);
+
+  // All threads have an attached protothread (pt).
+  //   They have member functions. This lets us
+  //   store inputs on a linked list. (slow access
+  //   takes up very little memory)
+  pt1->pt.put_input(1000);
+  pt2->pt.put_input(900);
+
+  // Show that the inputs have been gotten
+  Serial.println(F("Inputs:"));
+  Serial.println(pt1->pt.get_int_input(0));
+  Serial.println(pt2->pt.get_int_input(0));
+  schedule_thread(PT1);
+  schedule_thread(PT2);
 }
 
 void loop() {
-  protothread1(900); // schedule the two protothreads
-  protothread2(1000); // by calling them infinitely
+  thread_loop();
 }
+
 

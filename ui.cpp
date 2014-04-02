@@ -124,9 +124,8 @@ void *get_object(char *name, uint8_t len,
   // check if name is a number
   TRY(i = get_int(name));
   debug(i);
-  CATCH{}
+  CATCH_ALL{}
   else{
-    clrerr();
     assert_raise(i < len, ERR_INDEX);
     //return getobj(i);
     sdebug("elnum:"); edebug(i);
@@ -192,17 +191,13 @@ void put_inputs(pthread *pt, char *input){
     //AND DO ERROR CHECKING
     
     debug("gi");
-    L_silent += 1;
-    myint = get_int(word);
-    L_silent -= 1;
-    
-    if(not errno){
+    TRY(myint = get_int(word));
+    CATCH_ALL{} // clear errors
+    else{
       cdebug("Pi:"); cdebug(myint); cdebug("\t\t");
       pt->put_input(myint);
       continue;
     }
-    
-    clrerr();
     
     cdebug("Pw:"); cdebug(word); cdebug("\t\t");
     pt->put_input(word);
@@ -212,17 +207,24 @@ void put_inputs(pthread *pt, char *input){
 
 uint8_t call_function(UI_function *fun, char *input){
   // Can raise error
+  //pthread *pt = (pthread *)malloc(sizeof(pthread));
   pthread pt;
-  uint8_t out;
+  uint8_t out = 0;
+  assert(pt.data == NULL);
+  sdebug("PT_DATA="); edebug((uint16_t) pt.data);
   put_inputs(&pt, input);
+  pt.print();
+  sdebug("PT_DATA="); edebug((uint16_t) pt.data);
   if(errno){
     out = 0;
     goto done;
   }
   sdebug("CF:"); edebug(get_index(fun));
   out = (*fun->fptr)(&pt);
+error:
 done:
   pt.clear_data();
+  //memclr(pt);
   return out;
 }
 
@@ -319,30 +321,37 @@ void ui_pat_dog(){
 
 
 uint8_t cmd_t(pthread *pt){
-  uint8_t i = 0;
+  uint8_t i;
   char *thname = NULL;
   uint8_t type;
-  thread *th;
+  thread *th = NULL;
   // Calling thread from command
-  sdebug(F("T:"));
-  TRY(type = th->pt.get_int_input(0));
-  debug(type);
+  debug(F("T:"));
+  assert(not errno);
+  pt->print();
+  //TRY(i = th->pt.get_int_input(0));
+  sdebug("PT_DATA="); edebug((uint16_t) pt->data);
+  i = pt->get_int_input(0);
   CATCH(ERR_TYPE){
     char *thname = pt->get_str_input(0);
     iferr_log_return(0);
+    edebug(thname);
     th = get_thread(thname);
   }
   else{
-    th = get_thread(type);
+    iferr_log_return(0); // only error would be index
+    edebug(i);
+    th = get_thread(i);
   }
-  clrerr();
   edebug(get_index(th));
   
   assert_raise_return(not is_active(th), ERR_VALUE, 0);
   th->pt.clear_data();
-  while(true){
-    TRY(type = pt->get_type_input(0));
-    CATCH{
+  i = 0;
+  for(i = 0;;i++){
+    debug("looping");
+    TRY(type = pt->get_type_input(i));
+    CATCH_ALL{
       if(i == 0){
         raise(ERR_INPUT);
       }

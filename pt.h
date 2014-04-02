@@ -52,6 +52,7 @@
 
 #include "usertools.h"
 #include "errorhandling.h"
+#include "logging.h"
 
 #include "lc.h"
 
@@ -187,6 +188,8 @@ public:
   // General Destructors
   void clear_data();
   void clear_type(uint8_t type);
+  
+  void print();
 };
 
 struct PTsmall {

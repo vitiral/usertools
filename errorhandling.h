@@ -102,15 +102,15 @@ void EH_start_info(char *file, unsigned int line);
 #endif
 
 // Used with TRY
-#define CATCH                    if(clrerr())
+#define CATCH_ALL                if(clrerr())
 #define CATCH(E)                 if(clrerr_if(E))
 #define CATCH_N(E)               if(clrerr_ifn(E))
 #define ELSE_CATCH(E)            else if(clrerr_if(E))
 #define ELSE_CATCH_N(E)          else if(clrerr_ifn(E))
 
 #if LOGLEVEL >= LOG_ERROR
-  #define TRY(stuff)               EH_DW(L_silent += 1; EH_void_fun((void *) (stuff)); L_silent -= 1;)
-  
+  //#define TRY(stuff)               EH_DW(L_silent += 1; EH_void_fun((void *) (stuff)); L_silent -= 1;)
+  #define TRY(stuff)               EH_DW(L_silent += 1; (stuff); L_silent -= 1;)
   void EH_log_err(char *file, unsigned int line);
   #define slog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
   #define clog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, Serial.print(M); EH_FLUSH();))
@@ -124,7 +124,7 @@ void EH_start_info(char *file, unsigned int line);
   void EH_printinfo(char *file, unsigned int line);
   
 #else
-  #define TRY(stuff)              EH_void_fun((void *) (stuff))
+  #define TRY(stuff)              (stuff)
   #define slog_err(M)
   #define clog_err(M)
   #define elog_err(M)

@@ -10,7 +10,7 @@
 
 #ifndef logging_h
 #define logging_h
-
+#include "usertools.h"
 #include <Stream.h>
 #include <string.h>
 
@@ -45,18 +45,25 @@
   #define set_loglevel(LL)
 #endif
 
-//#ifdef SoftwareSerial_h
 #if LOGLEVEL > 0
 
 #define LOG_STD_SERIAL 0
-#define LOG_SOFT_SERIAL 1
 
+#ifdef UT_USE_SOFTSERIAL
+#define LOG_SOFT_SERIAL 1
+#endif
+
+#ifdef UT_USE_SOFTSERIAL
 #include <SoftwareSerial.h>
+#endif 
+
 class Logging : public Stream
 {
 private:
   uint8_t _mode;
+#ifdef UT_USE_SOFTSERIAL
   SoftwareSerial *_soft;
+#endif
   
 public:
   Logging();
@@ -66,7 +73,9 @@ public:
   uint16_t wrote;    // sets to true if any data was written
 
   void config_std();
+#ifdef UT_USE_SOFTSERIAL
   void config_soft(SoftwareSerial *soft);
+#endif
   int peek();
   
   void repeat(char *c, int times);
