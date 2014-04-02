@@ -133,5 +133,7 @@ void ui_print_options();
 // ### Other Module Functions
 void user_interface();
 
+extern volatile uint8_t UI_volatile;
+
 #endif
 

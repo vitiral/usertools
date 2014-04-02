@@ -273,18 +273,42 @@ void ui_process_command(char *input){
 // #####################################################
 // ### Interrupts
 
+volatile uint8_t UI_volatile = 0;
 void ui_watchdog(){
-  seterr(ERR_CRITICAL);
-  log_err("TO");
-
+  L_repeat('!', 10); L_println(F("TO"));
+  
+  L_print(F("th:"));
   L_print(th_loop_index);
+  L_write('\t');
   if(UI__thread_names){
     L_print(UI__thread_names[th_loop_index]);
   }
   L_println();
+  Serial.println("HELP I'M TRAPPED");
   //asm volatile ("  jmp 0"); 
-  wdt_reset();
-  wdt_enable(WDTO_250MS);
+  //wdt_enable(WDTO_250MS);
+  //dt_reset();
+  //MCUSR &= ~(1<<WDRF);
+  //WDTCSR |= (1<<WDCE) | (1<<WDE);
+
+  /* set new watchdog timeout prescaler value */
+  //WDTCSR = 1<<WDP2; /* 0.25 seconds, enough to print */
+  
+  
+ 
+  
+  /* In order to change WDE or the prescaler, we need to
+   * set WDCE (This will allow updates for 4 clock cycles).
+   */
+  //wdt_reset();
+  //MCUSR &= ~(1<<WDRF);
+  //WDTCSR |= (1<<WDCE) | (1<<WDE);
+
+  /* set new watchdog timeout prescaler value */
+  //http://donalmorrissey.blogspot.com/2010/04/sleeping-arduino-part-5-wake-up-via.html
+  //WDTCSR = (1<<WDP0) | (1<<WDP3); /* 8.0 seconds */
+  //WDTCSR = (1 << WDE) | (1<<WDP2); /* .25 seconds */
+  UI_volatile = 1;
 }
 
 
@@ -298,16 +322,34 @@ ISR(WDT_vect) {
 void ui_wdt_setup(void)
 {
     //disable interrupts
-    cli();
-    //reset watchdog
-    wdt_reset();
-    //set up WDT interrupt
-    WDTCSR = (1<<WDCE)|(1<<WDE);
-    //Start watchdog timer with 4s prescaller
-    WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP3);
-    //wdt_enable(WDTO_2S);  // can NOT use this -- must use custom
-    //Enable global interrupts
-    sei();
+  cli();
+    
+  MCUSR &= ~(1<<WDRF);
+  
+  /* In order to change WDE or the prescaler, we need to
+   * set WDCE (This will allow updates for 4 clock cycles).
+   */
+  WDTCSR |= (1<<WDCE) | (1<<WDE);
+
+  /* set new watchdog timeout prescaler value */
+  //http://donalmorrissey.blogspot.com/2010/04/sleeping-arduino-part-5-wake-up-via.html
+  //WDTCSR = (1<<WDP0) | (1<<WDP3); /* 8.0 seconds */
+  //WDTCSR = (1 << WDIE) | (1 << WDIE) | (1<<WDP1) | (1<<WDP2); /* 1.0 seconds */
+  WDTCSR = (1 << WDIE) | (1<<WDE) | (1<<WDP1) | (1<<WDP2); /* 1.0 seconds */
+  
+  /*
+  //reset watchdog
+  wdt_reset();
+  //set up WDT interrupt
+  WDTCSR |= (1<<WDCE)|(1<<WDE);
+  
+  WDTCSR |= 
+  //Start watchdog timer with 4s prescaller
+  WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP3);
+  //wdt_enable(WDTO_2S);  // can NOT use this -- must use custom
+  //Enable global interrupts
+   * */
+  sei();
 }
 
 void ui_pat_dog(){
@@ -474,6 +516,7 @@ PT_THREAD user_interface(pthread *pt){
   char c;
   static char *buffer;
   
+  PT_BEGIN(pt);
   if(buffer == NULL){
     buffer = (char *)malloc(MAX_STR_LEN);
     memcheck(buffer);
@@ -504,6 +547,7 @@ error:
   memclr(buffer);
   i = 0;
   return PT_YIELDED;
+  PT_END(pt);
 }
 
 void ui_loop(){
