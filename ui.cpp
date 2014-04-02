@@ -38,14 +38,14 @@ uint8_t cmd_print_options(pthread *pt);
 
 #define MAX_STR_LEN 25
 
-uint16_t ui_loop_time = 0;
-
 const __FlashStringHelper **UI__thread_names = NULL;
 const __FlashStringHelper **UI__function_names = NULL;
 const __FlashStringHelper **UI__variable_names = NULL;
 
 UI_VariableArray UI__variables = {0, 0, 0};
 UI_FunctionArray UI__functions = {0, 0, 0};
+
+uint8_t fun_calling = 255;
 
 // *******************************
 // **** Macro Helpers
@@ -220,7 +220,9 @@ uint8_t call_function(UI_function *fun, char *input){
     goto done;
   }
   sdebug("CF:"); edebug(get_index(fun));
+  fun_calling = get_index(fun);
   out = (*fun->fptr)(&pt);
+  fun_calling = 255;
 error:
 done:
   pt.clear_data();
@@ -273,42 +275,38 @@ void ui_process_command(char *input){
 // #####################################################
 // ### Interrupts
 
-volatile uint8_t UI_volatile = 0;
 void ui_watchdog(){
-  L_repeat('!', 10); L_println(F("TO"));
+  //L_repeat('\n', 4);
+  //L_repeat('!', 10); L_write('\t'); L_println(F("TO"));
   
-  L_print(F("th:"));
+  L_print(F("[TOUT]\nTH:"));
   L_print(th_loop_index);
-  L_write('\t');
-  if(UI__thread_names){
-    L_print(UI__thread_names[th_loop_index]);
-  }
+  L_print("\tF:");
+  L_print(fun_calling);
+  //L_write('\t');
+  //if(UI__thread_names){
+  //  L_print(UI__thread_names[th_loop_index]);
+  //}
   L_println();
-  Serial.println("HELP I'M TRAPPED");
-  //asm volatile ("  jmp 0"); 
-  //wdt_enable(WDTO_250MS);
-  //dt_reset();
-  //MCUSR &= ~(1<<WDRF);
-  //WDTCSR |= (1<<WDCE) | (1<<WDE);
 
-  /* set new watchdog timeout prescaler value */
-  //WDTCSR = 1<<WDP2; /* 0.25 seconds, enough to print */
-  
-  
- 
-  
-  /* In order to change WDE or the prescaler, we need to
-   * set WDCE (This will allow updates for 4 clock cycles).
-   */
-  //wdt_reset();
-  //MCUSR &= ~(1<<WDRF);
-  //WDTCSR |= (1<<WDCE) | (1<<WDE);
+  wdt_reset();
+  wdt_enable(WDTO_250MS);
+  //wdt_enable(WDTO_500MS);
+}
 
-  /* set new watchdog timeout prescaler value */
-  //http://donalmorrissey.blogspot.com/2010/04/sleeping-arduino-part-5-wake-up-via.html
-  //WDTCSR = (1<<WDP0) | (1<<WDP3); /* 8.0 seconds */
-  //WDTCSR = (1 << WDE) | (1<<WDP2); /* .25 seconds */
-  UI_volatile = 1;
+void ui_wdt_setup(void)
+{
+    //disable interrupts
+    cli();
+    //reset watchdog
+    wdt_reset();
+    //set up WDT interrupt
+    WDTCSR = (1<<WDCE)|(1<<WDE);
+    //Start watchdog timer with 1s prescaller
+    WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP1)|(1<<WDP2);
+    //wdt_enable(WDTO_2S);  // can NOT use this -- must use custom
+    //Enable global interrupts
+    sei();
 }
 
 
@@ -319,42 +317,9 @@ ISR(WDT_vect) {
 }
 */
 
-void ui_wdt_setup(void)
-{
-    //disable interrupts
-  cli();
-    
-  MCUSR &= ~(1<<WDRF);
-  
-  /* In order to change WDE or the prescaler, we need to
-   * set WDCE (This will allow updates for 4 clock cycles).
-   */
-  WDTCSR |= (1<<WDCE) | (1<<WDE);
-
-  /* set new watchdog timeout prescaler value */
-  //http://donalmorrissey.blogspot.com/2010/04/sleeping-arduino-part-5-wake-up-via.html
-  //WDTCSR = (1<<WDP0) | (1<<WDP3); /* 8.0 seconds */
-  //WDTCSR = (1 << WDIE) | (1 << WDIE) | (1<<WDP1) | (1<<WDP2); /* 1.0 seconds */
-  WDTCSR = (1 << WDIE) | (1<<WDE) | (1<<WDP1) | (1<<WDP2); /* 1.0 seconds */
-  
-  /*
-  //reset watchdog
-  wdt_reset();
-  //set up WDT interrupt
-  WDTCSR |= (1<<WDCE)|(1<<WDE);
-  
-  WDTCSR |= 
-  //Start watchdog timer with 4s prescaller
-  WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP3);
-  //wdt_enable(WDTO_2S);  // can NOT use this -- must use custom
-  //Enable global interrupts
-   * */
-  sei();
-}
 
 void ui_pat_dog(){
   wdt_reset();
-  ui_loop_time = millis(); // pet the custom dog.
 }
 
 // #####################################################

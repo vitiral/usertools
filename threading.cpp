@@ -29,48 +29,10 @@
 
 TH_ThreadArray TH__threads = {0, 0, 0};
 
-uint8_t th_calling = 255;
 uint8_t th_loop_index = 255;
 
 // #####################################################
 // ### Exported Functions
-/*
-
-uint8_t call_function(char *name, char *input){
-  TH_function *fun = TH_get_function(name);
-  if(fun == NULL) return false;
-  th_calling = name;
-  fun->fptr(input);
-  th_calling = NULL;
-  return true;
-}
-
-TH_variable *TH_get_variable(char *name){
-  TH_variable *var;
-  int8_t n;
-  uint8_t i;
-  uint8_t name_len = strlen(name);
-  sdebug(F("gv: "));
-  edebug(name);
-  for(i = 0; i < TH__variables.index; i++){
-    var = &TH__variables.array[i];
-    debug(var->el.name);
-    if(cmp_str_elptr(name, name_len, var)){
-      sdebug("Match");
-      edebug(var->el.name);
-      return var;
-    }
-  }
-  return NULL;
-}
-
-
-*/
-
-
-// *****************************************************************************
-// **************  Small Threads
-
 
 // *******************************
 // **** Macro Helpers
@@ -181,6 +143,7 @@ uint8_t thread_loop(){
       init_lc = th->pt.lc;
       if(init_lc == PT_INNACTIVE) continue;
       assert(th->fptr, th_loop_index);    // NOT NULL PTR
+      
       fout = th->fptr(&(th->pt));
 
       if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){
