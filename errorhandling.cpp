@@ -49,6 +49,10 @@ void EH_printinfo(char *file, unsigned int line)
 }
 
 void EH_void_fun(void *input){}
+void EH_try_end(){
+  L_silent -= 1;
+  errprint = errno;
+}
 
 void EH_printerrp(){
   L_write('(');
@@ -106,6 +110,7 @@ void EH_start_info(char *file, unsigned int line){
 }
 
 void EH_log_err(char *file, unsigned int line){
+  if(L_silent) return;  // Used so that TRY statements don't trigger the error being logged
   L_print(EH_GEN_ST_MSG);
   L_print(F("[ERR](")); 
   EH_printinfo(file, line);

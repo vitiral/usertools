@@ -39,6 +39,7 @@
 #define EH_config_soft(soft)     L_config_soft(&soft)
 
 void EH_void_fun(void *input);
+void EH_try_end();
 
 void EH_test();
 extern uint8_t errprint;
@@ -98,7 +99,7 @@ void EH_start_info(char *file, unsigned int line);
 #endif
 
 #if LOGLEVEL >= LOG_ERROR
-  //#define TRY(stuff)               EH_DW((L_silent += 1; L_silent -= 1;))
+  #define TRY(stuff)               EH_DW(L_silent += 1; EH_void_fun((void *) (stuff)); L_silent -= 1;)
   void EH_log_err(char *file, unsigned int line);
   #define slog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
   #define clog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, Serial.print(M); EH_FLUSH();))

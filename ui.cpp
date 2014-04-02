@@ -123,7 +123,7 @@ void *get_object(char *name, uint8_t len,
   
   
   // check if name is a number
-  i = get_int(name);
+  TRY(i = get_int(name));
   if(not errno){
     assert_raise(i < len, ERR_INDEX);
     //return getobj(i);
@@ -252,6 +252,19 @@ uint8_t print_variable(UI_variable *var){
   return true;
 }
 
+void ui_process_command(char *input){
+  char *word;
+  
+  sdebug(F("Parse CMD:")); edebug(input);
+  Serial.println(input);
+  word = get_word(input);
+  iferr_log_return();
+  assert_return(input); assert_return(word);
+  sdebug(F("Calling Name:"));
+  cdebug(word); cdebug(':'); edebug(input);
+  
+  call_function(word, input); // name, input
+}
 
 // #####################################################
 // ### Interrupts
@@ -301,19 +314,7 @@ void ui_pat_dog(){
 // #####################################################
 // ### User Commands
 
-void ui_process_command(char *input){
-  char *word;
-  
-  sdebug(F("Parse CMD:")); edebug(input);
-  Serial.println(input);
-  word = get_word(input);
-  iferr_log_return();
-  assert_return(input); assert_return(word);
-  sdebug(F("Calling Name:"));
-  cdebug(word); cdebug(':'); edebug(input);
-  
-  call_function(word, input); // name, input
-}
+
 
 uint8_t cmd_t(pthread *pt){
   uint8_t i = 0;
@@ -464,7 +465,7 @@ PT_THREAD user_interface(pthread *pt){
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
         buffer[i + 1] = 0;
-        sdebug(F("Command:"));  
+        sdebug(F("Command:"));
         edebug(buffer);
         ui_process_command(buffer);
         goto done;
