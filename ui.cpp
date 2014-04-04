@@ -466,7 +466,7 @@ PT_THREAD user_interface(pthread *pt){
   uint8_t v;
   static uint8_t i = 0;
   char c;
-  //static char *buffer;
+  //static char *buffer = NULL; // For some unknown reason, this with malloc doesn't work. TODO
   static char buffer[MAX_STR_LEN];
   
   if(pt->lc == PT_KILLED){
@@ -487,7 +487,7 @@ PT_THREAD user_interface(pthread *pt){
       buffer[i] = c;
       if(i > MAX_STR_LEN){
         while(L_available()) L_read();
-        raise(ERR_COM, F("Size"));
+        raise(ERR_COM, F("SIZE"));
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
         sdebug(F("Bp:")); edebug((uint16_t)buffer);
