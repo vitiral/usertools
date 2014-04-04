@@ -221,7 +221,6 @@ uint8_t call_function(pthread *pt){
   // Can raise error
   uint8_t out = 0;
   UI_function *fun;
-  pthread pt_fun;
   
   uint8_t type = pt->get_type_input(0);
   if(type < vt_maxint) fun = get_function(pt->get_int_input(0));
@@ -231,18 +230,15 @@ uint8_t call_function(pthread *pt){
   
   assert(function_exists(fun));
   
-  pt->del_input(0); // clear index 0 to transfer
-  transfer_inputs(pt, &pt_fun);
-  iferr_log_catch();
+  pt->del_input(0); // clear index 0, send rest to function
+  
   sdebug("CF:"); edebug(get_index(fun));
-  pt_fun.print();
   fun_calling = get_index(fun);
   out = (*fun->fptr)(pt);
   fun_calling = 255;
   
 error:
 done:
-  pt_fun.clear_data();
   return out;
 }
 
@@ -334,7 +330,7 @@ void ui_pat_dog(){
 // ### User Commands
 
 // helper function to get thread assuming it is in the first
-// data point's value
+// input's value
 thread *UI_get_thread(pthread *pt){
   thread *th;
   uint8_t i = pt->get_type_input(0);
@@ -360,28 +356,21 @@ uint8_t cmd_t(pthread *pt){
   char *thname = NULL;
   uint8_t type;
   thread *th = NULL;
-  
+  debug("CmdT:");
   pt->print();
-  sdebug(F("T:"));
-  assert(not errno);
-  type = pt->get_type_input(0);
-  iferr_log_catch();
-
-  if(type < vt_maxint) th = get_thread(pt->get_int_input(0));
-  else if(type == vt_str) th = get_thread(pt->get_str_input(0));
-  else assert(0);
-  pt->del_input(0);
   
-  cdebug("th:"); edebug(get_index(th)); 
   th = UI_get_thread(pt);
-  assert(thread_exists(th));
   iferr_log_catch();
+  cdebug("th:"); edebug(get_index(th));
+  assert(thread_exists(th));
   
-  sdebug(F("Ti:")); edebug(get_index(th));
+  // Prepare thread
   debug(th->pt.lc);
   assert_raise_return(not is_active(th), ERR_VALUE, 0);
   th->pt.clear_data();
+  pt->del_input(0); // delete input for transfering
   transfer_inputs(pt, &th->pt);
+  
   debug(F("Sch Thread"));
   schedule_thread(th);
   return 1;
@@ -419,6 +408,7 @@ error:
 uint8_t cmd_kill(pthread *pt){
   
   debug(F("UI_kill"));
+  pt->print();
   thread *th = UI_get_thread(pt);
   iferr_log_catch();
   
@@ -459,6 +449,7 @@ uint8_t cmd_print_options(pthread *pt){
 
 void ui_print_options(){
   uint8_t i = 0;
+  L_repeat('#', 5); L_print(F(" M:")); L_println(freeMemory());
   print_option_name(F("f"));
   for(i = 0; i < UI__functions.index; i++){
     print_option_line(i, UI__function_names, PRINT_IGNORE);
