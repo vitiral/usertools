@@ -144,10 +144,6 @@ UI_function *get_function(char *name){
   return (UI_function *)get_object(name, UI__functions.index, UI__function_names, UI__functions.array, sizeof(UI_function));
 }
 
-UI_variable *get_variable(char *name){
-  return (UI_variable *)get_object(name, UI__variables.index, UI__variable_names, UI__variables.array, sizeof(UI_variable));
-}
-
 uint8_t get_index(UI_function *fun){
   //sdebug((uint16_t)fun); cdebug(" "); edebug((uint16_t)UI__functions.array);
   return ((uint8_t *)fun - (uint8_t *)UI__functions.array) / sizeof(UI_function);
@@ -163,6 +159,15 @@ uint8_t function_exists(UI_function *fun){
     return false;
   }
   return true;
+}
+
+UI_variable *get_variable(char *name){
+  return (UI_variable *)get_object(name, UI__variables.index, UI__variable_names, UI__variables.array, sizeof(UI_variable));
+}
+
+uint8_t get_index(UI_variable *var){
+  //sdebug((uint16_t)fun); cdebug(" "); edebug((uint16_t)UI__functions.array);
+  return ((uint8_t *)var - (uint8_t *)UI__variables.array) / sizeof(UI_variable);
 }
 
 void put_inputs(pthread *pt, char *input){
@@ -377,20 +382,32 @@ uint8_t cmd_v(pthread *pt){
   UI_variable *var;
   int32_t vint;
   int8_t i = 0;
+  uint8_t type;
   
-  if(pt->get_type_input(0) < vt_maxint){
+  type = pt->get_type_input(0);
+  iferr_log_catch();
+  if(type < vt_maxint){
     var = get_variable(pt->get_int_input(0));
   }
-  else{
+  else if(type == vt_str){
     var = get_variable(pt->get_str_input(0));
   }
+  else assert(0);
+  sdebug("v:"); edebug(get_index(var));
+  
   iferr_log_catch();
-  vint = pt->get_int_input(1);
-  if(not errno){
+  TRY(vint = pt->get_int_input(1));
+  CATCH_ALL{}
+  else{
+    assert(sizeof(vint) >= var->size);
+    /*  // this would be for large values first (big endian)
     for(i = 1; i <= var->size; i++){
       // move the values at the end onto the variable. Truncate rest.
       ((uint8_t *)var->vptr)[var->size - i] = ((uint8_t *)vint)[sizeof(vint) - i];
     }
+     * */
+    // Little Endian
+    memcpy(var->vptr, &vint, var->size);
   }
   // always print the variable when done
   print_variable(var);
