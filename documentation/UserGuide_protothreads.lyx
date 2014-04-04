@@ -1,0 +1,795 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+
+\series bold
+Protothread Library (pt)
+\end_layout
+
+\begin_layout Author
+Garrett Berg, Cloudform Design, garrett@cloudformdesign.com
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+LICENSE: 
+\series default
+This library is released under the FreeBSD License, if you need a copy go
+ to:
+\begin_inset CommandInset href
+LatexCommand href
+name " http://www.freebsd.org/copyright/freebsd-license.html"
+target " http://www.freebsd.org/copyright/freebsd-license.html"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Copyright: 
+\series default
+Garrett Berg 
+\begin_inset CommandInset href
+LatexCommand href
+name "cloudformdesign.com"
+target "cloudformdesign.com"
+
+\end_inset
+
+, 
+\begin_inset CommandInset href
+LatexCommand href
+name "garrett@cloudformdesign.com"
+target "garrett@cloudformdesign.com"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Introduction
+\end_layout
+
+\begin_layout Standard
+Protothreads are extremely lightweight stackless threads designed for severely
+ memory constrained systems such as small embedded systems or sensor network
+ nodes.
+ Protothreads can be used with or without an underlying operating system.
+\end_layout
+
+\begin_layout Standard
+Protothreads provides a blocking context on top of an event-driven system,
+ without the overhead of per-thread stacks.
+ The purpose of protothreads is to implement sequential flow of control
+ without complex state machines or full multi-threading.
+\end_layout
+
+\begin_layout Standard
+Main features:
+\end_layout
+
+\begin_layout Itemize
+No machine specific code - the protothreads library is pure C
+\end_layout
+
+\begin_layout Itemize
+Does not use error-prone functions such as longjmp()
+\end_layout
+
+\begin_layout Itemize
+Very small RAM overhead - only four bytes per protothread
+\end_layout
+
+\begin_layout Itemize
+Can be used with or without an OS
+\end_layout
+
+\begin_layout Itemize
+Provides blocking wait without full multi-threading or stack-switching
+\end_layout
+
+\begin_layout Itemize
+Freely available under a BSD-like open source license 
+\end_layout
+
+\begin_layout Standard
+Example applications:
+\end_layout
+
+\begin_layout Itemize
+Memory constrained systems 
+\end_layout
+
+\begin_layout Itemize
+Event-driven protocol stacks
+\end_layout
+
+\begin_layout Itemize
+Small embedded systems
+\end_layout
+
+\begin_layout Itemize
+Sensor network nodes
+\end_layout
+
+\begin_layout Standard
+The original protothreads library was released under an open source BSD-style
+ license that allows for both non-commercial and commercial usage.
+ The only requirement was that the following credit be given:
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+The protothreads library was written by Adam Dunkels <adam@sics.se> with
+ support from Oliver Schmidt <ol.sc@web.de>
+\series default
+.
+ 
+\series bold
+Adam Dunkels, 3 June 2006 
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+More information and new versions of their library can be found at the protothre
+ads homepage: http://www.sics.se/~adam/pt/
+\end_layout
+
+\begin_layout Standard
+This is a rework of their protothread library to offer significantly more
+ features at only minimal changes to memory.
+ It is intended to be used with 
+\series bold
+threading.h 
+\series default
+or 
+\series bold
+ui.h
+\series default
+ (user interface).
+\end_layout
+
+\begin_layout Section*
+Overview
+\end_layout
+
+\begin_layout Standard
+There are several things to keep in mind when using protothreads:
+\end_layout
+
+\begin_layout Itemize
+Every time you 
+\begin_inset Quotes eld
+\end_inset
+
+yield
+\begin_inset Quotes erd
+\end_inset
+
+ to the outside system, your function is being left.
+ When it is called again, the pthread functions will return you to your
+ yielded spot.
+ However, 
+\series bold
+all
+\series default
+ 
+\series bold
+non-static data will be lost.
+ 
+\series default
+Functions like 
+\begin_inset Quotes eld
+\end_inset
+
+put_input
+\begin_inset Quotes erd
+\end_inset
+
+ have been created to make this problem less significant, and allow you
+ to use the same function for multiple threads.
+\end_layout
+
+\begin_layout Standard
+See the example 
+\series bold
+pt_example_led1 
+\series default
+to see protothreads in action.
+ Also look at the other 
+\series bold
+led examples
+\series default
+ to see more comples uses of threading and protothreads.
+\end_layout
+
+\begin_layout Subsection*
+
+\series bold
+Function Calls
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+PT_INIT(pt) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Call to reinitialize a protothread.
+ You should hardly ever have to do this.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_BEGIN(pt) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+The start of a protothreaded function.
+ Should be called immediately after variable initializations.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_END(pt) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+The end of a protothread.
+ Nothing should be called after this.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_WAIT_UNTIL(pt, condition) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Blocks and waits until the condition is true
+\end_layout
+
+\begin_layout Itemize
+Block == No code after this statement will run until the condition is true.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_WAIT_WHILE(pt, condition) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Blocks and waits while the condition is true.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_WAIT_MS(pt, ms) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Blocks until at least 
+\series bold
+ms
+\series default
+ milliseconds has passed (approximately, depends on other functions not
+ taking up much time)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_WAIT_THREAD(pt, thread) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Block and wait until a child protothread completes.
+ For instance: PT_WAIT_THREAD(pt, call_other_thread(pt2));
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_SPAWN(pt, thread_function) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Automatically creates a temporary thread and calls thread function with
+ it.
+\end_layout
+
+\begin_layout Itemize
+Blocks until that thread is complete.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_EXIT(pt) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+signal to the outside to set thread innactive.
+ Ends thread activity.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_YIELD(pt) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+The most common call.
+ Yields for one cycle.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_YIELD_VALUE(pt, value) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+same as 
+\series bold
+pt->clear_output(); pt->put_output(value); PT_YIELD(pt);
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+PT_KILLED(pt) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Note: Does NOT kill the protothread.
+ Use this just before 
+\series bold
+PT_END(pt)
+\series default
+.
+ If an outside function kills the protothread, the code will jump here first.
+ Use this to do cleanup (such as free memory, set pins to input, etc.)
+\end_layout
+
+\begin_layout Itemize
+Note: once the thread has been killed, 
+\series bold
+all data is lost
+\series default
+.
+ So all 
+\series bold
+pt_get_input(index)
+\series default
+/output will be gone.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection*
+
+\series bold
+Classes
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+pthread
+\end_layout
+
+\begin_layout Itemize
+This is the standard protothread object.
+ This is what keeps track of the position in calls and also of input and
+ output data.
+ There are only a couple of functions you need to worry about.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+pthread.put_input(value) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+put an integer or string into the 
+\begin_inset Quotes eld
+\end_inset
+
+input
+\begin_inset Quotes erd
+\end_inset
+
+ buffer.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.get_int_input(index) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+get an integer from index.
+ Note that the first item put in is index = 0, second item is index = 1,
+ etc.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.get_str_input(index) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+returns a character array pointer at index
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.get_type_input(index) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+returns the type of the index.
+ What you should be concerned about are:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+type < vt_max == value is an integer
+\end_layout
+
+\begin_layout Itemize
+type == vt_str == value is a string (character array)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.clear_input() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+clears all input values
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.del_input(index) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+deletes input value at index.
+ Note that all values above this will have 1 less index
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.put_output(value), get_xxx_output(index), etc ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+same as input
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.clear_data() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+clears ALL data (input, output, and temp).
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+pthread.print() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+useful when debugging your code.
+ Gives a list of all data and their values.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+
+\series bold
+Common Code:
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Known Input Type:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint8_t mythread(pthread *pt){
+\end_layout
+
+\begin_layout Plain Layout
+
+  uint16_t myint = pt->get_int_input(0);
+\end_layout
+
+\begin_layout Plain Layout
+
+  iferr_log_catch(); // catch errors.
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\end_layout
+
+\begin_layout Plain Layout
+
+  // YOUR CODE HERE
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  return good_value;
+\end_layout
+
+\begin_layout Plain Layout
+
+error:
+\end_layout
+
+\begin_layout Plain Layout
+
+  return bad_value;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Unknown Input Types:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint8_t mythread(pthread *pt){
+\end_layout
+
+\begin_layout Plain Layout
+
+  // demonstrates how to determine if the first index of the input is a
+ string or an integer.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  uint8_t type = pt->get_type_input(0);  // get the type
+\end_layout
+
+\begin_layout Plain Layout
+
+  iferr_log_catch(); // make sure there were no errors
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  if(type < vt_maxint) uint16_t myint = pt->get_int_input(0); // it is an
+ int
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  else if(type == vt_str) char *mystr = get_function(pt->get_str_input(0));
+ // it is a string
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  else assert(0); // errorhandling -- we don't know what it was
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  // YOUR CODE HERE
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  return good_value;
+\end_layout
+
+\begin_layout Plain Layout
+
+error:
+\end_layout
+
+\begin_layout Plain Layout
+
+  // clean up
+\end_layout
+
+\begin_layout Plain Layout
+
+  return bad_value;
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
