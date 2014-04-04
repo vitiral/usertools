@@ -36,7 +36,7 @@ uint8_t cmd_print_options(pthread *pt);
 // #####################################################
 // ### Globals
 
-#define MAX_STR_LEN 25
+#define MAX_STR_LEN 30
 
 const __FlashStringHelper **UI__thread_names = NULL;
 const __FlashStringHelper **UI__function_names = NULL;
@@ -253,16 +253,21 @@ uint8_t print_variable(UI_variable *var){
   return true;
 }
 
-void ui_process_command(char *input){
+void ui_process_command(char *input, uint8_t endi){
   pthread pt;
   assert(pt.data == NULL);
-  input = strip(input, strlen(input));
+  input = strip(input, endi);
   sdebug(F("Parse CMD:")); edebug(input);
   put_inputs(&pt, input);
   iferr_log_catch();
   call_function(&pt);
 error:
   pt.clear_data();
+}
+
+// for debugging
+void ui_process_command(char *input){
+  return ui_process_command(input, strlen(input));
 }
 
 // #####################################################
@@ -461,14 +466,21 @@ PT_THREAD user_interface(pthread *pt){
   uint8_t v;
   static uint8_t i = 0;
   char c;
-  static char *buffer;
+  //static char *buffer;
+  static char buffer[MAX_STR_LEN];
   
   pt->lc = 1; // demonstrate we started
+  if(pt->lc == PT_KILLED){
+    goto done;
+  }
+  
+  /*
   if(buffer == NULL){
     buffer = (char *)malloc(MAX_STR_LEN);
     memcheck(buffer);
     buffer[0] = 0;
   }
+   * */
   
   if(L_available()){
     while(L_available()){
@@ -483,8 +495,8 @@ PT_THREAD user_interface(pthread *pt){
         buffer[i] = 0;
         sdebug(F("Command:"));
         edebug(buffer);
-        delay(20);
-        ui_process_command(buffer);
+        delay(10);
+        ui_process_command(buffer, i);
         goto done;
       }
       i += 1;
@@ -494,7 +506,7 @@ PT_THREAD user_interface(pthread *pt){
 done:
 error:
   sdebug(F("Bp:")); edebug((uint16_t)buffer);
-  memclr(buffer);
+  //memclr(buffer);
   i = 0;
   return PT_YIELDED;
 }

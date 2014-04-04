@@ -97,6 +97,7 @@ char *strip(char *c, uint16_t end){
     else{
       break;
     }
+    i++;
   }
   c = pass_ws(c);
   return c;
