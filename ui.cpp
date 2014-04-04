@@ -290,8 +290,8 @@ void ui_watchdog(){
   L_println();
 
   wdt_reset();
-  wdt_enable(WDTO_250MS);
-  //wdt_enable(WDTO_500MS);
+  //wdt_enable(WDTO_250MS);
+  wdt_enable(WDTO_500MS);
 }
 
 void ui_wdt_setup(void)
@@ -303,7 +303,7 @@ void ui_wdt_setup(void)
     //set up WDT interrupt
     WDTCSR = (1<<WDCE)|(1<<WDE);
     //Start watchdog timer with 1s prescaller
-    WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP1)|(1<<WDP2);
+    WDTCSR = (1<<WDIE)|(1<<WDE)|(1<<WDP3); //(1<<WDP1)|(1<<WDP2);
     //wdt_enable(WDTO_2S);  // can NOT use this -- must use custom
     //Enable global interrupts
     sei();
@@ -333,47 +333,57 @@ uint8_t cmd_t(pthread *pt){
   uint8_t type;
   thread *th = NULL;
   // Calling thread from command
-  debug(F("T:"));
-  assert(not errno);
   pt->print();
-  //TRY(i = th->pt.get_int_input(0));
-  sdebug("PT_DATA="); edebug((uint16_t) pt->data);
-  i = pt->get_int_input(0);
-  CATCH(ERR_TYPE){
-    char *thname = pt->get_str_input(0);
-    iferr_log_return(0);
-    edebug(thname);
-    th = get_thread(thname);
-  }
-  else{
-    iferr_log_return(0); // only error would be index
+  sdebug(F("T:"));
+  assert(not errno);
+  i = pt->get_type_input(0);
+  iferr_log_catch(); // index error
+  if(i <= vt_maxint){
+    i = pt->get_int_input(0);
     edebug(i);
     th = get_thread(i);
   }
-  edebug(get_index(th));
+  else if(i == vt_str){
+    char *thname = pt->get_str_input(0);
+    edebug(thname);
+    th = get_thread(thname);
+  }
+  else raise(ERR_TYPE);
+  iferr_log_catch();
   
+  sdebug(F("Ti:")); edebug(get_index(th));
+  debug(th->pt.lc);
   assert_raise_return(not is_active(th), ERR_VALUE, 0);
   th->pt.clear_data();
   i = 0;
   for(i = 0;;i++){
-    debug("looping");
+    sdebug(F("in:")); cdebug(i); cdebug('\t');
     TRY(type = pt->get_type_input(i));
     CATCH_ALL{
       if(i == 0){
         raise(ERR_INPUT);
       }
+      edebug(F("BREAK"));
       break;
     }
     if(i == 0){ // first iteration is the thread itself
-      if(type < vt_maxint) th = get_thread(pt->get_int_input(0));
-      else th = get_thread(pt->get_str_input(0));
+      if(type < vt_maxint) th = get_thread(pt->get_int_input(i));
+      else th = get_thread(pt->get_str_input(i));
+      cdebug("th:"); edebug(get_index(th)); 
     }
     else{
-      if(type < vt_maxint) th->pt.put_input((int16_t)pt->get_int_input(i));
-      else th->pt.put_input(pt->get_str_input(i));
+      if(type < vt_maxint) {
+        th->pt.put_input((int16_t)pt->get_int_input(i));
+        edebug(th->pt.get_int_input(i-1));
+      }
+      else if (type == vt_str) {
+        th->pt.put_input(pt->get_str_input(i));
+        edebug(th->pt.get_str_input(i-1));
+      }
+      else assert(0);
     }
   }
-  debug(F("Scheduling Thread"));
+  debug(F("Sch Thread"));
   schedule_thread(th);
   return 1;
 error:
@@ -544,7 +554,7 @@ void UI__setup_std(){
   
   cmd_print_options((pthread *) 10);
   
-  ui_wdt_setup();
+  //ui_wdt_setup();
 }
 
 

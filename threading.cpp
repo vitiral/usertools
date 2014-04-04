@@ -56,14 +56,18 @@ uint8_t get_index(thread *th){
 
 thread *expose_thread(TH_funptr fptr){
   debug(F("ExpTh"));
-  assert_return(TH__threads.index < TH__threads.len, NULL);
-  assert_raise_return(TH__threads.array, ERR_VALUE, NULL); // assert not null
+  assert(TH__threads.index < TH__threads.len);
+  assert_raise(TH__threads.array, ERR_VALUE); // assert not null
 
   TH__threads.array[TH__threads.index].fptr = fptr;
   TH__threads.array[TH__threads.index].pt.lc = PT_INNACTIVE;
+  assert(TH__threads.array[TH__threads.index].pt.data == NULL);
+  
   sdebug(F("Added T:")); edebug(TH__threads.index);
   TH__threads.index++;
   return &(TH__threads.array[TH__threads.index - 1]);
+error:
+  return NULL;
 }
 
 uint8_t is_active(thread *th){
@@ -74,7 +78,7 @@ uint8_t is_active(thread *th){
 void set_thread_innactive(thread *th){
   th->pt.lc = PT_INNACTIVE;
   th->pt.clear_data();
-  slog_info("TK:"); elog_info(get_index(th));
+  slog_info("Tna:"); elog_info(get_index(th));
 }
 
 uint8_t schedule_thread(thread *th){
@@ -88,6 +92,7 @@ uint8_t schedule_thread(thread *th){
   if(out >= PT_EXITED){
     set_thread_innactive(th);
     out = true;
+    sdebug("Tns:"); edebug(get_index(th));
   }
   else{
     sdebug("Ts:"); edebug(get_index(th));
@@ -112,7 +117,7 @@ thread *expose_schedule_thread(TH_funptr fun){
 }
 
 thread *get_thread(uint8_t el_num){
-  assert_raise_return(el_num < TH__threads.len, ERR_INDEX, NULL);
+  assert_raise_return(el_num < TH__threads.index, ERR_INDEX, NULL);
   return &TH__threads.array[el_num];
 }
 

@@ -56,6 +56,16 @@
 
 #include "lc.h"
 
+enum PTVALUES {
+  PT_WAITING    ,
+  PT_YIELDED    ,
+  PT_ERROR      ,
+  PT_EXITED     ,
+  PT_ENDED      ,
+  PT_KILLED     ,
+  PT_CRITICAL   
+};
+
 #define PT_KILL_VALUE LC_KILL_VALUE
 #define PT_INNACTIVE  LC_KILL_VALUE + 1
 
@@ -216,15 +226,7 @@ struct PT_data_pt{
   pthread data;
 };
 
-enum PTVALUES {
-  PT_WAITING    ,
-  PT_YIELDED    ,
-  PT_ERROR      ,
-  PT_EXITED     ,
-  PT_ENDED      ,
-  PT_KILLED     ,
-  PT_CRITICAL   
-};
+
 
 /**
  * \name Initialization
