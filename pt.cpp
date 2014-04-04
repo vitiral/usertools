@@ -1,5 +1,7 @@
 #include "pt.h"
 
+#define PT_INDEX_NULL 255
+
 #define TYPE_BITSHIFT 6
 #define TYPE_ERROR    0 << TYPE_BITSHIFT
 #define TYPE_INPUT    1 << TYPE_BITSHIFT 
@@ -302,8 +304,12 @@ uint8_t pthread::get_type_input(ptindex index){
   return get_type_type(index, TYPE_INPUT);
 }
 
+void pthread::del_input(uint8_t index){
+  clear_type(TYPE_INPUT, index);
+}
+
 void pthread::clear_input(){
-  clear_type(TYPE_INPUT);
+  clear_type(TYPE_INPUT, PT_INDEX_NULL);
 }
 
 
@@ -353,12 +359,13 @@ uint8_t pthread::get_type_output(ptindex index){
   return get_type_type(index, TYPE_OUTPUT);
 }
 
-void pthread::clear_output(){
-  clear_type(TYPE_OUTPUT);
+void pthread::del_output(uint8_t index){
+  clear_type(TYPE_OUTPUT, index);
 }
 
-// *****************************************************
-// **** Local
+void pthread::clear_output(){
+  clear_type(TYPE_OUTPUT, PT_INDEX_NULL);
+}
 
 
 // *****************************************************
@@ -370,23 +377,36 @@ void pthread::clear_data(){
   }
 }
 
-void pthread::clear_type(uint8_t type){
+void pthread::clear_type(uint8_t type, ptindex index){
+  ptindex i = 0;
   PT_data *prevdata = NULL;
   PT_data *cdata;
   cdata  = data;
   
   while(cdata){
     if(PTYPE(cdata->b.type) == type) {
-      destroy_data(cdata, prevdata);
-      cdata = prevdata->b.next;
+      if(index == PT_INDEX_NULL){
+        destroy_data(cdata, prevdata);
+        cdata = prevdata->b.next;
+      }
+      else{
+        if(i == index){
+          destroy_data(cdata, prevdata);
+          cdata = prevdata->b.next;
+          return;
+        }
+        else i++;
+      }
     }
     else{
       prevdata = cdata;
       cdata = cdata->b.next;
     }
   }
+  if(index != PT_INDEX_NULL){
+    raise_return(ERR_INDEX);
+  }
 }
-
   
 void pthread::print(){
   PT_data *cdata;

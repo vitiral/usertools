@@ -75,6 +75,18 @@ uint8_t is_active(thread *th){
   else return true;
 }
 
+uint8_t thread_exists(thread *th){
+  if(th == NULL) return false;
+  uint32_t x = ((uint8_t *)th - (uint8_t *)TH__threads.array);
+  if(x % sizeof(thread) != 0){
+    return false;
+  }
+  if(x / sizeof(thread) >= TH__threads.index){
+    return false;
+  }
+  return true;
+}
+
 void set_thread_innactive(thread *th){
   th->pt.lc = PT_INNACTIVE;
   th->pt.clear_data();
@@ -85,7 +97,9 @@ uint8_t schedule_thread(thread *th){
   uint8_t out = false;
   
   sdebug(F("schT:")); edebug(get_index(th));
+  assert(thread_exists(th));
   assert_raise(not is_active(th), ERR_VALUE, 0);
+  debug("Init");
   PT_INIT(&(th->pt));
   assert(th->fptr);
   out = th->fptr(&(th->pt));

@@ -176,6 +176,7 @@ public:
   void *put_input(int32_t input);
   void *put_input(char *input, uint16_t len);
   void *put_input(char *input);
+  void del_input(uint8_t index);
   void clear_input();
   
   int32_t get_int_input(ptindex index);
@@ -189,6 +190,7 @@ public:
   void *put_output(int32_t output);
   void *put_output(char *output, uint16_t len);
   void *put_output(char *output);
+  void del_output(uint8_t index);
   void clear_output();
   
   int32_t get_int_output(ptindex index);
@@ -197,7 +199,7 @@ public:
   
   // General Destructors
   void clear_data();
-  void clear_type(uint8_t type);
+  void clear_type(uint8_t type, ptindex index);
   
   void print();
 };

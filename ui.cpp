@@ -166,6 +166,18 @@ uint8_t get_index(UI_function *fun){
   return ((uint8_t *)fun - (uint8_t *)UI__functions.array) / sizeof(UI_function);
 }
 
+uint8_t function_exists(UI_function *fun){
+  if(fun == NULL) return false;
+  uint32_t x = ((uint8_t *)fun - (uint8_t *)UI__functions.array);
+  if(x % sizeof(UI_function) != 0){
+    return false;
+  }
+  if(x / sizeof(UI_function) >= UI__functions.index){
+    return false;
+  }
+  return true;
+}
+
 void put_inputs(pthread *pt, char *input){
   // loads the inputs into a protothread.
   uint16_t myint;
@@ -210,6 +222,7 @@ uint8_t call_function(UI_function *fun, char *input){
   //pthread *pt = (pthread *)malloc(sizeof(pthread));
   pthread pt;
   uint8_t out = 0;
+  assert(function_exists(fun));
   assert(pt.data == NULL);
   sdebug("PT_DATA="); edebug((uint16_t) pt.data);
   put_inputs(&pt, input);
@@ -231,7 +244,9 @@ done:
 }
 
 uint8_t call_function(char *name, char *input){
-  return call_function(get_function(name), input);
+  UI_function *fun = get_function(name);
+  iferr_log_return(0);
+  return call_function(fun, input);
 }
 
 void schedule_thread(char *name, char *input){
@@ -259,17 +274,13 @@ uint8_t print_variable(UI_variable *var){
 }
 
 void ui_process_command(char *input){
-  char *word;
+  pthread pt;
+  assert(pt.data == NULL);
   
   sdebug(F("Parse CMD:")); edebug(input);
-  Serial.println(input);
-  word = get_word(input);
+  put_inputs(&pt, input);
   iferr_log_return();
-  assert_return(input); assert_return(word);
-  sdebug(F("Calling Name:"));
-  cdebug(word); cdebug(':'); edebug(input);
-  
-  call_function(word, input); // name, input
+  call_function(&pt);
 }
 
 // #####################################################
@@ -325,18 +336,11 @@ void ui_pat_dog(){
 // #####################################################
 // ### User Commands
 
-
-
-uint8_t cmd_t(pthread *pt){
-  uint8_t i;
-  char *thname = NULL;
-  uint8_t type;
-  thread *th = NULL;
-  // Calling thread from command
-  pt->print();
-  sdebug(F("T:"));
-  assert(not errno);
-  i = pt->get_type_input(0);
+// helper function to get thread assuming it is in the first
+// data point's value
+thread *UI_get_thread(pthread *pt){
+  thread *th;
+  uint8_t i = pt->get_type_input(0);
   iferr_log_catch(); // index error
   if(i <= vt_maxint){
     i = pt->get_int_input(0);
@@ -349,40 +353,59 @@ uint8_t cmd_t(pthread *pt){
     th = get_thread(thname);
   }
   else raise(ERR_TYPE);
+  return th;
+error:
+  return NULL;
+}
+
+void transfer_inputs(pthread *from, pthread *to){
+  uint8_t i;
+  for(i = 0;;i++){ // load the inputs into the thread
+    sdebug(F("Trans:")); cdebug(i); cdebug('\t');
+    TRY(type = pt->get_type_input(i));
+    CATCH_ALL{
+      edebug(F("BREAK"));
+      return;
+    }
+    else{
+      if(type < vt_maxint) {
+        th->pt.put_input((int16_t)pt->get_int_input(i));
+        edebug(th->pt.get_int_input(i));
+      }
+      else if (type == vt_str) {
+        th->pt.put_input(pt->get_str_input(i));
+        edebug(th->pt.get_str_input(i));
+      }
+      else assert(0);
+    }
+  }
+  assert(0);
+}
+uint8_t cmd_t(pthread *pt){
+  uint8_t i;
+  char *thname = NULL;
+  uint8_t type;
+  thread *th = NULL;
+  // Calling thread from command
+  pt->print();
+  sdebug(F("T:"));
+  assert(not errno);
+  type = pt->get_type_input(0);
+  iferr_log_return();
+
+  if(type < vt_maxint) th = get_thread(pt->get_int_input(0));
+  else if(type == vt_str) th = get_thread(pt->get_str_input(0));
+  else assert(0);
+  pt->dele
+  cdebug("th:"); edebug(get_index(th)); 
+  th = UI_get_thread(pt);
   iferr_log_catch();
   
   sdebug(F("Ti:")); edebug(get_index(th));
   debug(th->pt.lc);
   assert_raise_return(not is_active(th), ERR_VALUE, 0);
   th->pt.clear_data();
-  i = 0;
-  for(i = 0;;i++){
-    sdebug(F("in:")); cdebug(i); cdebug('\t');
-    TRY(type = pt->get_type_input(i));
-    CATCH_ALL{
-      if(i == 0){
-        raise(ERR_INPUT);
-      }
-      edebug(F("BREAK"));
-      break;
-    }
-    if(i == 0){ // first iteration is the thread itself
-      if(type < vt_maxint) th = get_thread(pt->get_int_input(i));
-      else th = get_thread(pt->get_str_input(i));
-      cdebug("th:"); edebug(get_index(th)); 
-    }
-    else{
-      if(type < vt_maxint) {
-        th->pt.put_input((int16_t)pt->get_int_input(i));
-        edebug(th->pt.get_int_input(i-1));
-      }
-      else if (type == vt_str) {
-        th->pt.put_input(pt->get_str_input(i));
-        edebug(th->pt.get_str_input(i-1));
-      }
-      else assert(0);
-    }
-  }
+  transfer_inputs();
   debug(F("Sch Thread"));
   schedule_thread(th);
   return 1;
@@ -418,21 +441,14 @@ error:
 }
 
 uint8_t cmd_kill(pthread *pt){
+  
   debug(F("UI_kill"));
-  char *thname = pt->get_str_input(0);
-  thread *th;
-  assert_raise(thname, ERR_INPUT);
-  slog_info(F("k:")); elog_info(thname);
-  th = get_thread(thname);
-  if(th) {
-    // print name
-    kill_thread(th);
-  }
-  else{
-    raise(ERR_INPUT);
-  }
+  thread *th = UI_get_thread(pt);
+  iferr_log_catch();
+  
+  kill_thread(th);
   L_print(F("Killed:"));
-  L_println(thname);
+  L_println(get_index(th));
   return 1;
 error:
   return 0;
@@ -491,7 +507,7 @@ PT_THREAD user_interface(pthread *pt){
   char c;
   static char *buffer;
   
-  PT_BEGIN(pt);
+  pt->lc = 1; // demonstrate we started
   if(buffer == NULL){
     buffer = (char *)malloc(MAX_STR_LEN);
     memcheck(buffer);
@@ -507,9 +523,12 @@ PT_THREAD user_interface(pthread *pt){
         raise(ERR_COM, F("Size"));
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
-        buffer[i + 1] = 0;
+        sdebug(F("Bp:")); edebug((uint16_t)buffer);
+        buffer[i] = 0;
+        strip(buffer, i);
         sdebug(F("Command:"));
         edebug(buffer);
+        delay(20);
         ui_process_command(buffer);
         goto done;
       }
@@ -519,10 +538,10 @@ PT_THREAD user_interface(pthread *pt){
   return PT_YIELDED;
 done:
 error:
+  sdebug(F("Bp:")); edebug((uint16_t)buffer);
   memclr(buffer);
   i = 0;
   return PT_YIELDED;
-  PT_END(pt);
 }
 
 void ui_loop(){

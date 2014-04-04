@@ -65,32 +65,50 @@ uint8_t cmp_flash_flash(const __FlashStringHelper *flsh1, const __FlashStringHel
   return true;
 }
 
-char *pass_ws(char *c){
-  while(true) {
-    switch(*c){
+uint8_t iswhite(char c){
+  switch(c){
     case 0x0A:
     case 0x0D:
     case ' ':
     case '\t':
+      return true;
+  }
+  return false;
+}
+
+char *pass_ws(char *c){
+  while(true) {
+    if(iswhite(*c)){
       c++;
-      break;
-    default:
+    }
+    else{
       return c;
     }
   }
 }
 
+char *strip(char *c, uint16_t end){
+  uint16_t i = 1;
+  assert(c[end] == 0);
+  while(true){
+    if(iswhite(c[end-i])){
+      c[end-i] = 0;
+    }
+    else{
+      break;
+    }
+  }
+  c = pass_ws(c);
+  return c;
+error:
+  return NULL;
+}
+
 char *get_word_end(char *c){
   c = pass_ws(c);
-  while(c++){
-    switch(*c){ // stop at ws, end, or line return
-    case 0:
-    case 0x0A:
-    case 0x0D:
-    case ' ':
-    case '\t':
-      return c;
-    }
+  while(true){
+    if(iswhite(*c) or *c == 0) return c;
+    c++;
   }
 }
 
