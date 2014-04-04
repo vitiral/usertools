@@ -454,3 +454,31 @@ ptsmall::ptsmall(){
 
 //void ptsmall::clear_data(){}
 void ptsmall::clear_output(){}
+
+// *****************************************************
+// **** protothread helper
+
+void transfer_inputs(pthread *from, pthread *to){
+  uint8_t i;
+  uint8_t type;
+  for(i = 0;;i++){ // load the inputs into the thread
+    sdebug(F("Trans:")); cdebug(i); cdebug('\t');
+    TRY(type = from->get_type_input(i));
+    CATCH_ALL{
+      edebug(F("BREAK"));
+      return;
+    }
+    else{
+      if(type < vt_maxint) {
+        to->put_input((int16_t)from->get_int_input(i));
+        edebug(to->get_int_input(i));
+      }
+      else if (type == vt_str) {
+        to->put_input(from->get_str_input(i));
+        edebug(to->get_str_input(i));
+      }
+      else assert_return(0);
+    }
+  }
+  assert_return(0);
+}

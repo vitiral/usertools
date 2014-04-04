@@ -75,6 +75,7 @@ thread *expose_schedule_thread(TH_funptr fun);
 
 thread *get_thread(uint8_t el_num);
 uint8_t get_index(thread *th);
+uint8_t thread_exists(thread *th);
 
 uint8_t schedule_thread(thread *th);
 uint8_t schedule_thread(uint8_t el_num);

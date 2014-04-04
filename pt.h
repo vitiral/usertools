@@ -154,6 +154,8 @@ private:
   
   char *get_str_type(ptindex index, uint8_t type);
   
+  void clear_type(uint8_t type, ptindex index);
+  
 public:
   lc_t lc;
   PT_data *data;
@@ -199,7 +201,6 @@ public:
   
   // General Destructors
   void clear_data();
-  void clear_type(uint8_t type, ptindex index);
   
   void print();
 };
@@ -227,6 +228,8 @@ struct PT_data_pt{
   struct PT_data_base b;
   pthread data;
 };
+
+void transfer_inputs(pthread *from, pthread *to);
 
 
 
