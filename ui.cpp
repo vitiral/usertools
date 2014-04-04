@@ -121,19 +121,6 @@ void *get_object(char *name, uint8_t len,
   sdebug(F("Gobj:")); edebug(name);
   clrerr();
   
-  // check if name is a number
-  TRY(i = get_int(name));
-  debug(i);
-  CATCH_ALL{}
-  else{
-    assert_raise(i < len, ERR_INDEX);
-    //return getobj(i);
-    sdebug("elnum:"); edebug(i);
-    return (void *)((char *)objarray + i*size);
-  }
-  
-  clrerr();
-  
   assert_raise(type_names, ERR_INPUT); // not null
   
   for(i = 0; i < len; i++){
@@ -189,8 +176,9 @@ void put_inputs(pthread *pt, char *input){
   while(true){
     clrerr();
     
-    debug("gw");
+    sdebug("gw:");
     word = get_word(input);
+    edebug(word);
     
     if(errno) {
       // no more words left
@@ -202,16 +190,15 @@ void put_inputs(pthread *pt, char *input){
     //myfloat = get_float(word);
     //AND DO ERROR CHECKING
     
-    debug("gi");
     TRY(myint = get_int(word));
     CATCH_ALL{} // clear errors
     else{
-      cdebug("Pi:"); cdebug(myint); cdebug("\t\t");
+      cdebug("Pi:"); cdebug(myint); edebug("\t\t");
       pt->put_input(myint);
       continue;
     }
     
-    cdebug("Pw:"); cdebug(word); cdebug("\t\t");
+    cdebug("Pw:"); cdebug(word); edebug("\t\t");
     pt->put_input(word);
   }
   edebug("None");
@@ -268,12 +255,14 @@ uint8_t print_variable(UI_variable *var){
 
 void ui_process_command(char *input){
   pthread pt;
-  assert_return(pt.data == NULL);
-  
+  assert(pt.data == NULL);
+  input = strip(input, strlen(input));
   sdebug(F("Parse CMD:")); edebug(input);
   put_inputs(&pt, input);
-  iferr_log_return();
+  iferr_log_catch();
   call_function(&pt);
+error:
+  pt.clear_data();
 }
 
 // #####################################################
@@ -492,7 +481,6 @@ PT_THREAD user_interface(pthread *pt){
       else if(buffer[i] == UI_CMD_END_CHAR){
         sdebug(F("Bp:")); edebug((uint16_t)buffer);
         buffer[i] = 0;
-        strip(buffer, i);
         sdebug(F("Command:"));
         edebug(buffer);
         delay(20);

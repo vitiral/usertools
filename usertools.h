@@ -18,6 +18,7 @@ Memproblem:
 
 #include <Arduino.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
 //#define UT_USE_SOFTSERIAL
 

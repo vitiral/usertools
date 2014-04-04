@@ -8,8 +8,7 @@
  
 #ifndef strtools_h
 #define strtools_h
-
-#define cmp_str_elptr(N, L, E) __cmp_str_elptr(N, L, (TH_element *)(E))
+#include <usertools.h>
 
 uint16_t flash_len(const __FlashStringHelper *ifsh);
 

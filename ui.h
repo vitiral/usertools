@@ -93,7 +93,6 @@ extern const __FlashStringHelper **UI__function_names;
         {F("?"), F("t"), F("v"), F("k")};             \
         UI__function_names = UI__FUNCTION_NAMES
 
-
 extern const __FlashStringHelper **UI__variable_names;
 #define set_variable_names(...) static const __FlashStringHelper *UI__VARIABLE_NAMES[] = {__VA_ARGS__};     \
         UI__variable_names = UI__VARIABLE_NAMES
