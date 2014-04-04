@@ -469,7 +469,6 @@ PT_THREAD user_interface(pthread *pt){
   //static char *buffer;
   static char buffer[MAX_STR_LEN];
   
-  pt->lc = 1; // demonstrate we started
   if(pt->lc == PT_KILLED){
     goto done;
   }
@@ -507,6 +506,7 @@ done:
 error:
   sdebug(F("Bp:")); edebug((uint16_t)buffer);
   //memclr(buffer);
+  //assert(buffer == NULL);
   i = 0;
   return PT_YIELDED;
 }
