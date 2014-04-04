@@ -19,8 +19,8 @@ ByteBuffer failbuffer;
 
 void setup(){
   failbuffer.init(100);
-  //setup_std();
-  setup_soft();
+  setup_std();
+  //setup_soft();
   log_info("setup");
   debug("Testing Debug");
   
@@ -37,12 +37,15 @@ void setup_std(){
   Serial.println("Started Std Serial");
 }
 
+void nothing(){}
 
+/*
 void setup_soft(){
   SoftSerial.begin(57600);
   SoftSerial.println("Started Soft Serial");
   Logger.config_soft(&SoftSerial);
 }
+*/
 
 void do_failure(){
   char *errmsg = "Doing Failure";
@@ -54,10 +57,10 @@ error:
 void do_failure2(){
   seterr(ERR_VALUE);
   if(true) iferr_log_return();
-  clrerr(); // function after this should be expecting derr to exist
+  clrerr(); // function after this should be expecting errno to exist
 }
 
-#define T1_TESTS 23
+#define T1_TESTS 24
 unsigned short test1(unsigned short tp){
   short tofail = false;
   short tobreak = true;
@@ -218,6 +221,61 @@ unsigned short test1(unsigned short tp){
     debug("FAIL");
     Logger.println("FAIL");
     Logger.silent = false;    
+    break;
+    
+  case 24:
+    tobreak = true;
+    tofail = false;
+    L_println("TRY CATCH");
+    
+    TRY(do_failure());
+    CATCH(ERR_ASSERT){
+    }
+    else{
+      assert(0);
+    }
+    assert(errno == 0);
+    clrerr();
+    
+    TRY(nothing());
+    CATCH_ALL{
+      assert(0);
+    }
+    assert(errno == 0);
+    
+    TRY(do_failure());
+    CATCH(ERR_VALUE){
+      assert(0);
+    }
+    ELSE_CATCH(ERR_ASSERT){
+    }
+    else{
+      assert(0);
+    }
+    assert(errno == 0);
+    
+    TRY(do_failure());
+    CATCH_N(ERR_INDEX){
+    }
+    else{
+      assert(0);
+    }
+    assert(errno == 0);
+    
+    TRY(do_failure());
+    CATCH(ERR_VALUE){
+      assert(0);
+    }
+    assert(errno == ERR_ASSERT);
+    clrerr();
+    
+    TRY(do_failure());
+    CATCH_N(ERR_ASSERT){
+      assert(0);
+    }
+    assert(errno == ERR_ASSERTGI);
+    clrerr();
+    
   default:
     return 0;
   }

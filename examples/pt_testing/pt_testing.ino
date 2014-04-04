@@ -10,14 +10,14 @@
  // 12452 -> 9968 without debug
 #define DEBUG
 
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 #include <errorhandling.h>
 #include <ByteBuffer.h>
 #include <logging.h>
 #include <MemoryFree.h>
 #include <pt.h>
 
-SoftwareSerial SoftSerial(10, 1); // RX, TX -- 10 should be disconnected (does not receieve)
+//SoftwareSerial SoftSerial(10, 1); // RX, TX -- 10 should be disconnected (does not receieve)
 ByteBuffer failbuffer;
 
 #define test_assert(A) EH_DW(if(!(A)){seterr(ERR_ASSERT); log_err();})
@@ -119,9 +119,23 @@ PT_THREAD test1(pthread *pt_l, unsigned short tp){
     
     assert(pt->get_int_input(3) == -30000);
     assert(pt->get_type_input(3) < vt_maxint);
+    
+    pt->print();
     //Serial.println(F("memtest"));
     //slog_info(F("Mem before:")); clog_info(mem); 
     //clog_info(F(" after:")); elog_info(freeMemory());
+    
+    // test single point deletions
+    pt->del_input(0);
+    assert(pt->get_int_input(0) == -42);
+    pt->del_input(0);
+    assert(strcmp(pt->get_str_input(0), "hello") == 0);
+    pt->del_input(0);
+    assert(pt->get_int_input(0) == -30000);
+    pt->del_input(0);
+    assert(mem == freeMemory()); // always make sure there are no memory leaks
+    
+    pt->put_input(42); //test clear data quick
     pt->clear_data();
     slog_info(F("after clear:")); elog_info(freeMemory());
     break;
@@ -135,6 +149,7 @@ PT_THREAD test1(pthread *pt_l, unsigned short tp){
     iferr_log_catch();
     assert(mem == freeMemory());
     break;
+    
   
   }
   assert(mem == freeMemory()); // always make sure there are no memory leaks

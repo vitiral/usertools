@@ -43,7 +43,7 @@ int get_user_int(){
 
 // Top Level Function
 void print_user_int(){
-  // shows teh use of the "catch" syntax. This is how
+  // shows the use of the "catch" syntax. This is how
   // all non-print error checking works (i.e. assert, assert_raise, etc)
   int user_int = get_user_int(); // expects to get an integer from the user
   iferr_log_catch();  // if there was an error, log it and go to error:
