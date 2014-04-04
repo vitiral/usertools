@@ -118,16 +118,29 @@ Summary
 \begin_layout Standard
 The threading.h library was created to make threading simpler for microcontroller
 s, while still using a very small footprint.
- It is integrated with the User Interface library (
-\begin_inset Quotes eld
-\end_inset
+ It can also be integreated with the User Interface (ui.h) library to create
+ a simple user interface
+\end_layout
 
-ui.h
-\begin_inset Quotes erd
-\end_inset
-
-), and it is recommended that you use that library instead of this one for
- simple projects, as it will provide a full user interface through the terminal.
+\begin_layout Standard
+This module supports threading through the 
+\shape italic
+protothreads
+\shape default
+ library.
+ Each function has an associated thread that can be called.
+ This library can make it significantly easier to manage multiple processes
+ with the.
+ See the 
+\series bold
+pt_led_example2
+\series default
+.
+ Also see 
+\series bold
+Userguide_protothreads 
+\series default
+for details on how to use protothreads.
 \end_layout
 
 \begin_layout Subsection*
@@ -137,7 +150,80 @@ Overview
 \begin_layout Itemize
 
 \series bold
-threading_loop() ::
+thread_setup(num_threads) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Must be called in the 
+\series bold
+setup
+\series default
+
+\begin_inset space ~
+\end_inset
+
+function, before any threads are exposed or called.
+ You must keep track of the number of variables, functions, and threads
+ you use and input them.
+ See 
+\begin_inset Quotes eld
+\end_inset
+
+pt_led_example2
+\begin_inset Quotes erd
+\end_inset
+
+ for an example.
+ The number can be higher than what you actually use (but uses more memory).
+\end_layout
+
+\begin_layout Itemize
+If you are using the ui.h module, use 
+\series bold
+ui_setup(T, F, V) 
+\series default
+instead
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+expose_thread(thread_function) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This exposes a thread and lets you schedule it later.
+\end_layout
+
+\begin_layout Itemize
+The function must be of type: uint8_t thfun(pthread *pt);
+\end_layout
+
+\begin_layout Itemize
+You must pay attention to the order that you expose threads, and not expose
+ more than the value you gave to thread_setup.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+schedule_thread(uint8_t thread_index) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Schedules a thread to be called by thread_loop
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+thread_loop() ::
 \end_layout
 
 \begin_deeper
@@ -159,210 +245,16 @@ ui_loop()
 \begin_layout Itemize
 
 \series bold
-ui_expose_variable(
-\begin_inset Quotes eld
-\end_inset
-
-var_name
-\begin_inset Quotes erd
-\end_inset
-
-, variable) ::
+kill_thread(uint8_t) ::
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-This exposes a variable.
- All the user has to do to read that variable is type 
-\begin_inset Quotes eld
-\end_inset
-
-?v var_name
-\begin_inset Quotes erd
-\end_inset
-
- + LINE_FEED and the value in hex will be printed out.
+the thread's pt is set to KILL.
+ When the thread is next called, it will jump to PT_KILL if it is defined,
+ or simply exit if it is not.
 \end_layout
 
 \end_deeper
-\begin_layout Itemize
-
-\series bold
-ui_expose_function(
-\begin_inset Quotes eld
-\end_inset
-
-func_name
-\begin_inset Quotes erd
-\end_inset
-
-, function) ::
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-This exposes a function.
- If the user types 
-\begin_inset Quotes eld
-\end_inset
-
-func_name input1 input2
-\begin_inset Quotes erd
-\end_inset
-
- + LINE_FEED the function will be called and sent 
-\begin_inset Quotes eld
-\end_inset
-
-input1 input2
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-The function must be of type 
-\begin_inset Quotes eld
-\end_inset
-
-void function(char *input)
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-ui_expose_thread(
-\begin_inset Quotes eld
-\end_inset
-
-thread_name
-\begin_inset Quotes erd
-\end_inset
-
-, thread_function) ::
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-This exposes a thread.
- If the user types 
-\begin_inset Quotes eld
-\end_inset
-
-thread_name input1 input2
-\begin_inset Quotes erd
-\end_inset
-
- + LINE_FEED the function will be called and sent 
-\begin_inset Quotes eld
-\end_inset
-
-input1 input2
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-the function must be of type 
-\begin_inset Quotes eld
-\end_inset
-
-PT_THREAD thread_function(pthread *pt, char *input)
-\begin_inset Quotes erd
-\end_inset
-
-
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-call_name(name, input) ::
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-calls the exposed thread or function of the specified name.
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-schedule_thread(name, function) ::
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-both exposes and calls the thread (do not use if you have already exposed
- the thread as it will duplicate it)
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-thread_setup(num_vars, num_functions, num_threads) ::
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Must be called in the 
-\series bold
-setup
-\series default
-
-\begin_inset space ~
-\end_inset
-
-function, before any threads are exposed or called.
- You must keep track of the number of variables, functions, and threads
- you use and input them.
- The number can be higher than what you actually use (but uses more memory).
-\end_layout
-
-\begin_layout Itemize
-If you are using the ui.h module, use 
-\series bold
-ui_setup(V, F, T) 
-\series default
-instead
-\end_layout
-
-\end_deeper
-\begin_layout Subsection*
-Threading
-\end_layout
-
-\begin_layout Standard
-This module supports threading through the 
-\shape italic
-protothreads
-\shape default
- library.
- Each function has an associated thread that can be called.
- This library can make it significantly easier to manage multiple processes
- with the run_thread(name, function) call.
- See the 
-\series bold
-threading_ex 
-\series default
-in the documentation for examples.
- Also see 
-\series bold
-README_pt.txt 
-\series default
-for information on how to use protothreads.
-\end_layout
-
 \end_body
 \end_document

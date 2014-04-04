@@ -27,9 +27,9 @@
 #define ERR_TYPE          50 // TypeErr
 #define ERR_VALUE         51 // ValueErr
 #define ERR_ASSERT        52 // AssertErr
-#define ERR_INDEX         54 // IndexErr
-#define ERR_MEMORY        55 // MemErr
-#define ERR_CRITICAL      56 // CRITErr
+#define ERR_INDEX         53 // IndexErr
+#define ERR_MEMORY        54 // MemErr
+#define ERR_CRITICAL      55 // CRITErr
 
 #define ERR_CLEARED       253 // "Cleared Error" used by clrerr_log and is then cleared
 #define ERR_NONEW         254 // NoNew -- error already printed

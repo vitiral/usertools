@@ -140,20 +140,6 @@ This is the Arduino errorhandling library, meant to make debugging and error
 \end_layout
 
 \begin_layout Subsection*
-Current Known Issues
-\end_layout
-
-\begin_layout Itemize
-
-\shape italic
-#include <SoftwareSerial.h>
-\shape default
- must be added before 
-\shape italic
-#include <errorhandling.h>
-\end_layout
-
-\begin_layout Subsection*
 Intended Use
 \end_layout
 
@@ -175,7 +161,7 @@ return checks
 \series default
  -- these do all your logging for you and set 
 \series bold
-derr
+errno
 \series default
  (the global error variable).
  They then return R.
@@ -197,9 +183,37 @@ goto error
 \end_layout
 
 \begin_layout Standard
-In the sub functions, you can then use noerr_log_return() to follow the
- stack trace down so you can see what called what.
+In the the calling functions, you can then noerr_log_return() to follow
+ the stack trace down so you can see what called what.
  This helps you keep track of where your code is giving errors.
+ For example, in 
+\begin_inset Quotes eld
+\end_inset
+
+errorhandling_ex1
+\begin_inset Quotes erd
+\end_inset
+
+ if you type 'x' (an invalid input), you will get:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+Input Int: :: [DBG]:M:1383(0 errorhandling_ex1.ino:37)|78 0 :: [ERR](50 errorhand
+ling_ex1.ino:25)|(50:TypeErr)120 :: [DBG]:M:1383(50 errorhandling_ex1.ino:39)|outi
+nt:-1 :: [ERR](50 errorhandling_ex1.ino:40)|(254:NoNewErr) :: [ERR](50 errorhandl
+ing_ex1.ino:49)|(254:NoNewErr) :: [DBG]:M:1444(50 errorhandling_ex1.ino:54)|Caught
+ Error :: [ERR](253 errorhandling_ex1.ino:55)|(253:ClredErr) 
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section*
@@ -653,6 +667,101 @@ clears error specifiers and logs that it did so
 \end_layout
 
 \end_deeper
+\begin_layout Itemize
+TRY(stuff) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+silences error printing if you are expecting an error.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+CATCH_ALL ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+intended to be used after try.
+ This will catch and clear all errors.
+ For example:
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+TRY(do_error());
+\end_layout
+
+\begin_layout Plain Layout
+
+CATCH_ALL{
+\end_layout
+
+\begin_layout Plain Layout
+
+  // Will only happen if there was an error.
+\end_layout
+
+\begin_layout Plain Layout
+
+  // Note that all errors are cleared.
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+CATCH_ERR(E) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Same as above, except it will catch a specific error
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+CATCH_ERR_N(E) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Will catch all errors except E
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+ELSE_CATCH_ERR(E), ELSE_CATCH_ERR_N(E) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Same as the above two, but used after another catch (kind of like an 
+\begin_inset Quotes eld
+\end_inset
+
+if else
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\end_deeper
 \begin_layout Section*
 Defined Errors
 \end_layout
@@ -710,7 +819,7 @@ is a special error used by clrerr_log() and is used to let the user know
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="21" columns="3">
+<lyxtabular version="3" rows="17" columns="3">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="top" width="0">
 <column alignment="center" valignment="top" width="0">
@@ -784,35 +893,6 @@ NoErr
 \begin_inset Text
 
 \begin_layout Plain Layout
-ERR_BASE
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-BaseErr
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 ERR_TIMEOUT
 \end_layout
 
@@ -842,7 +922,7 @@ TimeoutErr
 \begin_inset Text
 
 \begin_layout Plain Layout
-ERR_SERIAL
+ERR_COM
 \end_layout
 
 \end_inset
@@ -860,159 +940,14 @@ ERR_SERIAL
 \begin_inset Text
 
 \begin_layout Plain Layout
- SerialErr
+ ComErr
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ERR_SPI
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-4
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-SpiErr
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ERR_I2C
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-5
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-I2cErr
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ERR_COMMUNICATION
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-6
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ComErr
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ERR_CONFIG
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-7
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ConfigErr
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ERR_PIN
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-8
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-PinErr
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1021,16 +956,16 @@ ERR_INPUT
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-9
+4
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1161,7 +1096,7 @@ AssertErr
 \begin_inset Text
 
 \begin_layout Plain Layout
-ERR_TESTFAIL
+ERR_INDEX
 \end_layout
 
 \end_inset
@@ -1179,7 +1114,94 @@ ERR_TESTFAIL
 \begin_inset Text
 
 \begin_layout Plain Layout
-TestFail
+IndexErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_MEMORY
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+54
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+MemErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ERR_CRITICAL
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+55
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+CRITErr
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
 \end_layout
 
 \end_inset
@@ -1228,7 +1250,7 @@ ERR_CLEARED
 \begin_inset Text
 
 \begin_layout Plain Layout
-252
+253
 \end_layout
 
 \end_inset
@@ -1257,35 +1279,6 @@ ERR_NONEW
 \begin_inset Text
 
 \begin_layout Plain Layout
-253
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-NoNew 
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-ERR_EMPTY
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 254
 \end_layout
 
@@ -1295,7 +1288,7 @@ ERR_EMPTY
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+NoNew 
 \end_layout
 
 \end_inset
