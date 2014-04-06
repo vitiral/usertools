@@ -9,12 +9,11 @@
  
 #include <Arduino.h>
 
-#include "usertools.h"
-
 #ifdef UT_USE_SOFTSERIAL
 #include <SoftwareSerial.h>
 #endif
 
+#define LOGLEVEL 1
 #include "logging.h"
 #include "errorhandling.h"
 

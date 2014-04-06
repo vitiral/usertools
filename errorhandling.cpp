@@ -7,11 +7,11 @@
  */
  
 #include <Arduino.h>
-#include "usertools.h"
+
+#define LOGLEVEL 1
 #include "errorhandling.h"
 #include "logging.h"
 #include "MemoryFree.h"
-
 
 #define EH_GEN_END_MSG F(")|")
 #define EH_GEN_ST_MSG F(":: ")
@@ -45,12 +45,6 @@ void EH_printinfo(char *file, unsigned int line)
   L_print(file); 
   L_write(':'); 
   L_print(line);
-}
-
-void EH_void_fun(void *input){}
-void EH_try_end(){
-  L_silent -= 1;
-  errprint = errno;
 }
 
 void EH_printerrp(){

@@ -10,7 +10,7 @@
 
 #ifndef logging_h
 #define logging_h
-#include "usertools.h"
+//#include "usertools.h"
 #include <Stream.h>
 #include <string.h>
 
