@@ -129,11 +129,10 @@ protothreads
 \shape default
  library.
  Each function has an associated thread that can be called.
- This library can make it significantly easier to manage multiple processes
- with the.
+ This library can make it significantly easier to manage multiple processes.
  See the 
 \series bold
-pt_led_example2
+threading_led_example2
 \series default
 .
  Also see 

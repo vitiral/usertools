@@ -204,11 +204,42 @@ status open
 
 \begin_layout Plain Layout
 
-Input Int: :: [DBG]:M:1383(0 errorhandling_ex1.ino:37)|78 0 :: [ERR](50 errorhand
-ling_ex1.ino:25)|(50:TypeErr)120 :: [DBG]:M:1383(50 errorhandling_ex1.ino:39)|outi
-nt:-1 :: [ERR](50 errorhandling_ex1.ino:40)|(254:NoNewErr) :: [ERR](50 errorhandl
-ing_ex1.ino:49)|(254:NoNewErr) :: [DBG]:M:1444(50 errorhandling_ex1.ino:54)|Caught
- Error :: [ERR](253 errorhandling_ex1.ino:55)|(253:ClredErr) 
+Input Int: 
+\end_layout
+
+\begin_layout Plain Layout
+
+:: [DBG]:M:1383(0 errorhandling_ex1.ino:37)|78 0 
+\end_layout
+
+\begin_layout Plain Layout
+
+:: [ERR](50 errorhandling_ex1.ino:25)|(50:TypeErr)120
+\end_layout
+
+\begin_layout Plain Layout
+
+:: [DBG]:M:1383(50 errorhandling_ex1.ino:39)|outint:-1 
+\end_layout
+
+\begin_layout Plain Layout
+
+:: [ERR](50 errorhandling_ex1.ino:40)|(254:NoNewErr) 
+\end_layout
+
+\begin_layout Plain Layout
+
+:: [ERR](50 errorhandling_ex1.ino:49)|(254:NoNewErr) 
+\end_layout
+
+\begin_layout Plain Layout
+
+:: [DBG]:M:1444(50 errorhandling_ex1.ino:54)|Caught Error 
+\end_layout
+
+\begin_layout Plain Layout
+
+:: [ERR](253 errorhandling_ex1.ino:55)|(253:ClredErr) 
 \end_layout
 
 \end_inset

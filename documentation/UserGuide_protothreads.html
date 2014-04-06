@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name="generator" content="http://www.nongnu.org/elyxer/"/>
+<meta name="create-date" content="2014-04-06"/>
+<link rel="stylesheet" href="http://elyxer.nongnu.org/lyx.css" type="text/css" media="all"/>
+<title>Converted document</title>
+</head>
+<body>
+<div id="globalWrapper">
+<h1 class="title">
+<b>Protothread Library (pt)</b>
+</h1>
+<h2 class="author">
+Garrett Berg, Cloudform Design, garrett@cloudformdesign.com
+</h2>
+<div class="Standard">
+<b>LICENSE: </b>This library is released under the FreeBSD License, if you need a copy go to:<a class="URL" href=" http://www.freebsd.org/copyright/freebsd-license.html"> http://www.freebsd.org/copyright/freebsd-license.html</a>
+</div>
+<div class="Standard">
+<b>Copyright: </b>Garrett Berg <a class="URL" href="cloudformdesign.com">cloudformdesign.com</a>, <a class="URL" href="garrett@cloudformdesign.com">garrett@cloudformdesign.com</a>
+</div>
+<h1 class="Section-">
+<a class="toc" name="toc-Section--1"></a>Introduction
+</h1>
+<div class="Standard">
+Protothreads are extremely lightweight stackless threads designed for severely memory constrained systems such as small embedded systems or sensor network nodes. Protothreads can be used with or without an underlying operating system.
+</div>
+<div class="Standard">
+Protothreads provides a blocking context on top of an event-driven system, without the overhead of per-thread stacks. The purpose of protothreads is to implement sequential flow of control without complex state machines or full multi-threading.
+</div>
+<div class="Standard">
+Main features:
+</div>
+<ul>
+<li>
+No machine specific code - the protothreads library is pure C
+</li>
+<li>
+Does not use error-prone functions such as longjmp()
+</li>
+<li>
+Very small RAM overhead - only four bytes per protothread
+</li>
+<li>
+Can be used with or without an OS
+</li>
+<li>
+Provides blocking wait without full multi-threading or stack-switching
+</li>
+<li>
+Freely available under a BSD-like open source license 
+</li>
+
+</ul>
+<div class="Standard">
+Example applications:
+</div>
+<ul>
+<li>
+Memory constrained systems 
+</li>
+<li>
+Event-driven protocol stacks
+</li>
+<li>
+Small embedded systems
+</li>
+<li>
+Sensor network nodes
+</li>
+
+</ul>
+<div class="Standard">
+The original protothreads library was released under an open source BSD-style license that allows for both non-commercial and commercial usage. The only requirement was that the following credit be given:
+</div>
+<div class="Standard">
+<b>The protothreads library was written by Adam Dunkels &lt;adam@sics.se&gt; with support from Oliver Schmidt &lt;ol.sc@web.de&gt;</b>. <b>Adam Dunkels, 3 June 2006 </b>
+</div>
+<div class="Standard">
+<b>More information and new versions of their library can be found at the protothreads homepage: http://www.sics.se/~adam/pt/</b>
+</div>
+<div class="Standard">
+This is a rework of their protothread library to offer significantly more features at only minimal changes to memory. It is intended to be used with <b>threading.h </b>or <b>ui.h</b> (user interface).
+</div>
+<h1 class="Section-">
+<a class="toc" name="toc-Section--2"></a>Overview
+</h1>
+<div class="Standard">
+There are several things to keep in mind when using protothreads:
+</div>
+<ul>
+<li>
+Every time you &ldquo;yield&rdquo; to the outside system, your function is being left. When it is called again, the pthread functions will return you to your yielded spot. However, <b>all</b> <b>non-static data will be lost. </b>Functions like &ldquo;put_input&rdquo; have been created to make this problem less significant, and allow you to use the same function for multiple threads.
+</li>
+
+</ul>
+<div class="Standard">
+See the example <b>pt_example_led1 </b>to see protothreads in action. Also look at the other <b>led examples</b> to see more comples uses of threading and protothreads.
+</div>
+<h2 class="Subsection-">
+<a class="toc" name="toc-Subsection--1"></a><b>Function Calls</b>
+</h2>
+<ul>
+<li>
+<b>PT_INIT(pt) ::</b><ul>
+<li>
+Call to reinitialize a protothread. You should hardly ever have to do this.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_BEGIN(pt) ::</b><ul>
+<li>
+The start of a protothreaded function. Should be called immediately after variable initializations.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_END(pt) ::</b><ul>
+<li>
+The end of a protothread. Nothing should be called after this.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_WAIT_UNTIL(pt, condition) ::</b><ul>
+<li>
+Blocks and waits until the condition is true
+</li>
+<li>
+Block == No code after this statement will run until the condition is true.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_WAIT_WHILE(pt, condition) ::</b><ul>
+<li>
+Blocks and waits while the condition is true.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_WAIT_MS(pt, ms) ::</b><ul>
+<li>
+Blocks until at least <b>ms</b> milliseconds has passed (approximately, depends on other functions not taking up much time)
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_WAIT_THREAD(pt, thread) ::</b><ul>
+<li>
+Block and wait until a child protothread completes. For instance: PT_WAIT_THREAD(pt, call_other_thread(pt2));
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_SPAWN(pt, thread_function) ::</b><ul>
+<li>
+Automatically creates a temporary thread and calls thread function with it.
+</li>
+<li>
+Blocks until that thread is complete.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_EXIT(pt) ::</b><ul>
+<li>
+signal to the outside to set thread innactive. Ends thread activity.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_YIELD(pt) ::</b><ul>
+<li>
+The most common call. Yields for one cycle.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_YIELD_VALUE(pt, value) ::</b><ul>
+<li>
+same as <b>pt-&gt;clear_output(); pt-&gt;put_output(value); PT_YIELD(pt);</b>
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>PT_KILLED(pt) ::</b><ul>
+<li>
+Note: Does NOT kill the protothread. Use this just before <b>PT_END(pt)</b>. If an outside function kills the protothread, the code will jump here first. Use this to do cleanup (such as free memory, set pins to input, etc.)
+</li>
+<li>
+Note: once the thread has been killed, <b>all data is lost</b>. So all <b>pt_get_input(index)</b>/output will be gone.
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+<h2 class="Subsection-">
+<a class="toc" name="toc-Subsection--2"></a><b>Classes</b>
+</h2>
+<div class="Standard">
+<b>pthread</b>
+</div>
+<ul>
+<li>
+This is the standard protothread object. This is what keeps track of the position in calls and also of input and output data. There are only a couple of functions you need to worry about.
+</li>
+<li>
+<b>pthread.put_input(value) ::</b><ul>
+<li>
+put an integer or string into the &ldquo;input&rdquo; buffer.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.get_int_input(index) ::</b><ul>
+<li>
+get an integer from index. Note that the first item put in is index = 0, second item is index = 1, etc.
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.get_str_input(index) ::</b><ul>
+<li>
+returns a character array pointer at index
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.get_type_input(index) ::</b><ul>
+<li>
+returns the type of the index. What you should be concerned about are:<ul>
+<li>
+type &lt; vt_max == value is an integer
+</li>
+<li>
+type == vt_str == value is a string (character array)
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.clear_input() ::</b><ul>
+<li>
+clears all input values
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.del_input(index) ::</b><ul>
+<li>
+deletes input value at index. Note that all values above this will have 1 less index
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.put_output(value), get_xxx_output(index), etc ::</b><ul>
+<li>
+same as input
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.clear_data() ::</b><ul>
+<li>
+clears ALL data (input, output, and temp).
+</li>
+
+</ul>
+
+</li>
+<li>
+<b>pthread.print() ::</b><ul>
+<li>
+useful when debugging your code. Gives a list of all data and their values.
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+<div class="Standard">
+<b>Common Code:</b>
+</div>
+<div class="Standard">
+<b>Known Input Type:</b>
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing">uint8_t mythread(pthread *pt){
+  uint16_t myint = pt-&gt;get_int_input(0);
+  iferr_log_catch(); // catch errors.
+  
+  // YOUR CODE HERE
+​
+  return good_value;
+error:
+  return bad_value;
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+<b>Unknown Input Types:</b>
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing">uint8_t mythread(pthread *pt){
+  // demonstrates how to determine if the first index of the input is a string or an integer.
+​
+  uint8_t type = pt-&gt;get_type_input(0);  // get the type
+  iferr_log_catch(); // make sure there were no errors
+​
+  if(type &lt; vt_maxint) uint16_t myint = pt-&gt;get_int_input(0); // it is an int
+​
+  else if(type == vt_str) char *mystr = get_function(pt-&gt;get_str_input(0)); // it is a string
+​
+  else assert(0); // errorhandling — we don’t know what it was
+​
+  // YOUR CODE HERE
+​
+  return good_value;
+error:
+  // clean up
+  return bad_value;
+}
+</pre>
+</div>
+
+</div>
+
+<hr class="footer"/>
+<div class="footer" id="generated-by">
+Document generated by <a href="http://elyxer.nongnu.org/">eLyXer 1.2.3 (2011-08-31)</a> on <span class="create-date">2014-04-06T16:29:59.199225</span>
+</div>
+</div>
+</body>
+</html>

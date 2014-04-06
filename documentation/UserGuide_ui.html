@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name="generator" content="http://www.nongnu.org/elyxer/"/>
+<meta name="create-date" content="2014-04-06"/>
+<link rel="stylesheet" href="http://elyxer.nongnu.org/lyx.css" type="text/css" media="all"/>
+<title>Converted document</title>
+</head>
+<body>
+<div id="globalWrapper">
+<h1 class="title">
+<b>User Interface (ui) for the Arduino</b>
+</h1>
+<h2 class="author">
+Garrett Berg, Cloudform Design, garrett@cloudformdesign.com
+</h2>
+<div class="Standard">
+<b>LICENSE: </b>This library is released under the FreeBSD License, if you need a copy go to:<a class="URL" href=" http://www.freebsd.org/copyright/freebsd-license.html"> http://www.freebsd.org/copyright/freebsd-license.html</a>
+</div>
+<div class="Standard">
+<b>Copyright: </b>Garrett Berg <a class="URL" href="cloudformdesign.com">cloudformdesign.com</a>, <a class="URL" href="garrett@cloudformdesign.com">garrett@cloudformdesign.com</a>
+</div>
+<h1 class="Section-">
+<a class="toc" name="toc-Section--1"></a>Introduction
+</h1>
+<div class="Standard">
+There was once upon a time when I tried to code my own user interface. It went a little something like this:
+</div>
+<div class="Standard">
+<div class="listing">
+<pre class="listing">void mythread(){
+  static int place = 0;
+  if(place) == 0){
+    do something...
+    place = 1;
+  }
+  if(place == 1)
+     something else;
+     place = 2;
+  ... etc.
+}
+​
+void loop(){
+  mythread();
+}
+</pre>
+</div>
+
+</div>
+<div class="Standard">
+This way of doing things had serious flaws, too many to go into. 
+</div>
+<div class="Standard">
+Then I came across the protothreads library (included in this folder as <b>pt.h</b>) and everything was better... or was it.
+</div>
+<div class="Standard">
+I still wanted to be able to actually <i>interface</i> with my functions and variables through the command terminal.
+</div>
+<div class="Standard">
+So, to do this I wrote <b>threads.h</b> and <b>ui.h</b>. With these two libraries it is now possible to:
+</div>
+<ul>
+<li>
+Create threads easily — a thread is a function that will be called frequently, who’s status can be observed externally, and who can be killed by the implemented task manager. Threads are easy to create and much easier to maintain than doing similar things any other way.
+</li>
+<li>
+Access variables easily : expose_variable(variable) and you can access it with &ldquo;v myvar&rdquo; on the serial terminal, or set with &ldquo;v myvar value&rdquo;
+</li>
+<li>
+Call functions: same as exposing variables.
+</li>
+
+</ul>
+<h1 class="Section-">
+<a class="toc" name="toc-Section--2"></a>Overview
+</h1>
+<div class="Standard">
+Please see UserGuide_threading.h for the functions that you can call. See the example <b>ui_led_example4 </b>for code examples.
+</div>
+<div class="Standard">
+The best way to see the power of the threading module is to see it in action. Do the following:
+</div>
+<ul>
+<li>
+Load up <b>ui_led_example4</b>
+</li>
+<li>
+Program it to your arduino
+</li>
+<li>
+Set your baud rate = 57600 and set it to send both NR and CR characters on each enter.
+</li>
+<li>
+Play with it!<ul>
+<li>
+type <b>&ldquo;?</b>&rdquo; to get info on commands you can type.
+</li>
+<li>
+"<b>v sub_time 500</b>" — you will see the led’s blink much faster (500ms is being taken off both periods)
+</li>
+<li>
+"<b>v sub_time</b>" — get the value of sub_time in hex
+</li>
+<li>
+"<b>v sub_time 0</b>" — set it back to 0 (slow blinking)
+</li>
+<li>
+"<b>k led1</b>" — will make it so that only 1 thread is blinking (blinks at period of 900ms)
+</li>
+<li>
+<b>&ldquo;k led2&rdquo; </b>-- everything will be killed (no blinking)
+</li>
+<li>
+<b>&ldquo;reinit&rdquo; </b>-- calls the reinit function, everything will be set to default values!
+</li>
+
+</ul>
+
+</li>
+<li>
+Check out the code and read the documentation to see how things are working!
+</li>
+<li>
+Check out the other documentation:<ul>
+<li>
+<b>UserGuide_errorhandling</b> is how you can generate error messages and do error handling. It also has logging.
+</li>
+<li>
+<b>UserGuide_threading</b> is a useful reference on how to create your threads
+</li>
+<li>
+<b>UserGuide_pt </b>The protothread library is how you create your threads — it would be helpful to read this.
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+<h1 class="Section-">
+<a class="toc" name="toc-Section--3"></a>Serial Port
+</h1>
+<div class="Standard">
+Threading operates as simply as it possibly can. You can access either functions or variables through it’s interface. In summary:
+</div>
+<ul>
+<li>
+The following terminal commands are supported:<ul>
+<li>
+<b>v</b> ::VARNAME&rdquo; — Gives you the value of variable VARNAME in hex that you have exposed
+</li>
+<li>
+<b>? :: </b>print all options for threads, variables and function calls.
+</li>
+<li>
+<b>k [process name] :: </b>kills the indicated process name
+</li>
+<li>
+<b>(exposed function) [input] :: </b>calls a function that you have exposed. Sends it input
+</li>
+<li>
+<b>t (exposed thread) [input] :: </b>calls an exposed thread, sends it input
+</li>
+
+</ul>
+
+</li>
+
+</ul>
+
+<hr class="footer"/>
+<div class="footer" id="generated-by">
+Document generated by <a href="http://elyxer.nongnu.org/">eLyXer 1.2.3 (2011-08-31)</a> on <span class="create-date">2014-04-06T16:40:42.640495</span>
+</div>
+</div>
+</body>
+</html>
