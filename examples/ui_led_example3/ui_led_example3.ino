@@ -13,8 +13,9 @@
  */
 
 
-#define DEBUG
 #include <ui.h>           // include protothread library
+#include <MemoryFree.h>
+#include <errorhandling.h>
 
 #define LEDPIN 13  // LEDPIN is a constant 
 
@@ -49,6 +50,7 @@ void setup() {
   Serial.begin(57600);
   
   Serial.println("\n\n#########################  Start Setup");
+  EH_test();
   
   // You must always begin the setup with this call. The inputs are
   // the numbers of exposed:
@@ -58,13 +60,13 @@ void setup() {
   // This sets the thread names so that you can access them more easily over the terminal.
   // You can abstain from doing this (it will save some space in program memory) BUT if you call them, you need to have the right number.
   // For instance, it would be bad if I only made an name for "led1".
-  set_thread_names(F("led1"), F("led2"));
+  set_thread_names(F("led1"), F("led2")); //LED1, LED2
   default_function_names_only();  // this lets us use the default user interface to schedule threads, kill threads, etc. USE ONLY IF YOU HAVE NO FUNCTIONS
   
   // Expose the things we want to access.
   // Make sure you expose things in the correct order.
-  expose_thread(blinky_thread);
-  expose_thread(blinky_thread);
+  expose_thread(blinky_thread); //LED1
+  expose_thread(blinky_thread); //LED2
   
   thread *th;
   
@@ -79,6 +81,8 @@ void setup() {
   
   // You must always end the setup with this call
   ui_end_setup();
+  Serial.println(freeMemory());
+  
 }
 
 

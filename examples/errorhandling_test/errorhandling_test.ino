@@ -20,9 +20,11 @@ ByteBuffer failbuffer;
 void setup(){
   failbuffer.init(100);
   setup_std();
+  EH_test();
   //setup_soft();
   log_info("setup");
-  debug("Testing Debug");
+  debug("Testing Debug:");
+  debug(LOGLEVEL);
   
   uint16_t mem;
   uint16_t time = micros();
@@ -43,7 +45,7 @@ void nothing(){}
 void setup_soft(){
   SoftSerial.begin(57600);
   SoftSerial.println("Started Soft Serial");
-  Logger.config_soft(&SoftSerial);
+  L_config_soft(&SoftSerial);
 }
 */
 
@@ -180,7 +182,7 @@ unsigned short test1(unsigned short tp){
     // Testing log level printing
     tobreak = true;
     
-    Logger.println(":: You shouldn't see anything...");
+    L_println(":: You shouldn't see anything...");
     set_loglevel(LOG_SILENT);
     debug("debug");
     log_info("info");
@@ -188,7 +190,7 @@ unsigned short test1(unsigned short tp){
     EH_ST_raisem(ERR_UNKNOWN);
     clrerr_log();
     
-    Logger.println(":: Now only errors");
+    L_println(":: Now only errors");
     set_loglevel(LOG_ERROR);
     debug("debug");
     log_info("info");
@@ -196,7 +198,7 @@ unsigned short test1(unsigned short tp){
     EH_ST_raisem(ERR_UNKNOWN);
     clrerr_log();
     
-    Logger.println(":: errors + info");
+    L_println(":: errors + info");
     set_loglevel(LOG_INFO);
     debug("debug");
     log_info("info");
@@ -204,7 +206,7 @@ unsigned short test1(unsigned short tp){
     EH_ST_raisem(ERR_UNKNOWN);
     clrerr_log();
     
-    Logger.println(":: should see all 3");
+    L_println(":: should see all 3");
     set_loglevel(LOG_DEBUG);
     debug("debug");
     log_info("info");
@@ -214,13 +216,13 @@ unsigned short test1(unsigned short tp){
     
     break;
   case 23:
-    Logger.println("Should see nothing...");
-    Logger.silent = true;
+    L_println("Should see nothing...");
+    L_set_silent(true);
     log_err("FAIL");
     log_info("FAIL");
     debug("FAIL");
-    Logger.println("FAIL");
-    Logger.silent = false;    
+    L_println("FAIL");
+    L_set_silent(false);    
     break;
     
   case 24:
@@ -273,7 +275,7 @@ unsigned short test1(unsigned short tp){
     CATCH_N(ERR_ASSERT){
       assert(0);
     }
-    assert(errno == ERR_ASSERTGI);
+    assert(errno == ERR_ASSERT);
     clrerr();
     
   default:
@@ -294,34 +296,34 @@ error:
 void loop(){
   int out;
   int failures = 0;
-  Logger.println("\n\n\n\n");
-  Logger.println("Testing Standard:");
+  L_println("\n\n\n\n");
+  L_println("Testing Standard:");
   for(int n = 0; n <= T1_TESTS; n++){
-    Logger.flush();
-    Logger.print("Testcase:");
-    Logger.println(n);
+    L_flush();
+    L_print("Testcase:");
+    L_println(n);
 
     clrerr();
     out = test1(n);
     if(out){
-      Logger.println("*** FAILURE ***");
+      L_println("*** FAILURE ***");
       failures++;
       failbuffer.put(n);
     }
     else{
-      Logger.println("*** Success ***");
+      L_println("*** Success ***");
     }
   }
 
-  Logger.println("##### Tests Done #####");
-  Logger.println(String("Results: ") + String(failures) + String(" failures out of: ") + String(T1_TESTS));
+  L_println("##### Tests Done #####");
+  L_println(String("Results: ") + String(failures) + String(" failures out of: ") + String(T1_TESTS));
   if(failbuffer.getSize()) {
-    Logger.println(String("Failed cases:"));
+    L_println(String("Failed cases:"));
   }
 
   while(failbuffer.getSize() > 0){
-    Logger.print((unsigned short)failbuffer.get());
-    Logger.print(", ");
+    L_print((unsigned short)failbuffer.get());
+    L_print(", ");
   } 
   while(true);
 }

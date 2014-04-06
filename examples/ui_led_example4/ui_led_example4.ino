@@ -18,7 +18,6 @@
  */
 
 
-#define DEBUG
 #include <ui.h>           // include protothread library
 
 #define LEDPIN 13  // LEDPIN is a constant 
@@ -97,35 +96,35 @@ void setup() {
   Serial.println("\n\n#########################  Start Setup");
   
   // You must always begin the setup with this call. The inputs are
-  // the numbers of exposed:
-  // threads, functions, variables
+  // the numbers of exposed: threads, functions, variables
   ui_setup_std(NUM_THREADS, NUM_FUNCS, NUM_VARS);
   
+  // This is used to set the thread names, so they can be more
+  // easily accessed in the terminal.
   set_thread_names(F("led1"), F("led2"));
   set_function_names(F("reinit"));
   set_variable_names(F("sub"));
   
   // Expose the things we want to access.
   // Threads always need to be exposed if you want to schedule them
-  expose_thread(blinky_thread);
-  expose_thread(blinky_thread);
+  // Note: the order is important!
+  expose_thread(blinky_thread); // TH_LED1
+  expose_thread(blinky_thread); // TH_LED2
   
-  expose_function(reinit);
-  expose_variable(sub_time);
+  // we can also expose functions and variables to be called from the command line
+  expose_function(reinit);  // REINIT
+  expose_variable(sub_time);  // SUB_TIME
   
-  // This function doesn't actually use it's input, but it still needs it to be added to the ui
-  // Here it has two purposes: it initilizes the values during setup, and it can be called
+  // This has two purposes: it initilizes the values during setup, and it can be called
   // by the user to reinitilize the values.
-  reinit(NULL); 
+  reinit(NULL); // Note: NULL is only used because the function doesn't actually use it's pthread input.
   
   // You must always end the setup with this call
   ui_end_setup();
 }
 
 void loop() {
-  static uint32_t time = millis();
   ui_loop();
-  
 }
 
 

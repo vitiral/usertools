@@ -12,12 +12,22 @@
  
 #include "usertools.h"
 
+#ifndef LOGLEVEL
+#ifndef DEBUG
+  #define LOGLEVEL 30
+#endif
+#endif
+
+#if LOGLEVEL < 30
+  #define LOGLEVEL 30
+#endif
+
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 
-#include <SoftwareSerial.h>
+#include "logging.h"
 #include "errorhandling.h"
 
 #include "ui.h"
@@ -29,6 +39,7 @@
 #include <avr/interrupt.h>
 
 #define LEDPIN 2
+
 
 
 uint8_t cmd_print_options(pthread *pt);

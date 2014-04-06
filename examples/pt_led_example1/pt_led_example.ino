@@ -17,7 +17,6 @@
 // directly in a similar way to the thread_loop in
 // threading.
 
-#include <SoftwareSerial.h> // BUG: this has to be included
 #include <pt.h>   // include protothread library
 
 #define LEDPIN 13  // LEDPIN is a constant 
