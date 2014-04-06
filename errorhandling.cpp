@@ -7,7 +7,6 @@
  */
  
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include "usertools.h"
 #include "errorhandling.h"
 #include "logging.h"
