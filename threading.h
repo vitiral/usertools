@@ -42,36 +42,29 @@ typedef struct TH_ThreadArray{
 // #####################################################
 // ### Initialization Macros
 extern TH_ThreadArray TH__threads;
-
 extern uint8_t th_loop_index;
 
-#define thread_setup(T) do{                                         \
-      static TH_fake_thread TH__thread_array[T];                        \
-      TH__set_thread_array((thread *) TH__thread_array, T);  \
-    }while(0)
+#define expose_threads(...) do{     \
+  static PROGMEM TH_funptr TH_THREAD_FUNPTRS[] = {__VA_ARGS__, NULL};
+  TH__setup_threads(TH_THREAD_FUNPTRS);
+// Eventually I want to use this method:
+// 
+// This will make it so that:
+//  - threads will take up half the memory
+//  - functions and variables in ui will take up NO MEMORY.
 
+      
+#define expose_threads(...) 
 //#define thread_function(name, func)  do{static thread name; schedule_thread(name, func)}while(0) 
 
-uint8_t thread_ui_loop();
+
 uint8_t thread_loop();
 
-// #####################################################
-// ### Macro Helpers
 
-void TH__set_thread_array(thread *fray, uint16_t len);
-
-
-
-// #####################################################
-// ### User Functions
 
 
 // #####################################################
 // ### Package Access
-
-thread *expose_thread(TH_funptr fptr);
-
-thread *expose_schedule_thread(TH_funptr fun);
 
 thread *get_thread(uint8_t el_num);
 uint8_t get_index(thread *th);

@@ -566,7 +566,7 @@ void UI__setup_std(){
   expose_function(cmd_v);
   expose_function(cmd_kill);
   
-  cmd_print_options((pthread *) 10);
+  cmd_print_options(NULL);
   
   //ui_wdt_setup();
 }

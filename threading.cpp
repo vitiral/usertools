@@ -23,86 +23,79 @@
 //#include "ui.h"
 
 #define MAX_STR_LEN 100
-
+#define MAX_THREADS 254
 // #####################################################
 // ### Globals
 
-TH_ThreadArray TH__threads = {0, 0, 0};
+//TH_ThreadArray TH__threads = {0, 0, 0};
+TH_funptr *TH_thread_funptrs = NULL;
+pthread *TH__threads = NULL;
+
+uint8_t get_len(TH_funptr *thfptrs){
+  for(uint16_t i = 0; thfptrs[i]; i++);
+  return i;
+}
+
+void TH__setup_threads(TH_funptr *thfptrs){
+  int16_t i, n;
+  assert(thfptrs);
+  TH_thread_funptrs = thfptrs;
+  i = get_len(thfptrs);
+  assert(i <= MAX_THREADS);
+  TH__threads = (pthread *)malloc(sizeof(pthread) * i);
+  memcheck(TH__threads);
+  for(n = 0; n < i; n++){
+    PT_INIT(TH__threads[n]);
+  }
+  return;
+error:
+  memclr(TH__threads);
+  return;
+}
 
 uint8_t th_loop_index = 255;
 
 // #####################################################
-// ### Exported Functions
-
-// *******************************
-// **** Macro Helpers
-void TH__set_thread_array(thread *fray, uint16_t len){
-  assert_raise_return(len < TH__MAX_ARRAY_LEN, ERR_VALUE);
-  TH__threads.array = fray;
-  TH__threads.len = len;
-  for(uint8_t i = 0; i < len; i++){
-    TH__threads.array[i].fptr = NULL;
-    TH__threads.array[i].pt.lc = PT_INNACTIVE;
-  }
-}
-
-
-// #####################################################
 // ### Package Access
 
-uint8_t get_index(thread *th){
-  return ((uint8_t *)th - (uint8_t *)TH__threads.array) / sizeof(thread);
+
+uint8_t get_index(pthread *th){
+  return ((uint8_t *)th - (uint8_t *)TH__threads) / sizeof(pthread);
 }
 
-thread *expose_thread(TH_funptr fptr){
-  debug(F("ExpTh"));
-  assert(TH__threads.index < TH__threads.len);
-  assert_raise(TH__threads.array, ERR_VALUE); // assert not null
-
-  TH__threads.array[TH__threads.index].fptr = fptr;
-  TH__threads.array[TH__threads.index].pt.lc = PT_INNACTIVE;
-  assert(TH__threads.array[TH__threads.index].pt.data == NULL);
-  
-  sdebug(F("Added T:")); edebug(TH__threads.index);
-  TH__threads.index++;
-  return &(TH__threads.array[TH__threads.index - 1]);
-error:
-  return NULL;
-}
-
-uint8_t is_active(thread *th){
-  if (th->pt.lc == PT_INNACTIVE) return false;
+uint8_t is_active(pthread *th){
+  if (th.lc == PT_INNACTIVE) return false;
   else return true;
 }
 
 uint8_t thread_exists(thread *th){
   if(th == NULL) return false;
-  uint32_t x = ((uint8_t *)th - (uint8_t *)TH__threads.array);
+  uint32_t x = ((uint8_t *)th - (uint8_t *)TH__threads);
   if(x % sizeof(thread) != 0){
     return false;
   }
-  if(x / sizeof(thread) >= TH__threads.index){
+  if(x / sizeof(thread) >= get_len(TH_thread_funptrs){
     return false;
   }
   return true;
 }
 
 void set_thread_innactive(thread *th){
-  th->pt.lc = PT_INNACTIVE;
-  th->pt.clear_data();
+  th->lc = PT_INNACTIVE;
+  th->clear_data();
   slog_info("Tna:"); elog_info(get_index(th));
 }
 
-uint8_t schedule_thread(thread *th){
+uint8_t schedule_thread(pthread *th){
   uint8_t out = false;
   
   sdebug(F("schT:")); edebug(get_index(th));
   assert(thread_exists(th));
   assert_raise(not is_active(th), ERR_VALUE, 0);
   debug("Init");
-  PT_INIT(&(th->pt));
-  assert(th->fptr);
-  out = th->fptr(&(th->pt));
+  PT_INIT(th);
+  assert(TH_thread_funptrs[get_index(th)])
+  out = TH_thread_funptrs[get_index(th)](th);
   if(out >= PT_EXITED){
     set_thread_innactive(th);
     out = true;
@@ -117,30 +110,23 @@ error:
 }
 
 uint8_t schedule_thread(uint8_t el_num){
-  thread *th = get_thread(el_num);
+  pthread *th = get_thread(el_num);
   assert_raise_return(th, ERR_VALUE, false);
   schedule_thread(th);
   return true;
 }
 
-thread *expose_schedule_thread(TH_funptr fun){
-  thread *th = expose_thread(fun);
-  iferr_log_return(NULL);
-  schedule_thread(th);
-  return th;
-}
-
-thread *get_thread(uint8_t el_num){
+pthread *get_thread(uint8_t el_num){
   assert_raise_return(el_num < TH__threads.index, ERR_INDEX, NULL);
-  return &TH__threads.array[el_num];
+  return &TH__threads[el_num];
 }
 
-void kill_thread(thread *th){
-  th->pt.lc = PT_KILL_VALUE;
+void kill_thread(pthread *th){
+  th->lc = PT_KILL_VALUE;
 }
 
 void kill_thread(uint8_t el_num){
-  thread *th = get_thread(el_num);
+  pthread *th = get_thread(el_num);
   assert_raise_return(th, ERR_VALUE);
   kill_thread(th);
 }
@@ -148,7 +134,7 @@ void kill_thread(uint8_t el_num){
 uint8_t thread_loop(){
   uint16_t init_lc;
   uint8_t fout;
-  thread *th;
+  pthread *th;
   
   // ***** don't try this at home kids ********
   static struct PTsmall pt = {0};
@@ -157,13 +143,14 @@ uint8_t thread_loop(){
   PT_BEGIN((ptsmall *)(&pt));
   while(true){
     PT_YIELD((ptsmall *)(&pt));
-    for(th_loop_index = 0; th_loop_index < TH__threads.index; th_loop_index++){
-      th = &TH__threads.array[th_loop_index];
-      init_lc = th->pt.lc;
+    for(th_loop_index = 0; TH_thread_funptrs[th_loop_index]; th_loop_index++){
+      
+      th = TH__threads[th_loop_index];
+      init_lc = th->lc;
       if(init_lc == PT_INNACTIVE) continue;
       assert(th->fptr, th_loop_index);    // NOT NULL PTR
       
-      fout = th->fptr(&(th->pt));
+      fout = th->fptr(th);
 
       if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){
         if(fout < PT_EXITED){
