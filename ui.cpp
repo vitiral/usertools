@@ -11,7 +11,7 @@
  
  
 #include "usertools.h"
-
+/*
 #ifndef LOGLEVEL
 #ifndef DEBUG
   #define LOGLEVEL 30
@@ -324,12 +324,12 @@ void ui_wdt_setup(void)
 }
 
 
-/*
+
 //Activating watchdog UI
-ISR(WDT_vect) {
-   ui_watchdog();
-}
-*/
+//ISR(WDT_vect) {
+//   ui_watchdog();
+//}
+
 
 
 void ui_pat_dog(){
@@ -411,12 +411,12 @@ uint8_t cmd_v(pthread *pt){
   CATCH_ALL{}
   else{
     assert(sizeof(vint) >= var->size);
-    /*  // this would be for large values first (big endian)
-    for(i = 1; i <= var->size; i++){
-      // move the values at the end onto the variable. Truncate rest.
-      ((uint8_t *)var->vptr)[var->size - i] = ((uint8_t *)vint)[sizeof(vint) - i];
-    }
-     * */
+//      // this would be for large values first (big endian)
+//    for(i = 1; i <= var->size; i++){
+//      // move the values at the end onto the variable. Truncate rest.
+//      ((uint8_t *)var->vptr)[var->size - i] = ((uint8_t *)vint)[sizeof(vint) - i];
+//    }
+    
     // Little Endian
     memcpy(var->vptr, &vint, var->size);
   }
@@ -501,14 +501,6 @@ PT_THREAD user_interface(pthread *pt){
     goto done;
   }
   
-  /*
-  if(buffer == NULL){
-    buffer = (char *)malloc(MAX_STR_LEN);
-    memcheck(buffer);
-    buffer[0] = 0;
-  }
-   * */
-  
   if(L_available()){
     while(L_available()){
       c = L_read();
@@ -533,8 +525,6 @@ PT_THREAD user_interface(pthread *pt){
 done:
 error:
   sdebug(F("Bp:")); edebug((uint16_t)buffer);
-  //memclr(buffer);
-  //assert(buffer == NULL);
   i = 0;
   return PT_YIELDED;
 }
@@ -571,5 +561,6 @@ void UI__setup_std(){
   //ui_wdt_setup();
 }
 
+ * */
 
 
