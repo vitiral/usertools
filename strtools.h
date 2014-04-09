@@ -31,5 +31,10 @@ long int get_int(char *c);
 long int _get_int(char **c);
 
 
+
+void print_strnames();
+void showString (PGM_P s);
+void set_strname(PGM_P *s);
+
 #endif
 

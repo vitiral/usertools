@@ -14,6 +14,7 @@
 #include "threading.h"
 #include "strtools.h"
 
+#include <avr/pgmspace.h>
 
 // #####################################################
 // ### Useful Functions
@@ -156,4 +157,56 @@ double get_float(char *c){
 }
 
 
+/*
+void showString (PGM_P s) {
+    char c;
+    while ((c = pgm_read_byte(s++)) != 0){
+        Serial.print((uint8_t)c, HEX); Serial.write(' ');
+    }
+}
 
+//extern PROGMEM const prog_char *strnames[];
+
+
+PGM_P get_pointer(PGM_P s, uint8_t index){
+  char c;
+  uint16_t ptr;
+  uint8_t i = 0;
+  s += index * 2;
+  while ((c = pgm_read_byte(s++)) != 0){
+      ptr = c << (8* i);
+      i++;
+  }
+  return (PGM_P) ptr;
+}
+
+
+PGM_P *mystrnames = NULL;
+void set_strname(PGM_P *s) {
+  mystrnames = s;
+  Serial.println("GOT");
+  //Serial.println((const __FlashStringHelper **)mystrnames[0]);
+    Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)mystrnames, 0));
+    Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)mystrnames, 1));
+    Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)s, 0));
+    Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)s, 1));
+  //Serial.println(s[0]);
+}
+
+void print_mystrnames(){
+  Serial.println("in mystrnames");
+  Serial.println((uint32_t)mystrnames);
+  Serial.println((uint32_t)mystrnames[0]);
+  
+  showString(mystrnames[0]);
+  Serial.println();
+  Serial.println((const __FlashStringHelper *)mystrnames[0]);
+  Serial.println((const __FlashStringHelper *)mystrnames[1]);
+  
+  Serial.println("read bytes names:");
+  Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)mystrnames, 0));
+  Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)mystrnames, 1));
+  
+}
+
+ * */

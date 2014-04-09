@@ -13,6 +13,7 @@
 #include "usertools.h"
 #include "pt.h"
 
+
 // #####################################################
 // ### Struct Declaration
 
@@ -30,7 +31,8 @@ extern uint8_t th_loop_index;
 
 void TH__setup_threads(const TH_funptr *thfptrs);
 
-#define expose_threads(...)  const TH_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}
+#define TH_F(T)   {&T}
+#define expose_threads(...)  PROGMEM const TH_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}
 #define setup_threading() TH__setup_threads(_TH__THREAD_FUNPTRS)
 
 // Eventually I want to use this method:

@@ -9,9 +9,9 @@
  * See UserGuide_ui.html for more information.
  */
  
- 
+ /*
 #include "usertools.h"
-/*
+
 #ifndef LOGLEVEL
 #ifndef DEBUG
   #define LOGLEVEL 30
@@ -60,6 +60,10 @@ uint8_t fun_calling = 255;
 
 // *******************************
 // **** Macro Helpers
+
+
+
+
 
 void UI__set_variable_array(UI_variable *vray, uint16_t len){
   assert_raise_return(len < TH__MAX_ARRAY_LEN, ERR_VALUE);
@@ -361,7 +365,7 @@ error:
   return NULL;
 }
 
-uint8_t cmd_t(pthread *pt){
+uint8_t UI_cmd_t(pthread *pt){
   uint8_t i;
   char *thname = NULL;
   uint8_t type;
@@ -388,7 +392,7 @@ error:
   return 0;
 }
 
-uint8_t cmd_v(pthread *pt){
+uint8_t UI_cmd_v(pthread *pt){
   // Printing variable from command
   UI_variable *var;
   int32_t vint;
@@ -427,7 +431,7 @@ error:
   return 0;
 }
 
-uint8_t cmd_kill(pthread *pt){
+uint8_t UI_cmd_kill(pthread *pt){
   
   debug(F("UI_kill"));
   pt->print();
@@ -464,7 +468,7 @@ void print_option_line(uint8_t i, const __FlashStringHelper **name_array, uint16
   L_println();
 }
 
-uint8_t cmd_print_options(pthread *pt){
+uint8_t UI_cmd_print_options(pthread *pt){
   ui_print_options();
   return 1;
 }
@@ -561,6 +565,5 @@ void UI__setup_std(){
   //ui_wdt_setup();
 }
 
- * */
-
+*/
 

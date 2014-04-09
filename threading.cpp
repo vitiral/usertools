@@ -14,10 +14,9 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include "flash_ptrs.h"
 #include "pt.h"
-
 #include "errorhandling.h"
-
 #include "threading.h"
 //#include "strtools.h"
 //#include "ui.h"
@@ -32,13 +31,21 @@ TH_funptr *TH_thread_funptrs = NULL;
 pthread *TH__threads = NULL;
 uint8_t TH__threads_len = 0;
 
-uint8_t get_len(TH_funptr *thfptrs){
+
+TH_funptr get_funptr(uint8_t index){
+  return (TH_funptr)get_pointer((PGM_P) TH_thread_funptrs, index, sizeof(TH_funptr));
+}
+
+uint8_t get_len_fptrs(){
   uint16_t i;
-  for(i = 0; thfptrs[i] != NULL; i++){
-    debug((uint16_t) thfptrs[i]);
+  TH_funptr fptr;
+  for(i = 0; (void *)(fptr = get_funptr(i)) != NULL; i++){
+    debug((uint16_t) fptr);
   }
   return i;
 }
+
+
 
 void TH__setup_threads(const TH_funptr *thfptrs){
   debug((uint16_t) thfptrs[0]);
@@ -46,7 +53,7 @@ void TH__setup_threads(const TH_funptr *thfptrs){
   debug(F("Tset:"));
   assert(thfptrs);
   TH_thread_funptrs = (TH_funptr *)thfptrs;
-  i = get_len(TH_thread_funptrs);
+  i = get_len_fptrs();
   sdebug(F("len:")); edebug(i);
   assert(i <= MAX_THREADS);
   TH__threads = (pthread *)malloc(sizeof(pthread) * i);
@@ -84,7 +91,7 @@ uint8_t thread_exists(pthread *th){
   if(x % sizeof(pthread) != 0){
     return false;
   }
-  if(x / sizeof(pthread) >= TH__threads_len){//get_len(TH_thread_funptrs)){
+  if(x / sizeof(pthread) >= TH__threads_len){
     return false;
   }
   return true;
@@ -96,16 +103,33 @@ void set_thread_innactive(pthread *th){
   //slog_info("Tna:"); elog_info(get_index(th));
 }
 
+TH_funptr get_thread_function(uint8_t el_num){
+  // returns NULL on error
+  TH_funptr fptr = get_funptr(el_num);
+  
+  uint32_t x = ((uint8_t *)fptr - (uint8_t *)TH_thread_funptrs);
+  assert(x % sizeof(TH_funptr) == 0);
+  debug(x);
+  debug(x / sizeof(TH_funptr));
+  assert(x / sizeof(TH_funptr) <= TH__threads_len);
+  
+  return fptr;
+error:
+  clrerr_log();
+  return NULL;
+}
+
 uint8_t schedule_thread(pthread *th){
   uint8_t out = false;
-  
+  TH_funptr tfun;
   sdebug(F("schT:")); edebug(get_index(th));
   assert(thread_exists(th));
   assert_raise(not is_active(th), ERR_VALUE, 0);
   debug("Init");
   PT_INIT(th);
-  assert(TH_thread_funptrs[get_index(th)]);
-  out = TH_thread_funptrs[get_index(th)](th);
+  tfun = get_thread_function(get_index(th));
+  assert(tfun);
+  out = tfun(th);
   if(out >= PT_EXITED){
     set_thread_innactive(th);
     out = true;
@@ -145,6 +169,7 @@ uint8_t thread_loop(){
   uint16_t init_lc;
   uint8_t fout;
   pthread *th;
+  TH_funptr thfun;
   
   // ***** don't try this at home kids ********
   static struct PTsmall pt = {0};
@@ -153,12 +178,13 @@ uint8_t thread_loop(){
   PT_BEGIN((ptsmall *)(&pt));
   while(true){
     PT_YIELD((ptsmall *)(&pt));
-    for(th_loop_index = 0; TH_thread_funptrs[th_loop_index]; th_loop_index++){
+    for(th_loop_index = 0; thfun = get_thread_function(th_loop_index); th_loop_index++){
+      assert(thfun);
       th = &TH__threads[th_loop_index];
       init_lc = th->lc;
       if(init_lc == PT_INNACTIVE) continue;
       
-      fout = TH_thread_funptrs[th_loop_index](th);
+      fout = thfun(th);
 
       if((fout >= PT_EXITED) || (init_lc == PT_KILL_VALUE)){
         if(fout < PT_EXITED){

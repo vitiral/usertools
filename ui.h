@@ -45,6 +45,25 @@ typedef struct UI_FunctionArray{
 
 // ####################################
 // ## GLOBALS
+uint8_t UI_cmd_print_options(pthread *pt);
+uint8_t UI_cmd_t(pthread *pt);
+uint8_t UI_cmd_v(pthread *pt);
+uint8_t UI_cmd_kill(pthread *pt);
+
+#define UI_F(F)   {&(F)}
+void UI__setup_functions(const UI_function *thfptrs);
+#define expose_functions(...)  PROGMEM const UI_function _TH__THREAD_FUNPTRS[] = \
+    {__VA_ARGS__, UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
+    UI_F(UI_cmd_kill), NULL}
+
+void UI__setup_variables(const UI_variable *vars);
+#define expose_variables(...)  const UI_function _TH__THREAD_FUNPTRS[] = \
+    {__VA_ARGS__, NULL}
+
+
+
+#define expose_threads(...)  const TH_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}
+#define setup_threading() TH__setup_threads(_TH__THREAD_FUNPTRS)
 
 // for user interface, with names etc.
 #define thread_setup_ui(T, F, V) do{                                       \
@@ -78,7 +97,11 @@ uint8_t call_function(UI_function *fun, char *input);
 uint8_t call_function(char *name, char *input);
 
 
+#define UI_STR(N, D)    PROGMEM const prog_char (N)[] = D
+#define UI_NAMES(D)     PROGMEM const prog_char *names[]
+
 #define UI__MIN_T 1
+
 extern const __FlashStringHelper **UI__thread_names;
 #define set_thread_names(...)  static const __FlashStringHelper *UI__THREAD_NAMES[] = {__VA_ARGS__, F("ui")};     \
         UI__thread_names = UI__THREAD_NAMES
