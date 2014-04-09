@@ -68,11 +68,14 @@ void UI__setup_variables(const UI_variable *vars);
 #define no_variables() PROGMEM const UI_variable _UI__VARIABLES[] = \
     {{NULL, 0}}
 
+void UI__setup_std();
+
 // ## Standard Setup
 #define setup_ui()        do{   \
     setup_threading();                      \
     UI__setup_functions(_UI__FUNCTIONS);    \
     UI__setup_variables(_UI__VARIABLES);    \
+    UI__setup_std();                        \
   }while(0)
 
     
@@ -113,7 +116,7 @@ uint8_t call_function(char *name, char *input);
 
 
 
-void UI__setup_std();
+
 #define UI_CMD_END_CHAR 0x0A
 #define UI_CMD_PEND_CHAR 0x0D  // may be right before the end.
 

@@ -71,7 +71,7 @@ UI_function get_function_ptr_obj(uint8_t index){
 
 uint8_t get_len_functions(){
   uint16_t i;
-  for(i = 0; (get_function_ptr_obj(i).fptr) != NULL; i++)
+  for(i = 0; (get_function_ptr_obj(i).fptr) != NULL; i++);
   return i;
 }
 
@@ -104,7 +104,7 @@ UI_variable get_var_pgm(uint8_t index){
 
 uint8_t get_len_variables(){
   uint16_t i;
-  for(i = 0; get_var_pgm(i).vptr != NULL; i++)
+  for(i = 0; get_var_pgm(i).vptr != NULL; i++);
   return i;
 }
 
@@ -133,13 +133,15 @@ error:
 UI_variable get_variable(uint8_t el_num){
   sdebug("Gv:"); edebug(el_num);
   // TODO: RE-ADD THIS
-  //assert_raise_return(el_num < UI__variables_len, ERR_INDEX, NULL);
+  assert_raise(el_num < UI__variables_len, ERR_INDEX);
+error:
   return get_var_pgm(el_num);
 }
 
 UI_function get_function(uint8_t el_num){
   sdebug("Gf:"); edebug(el_num);
-  //assert_raise_return(el_num < UI__functions_len, ERR_INDEX, NULL);
+  assert_raise(el_num < UI__functions_len, ERR_INDEX);
+error:
   return get_function_ptr_obj(el_num);
 }
 
@@ -465,11 +467,6 @@ void print_option_line(uint8_t i, const __FlashStringHelper **name_array, uint16
   L_println();
 }
 
-uint8_t UI_cmd_print_options(pthread *pt){
-  ui_print_options();
-  return 1;
-}
-
 void ui_print_options(){
   uint8_t i = 0;
   L_repeat('#', 5); L_print(F(" M:")); L_println(freeMemory());
@@ -487,6 +484,11 @@ void ui_print_options(){
   for(i = 0; i < UI__variables_len; i++){
     print_option_line(i, UI__variable_names, PRINT_IGNORE);
   }
+}
+
+uint8_t UI_cmd_print_options(pthread *pt){
+  ui_print_options();
+  return 1;
 }
 
 // #####################################################
@@ -549,7 +551,7 @@ void ui_std_greeting(){
 void UI__setup_std(){
   debug(F("UiS:"));
   schedule_thread(TH__threads_len - 1); // ui always guaranteed to be at the end
-  cmd_print_options(NULL);
+  ui_print_options();
   
   //ui_wdt_setup();
 }
