@@ -53,11 +53,11 @@ uint8_t UI_cmd_kill(pthread *pt);
 void UI__setup_functions(const UI_function *thfptrs);
 #define expose_functions(...)  PROGMEM const UI_function _UI__FUNCTIONS[] = \
     {__VA_ARGS__, UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
-    UI_F(UI_cmd_kill), NULL}
+    UI_F(UI_cmd_kill), {NULL}}
     
 #define no_functions() PROGMEM const UI_function _UI__FUNCTIONS[] = \
     {UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
-    UI_F(UI_cmd_kill), NULL}
+    UI_F(UI_cmd_kill), {NULL}}
 
 // ## Variables
 #define UI_V(V)   {&V, sizeof(V)}

@@ -68,7 +68,7 @@ uint8_t UI__variables_len = 0;
 
 UI_function get_function_ptr_obj(uint8_t index){
   //return (UI_function) pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function));
-  return *(UI_function *)pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function));
+  return *((UI_function *) pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function)));
 }
 
 uint8_t get_len_functions(){
