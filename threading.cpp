@@ -27,7 +27,7 @@
 // ### Globals
 
 //TH_ThreadArray TH__threads = {0, 0, 0};
-TH_funptr *TH_thread_funptrs = NULL;
+TH_thread_funptr *TH_thread_funptrs = NULL;
 pthread *TH__threads = NULL;
 uint8_t TH__threads_len = 0;
 
@@ -44,12 +44,12 @@ uint8_t get_len_fptrs(){
   return i;
 }
 
-void TH__setup_threads(const TH_funptr *thfptrs){
-  debug((uint16_t) thfptrs[0]);
+void TH__setup_threads(const TH_thread_funptr *thfptrs){
+  debug((uint16_t) thfptrs[0].fptr);
   int16_t i, n;
   debug(F("Tset:"));
   assert(thfptrs);
-  TH_thread_funptrs = (TH_funptr *)thfptrs;
+  TH_thread_funptrs = (TH_thread_funptr *)thfptrs;
   i = get_len_fptrs();
   sdebug(F("len:")); edebug(i);
   assert(i <= MAX_THREADS);

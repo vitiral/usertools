@@ -29,14 +29,14 @@ typedef uint8_t (*TH_funptr)(pthread *pt);
 extern pthread *TH__threads;
 extern uint8_t th_loop_index;
 
-void TH__setup_threads(const TH_funptr *thfptrs);
-
 typedef struct TH_thread_funptr{
   TH_funptr fptr;
 };
 
-#define TH_F(T)   {&T}
-#define expose_threads(...)  PROGMEM const TH_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}
+void TH__setup_threads(const TH_thread_funptr *thfptrs);
+
+#define TH_T(T)   {&T}
+#define expose_threads(...)  PROGMEM const TH_thread_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}
 #define setup_threading() TH__setup_threads(_TH__THREAD_FUNPTRS)
 
 // Eventually I want to use this method:
