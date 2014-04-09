@@ -37,10 +37,12 @@ TH_funptr get_funptr(uint8_t index){
 
 uint8_t get_len_fptrs(){
   uint16_t i;
-  TH_funptr fptr;
-  for(i = 0; (void *)(fptr = get_funptr(i)) != NULL; i++){
-    debug((uint16_t) fptr);
-  }
+  for(i = 0; (void *)(get_funptr(i)) != NULL; i++)
+    
+  //TH_funptr fptr;
+  //for(i = 0; (void *)(fptr = get_funptr(i)) != NULL; i++){
+  //  debug((uint16_t) fptr);
+  //}
   return i;
 }
 

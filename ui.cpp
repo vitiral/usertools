@@ -9,7 +9,7 @@
  * See UserGuide_ui.html for more information.
  */
  
- /*
+
 #include "usertools.h"
 
 #ifndef LOGLEVEL
@@ -46,62 +46,84 @@ uint8_t cmd_print_options(pthread *pt);
 
 // #####################################################
 // ### Globals
-
+#define MAX_FUNCTIONS 255
+#define MAX_VARIABLES 255
 #define MAX_STR_LEN 30
 
 const __FlashStringHelper **UI__thread_names = NULL;
 const __FlashStringHelper **UI__function_names = NULL;
 const __FlashStringHelper **UI__variable_names = NULL;
 
-UI_VariableArray UI__variables = {0, 0, 0};
-UI_FunctionArray UI__functions = {0, 0, 0};
-
+UI_function *UI__functions = NULL;
+uint8_t UI__functions_len = 0;
 uint8_t fun_calling = 255;
+
+UI_variable *UI__variables = NULL;
+uint8_t UI__variables_len = 0;
 
 // *******************************
 // **** Macro Helpers
 
-
-
-
-
-void UI__set_variable_array(UI_variable *vray, uint16_t len){
-  assert_raise_return(len < TH__MAX_ARRAY_LEN, ERR_VALUE);
-  UI__variables.array = vray;
-  UI__variables.len = len;
+TH_funptr get_function_ptr(uint8_t index){
+  return (TH_funptr)get_pointer((PGM_P) UI__functions, index, sizeof(UI_function));
 }
 
-void UI__set_function_array(UI_function *fray, uint16_t len){
-  assert_raise_return(len < TH__MAX_ARRAY_LEN, ERR_VALUE);
-  UI__functions.array = fray;
-  UI__functions.len = len;
-  for(uint8_t i = 0; i < len; i++){
-    UI__functions.array[i].fptr = NULL;
+uint8_t get_len_functions(){
+  uint16_t i;
+  for(i = 0; (void *)(get_function_ptr(i)) != NULL; i++)
+  return i;
+}
+
+void UI__setup_functions(const UI_function *funcs){
+  debug((uint16_t) funcs[0].fptr);
+  int16_t i;
+  debug(F("Fset:"));
+  assert(funcs);
+  UI__functions = (UI_function *)thfptrs;
+  i = get_len_functions();
+  sdebug(F("len:")); edebug(i);
+  assert(i <= MAX_FUNCTIONS);
+  UI__functions_len = i;
+  debug(F("FsetD"));
+  return;
+error:
+  return;
+}
+
+UI_variable get_var_pgm(uint8_t index){
+  // The data has to be copied from pgm to variable. You then access with the
+  // vptr
+  UI_variable var;
+  PGM_P s = ((PGM_P)UI_variables) + index*sizeof(UI_variable);
+  for(uint8_t i = 0; i < sizeof(UI_variable); i++){
+    (uint8_t *)(&var)[i] = pgm_read_byte(s++);
   }
+  return var;
 }
 
-UI_variable *UI__expose_variable(void *varptr, uint8_t varsize){
-  debug(F("ExpV"));
-  assert_return(UI__variables.index < UI__variables.len, NULL);
-  assert_raise_return(UI__variables.array, ERR_VALUE, NULL); // assert not null
-  
-  UI__variables.array[UI__variables.index].vptr = varptr;
-  UI__variables.array[UI__variables.index].size = varsize;
-  UI__variables.index++;
-  sdebug(F("v:")); edebug(UI__variables.index);
-  return &(UI__variables.array[UI__variables.index - 1]);
+uint8_t get_len_variables(){
+  uint16_t i;
+  for(i = 0; get_var_pgm(i).vptr != NULL; i++)
+  return i;
 }
 
-UI_function *expose_function(TH_funptr fptr){
-  debug(F("ExpF"));
-  assert_return(UI__functions.index < UI__functions.len, NULL);
-  assert_raise_return(UI__functions.array, ERR_VALUE, NULL); // assert not null
-
-  UI__functions.array[UI__functions.index].fptr = fptr;
-  UI__functions.index++;
-  sdebug(F("f:")); edebug(UI__functions.index);
-  return &(UI__functions.array[UI__functions.index - 1]);
+void UI__setup_variables(const UI_variable *vars){
+  debug((uint16_t) vars[0].vptr);
+  int16_t i;
+  debug(F("Vset:"));
+  assert(vars);
+  UI__functions = (UI_function *)thfptrs;
+  i = get_len_variables();
+  sdebug(F("len:")); edebug(i);
+  assert(i <= MAX_VARIABLES);
+  UI__variables_len = i;
+  debug(F("FsetD"));
+  return;
+error:
+  return;
 }
+
+
 
 // #####################################################
 // ## Helper functions
@@ -115,21 +137,21 @@ typedef enum UI_TYPES{
 typedef void *(*GET_OBJECT)(uint8_t index);
 
 // Get from index
-UI_variable *get_variable(uint8_t el_num){
-  assert_raise_return(el_num < UI__variables.len, ERR_INDEX, NULL);
-  return &UI__variables.array[el_num];
+UI_variable get_variable(uint8_t el_num){
+  sdebug("Gv:"); edebug(el_num);
+  assert_raise_return(el_num < UI__variables_len, ERR_INDEX, NULL);
+  return get_var_pgm(el_num);
 }
 
-UI_function *get_function(uint8_t el_num){
+UI_function get_function(uint8_t el_num){
   sdebug("Gf:"); edebug(el_num);
-  assert_raise_return(el_num < UI__functions.index, ERR_INDEX, NULL);
-  return &UI__functions.array[el_num];
+  assert_raise_return(el_num < UI__functions_len, ERR_INDEX, NULL);
+  return (UI_function) get_function_ptr(el_num);
 }
 
 // Get from name
 
-void *get_object(char *name, uint8_t len, 
-    const __FlashStringHelper **type_names, void *objarray, uint8_t size){
+uint8_t get_name_index(char *name, uint8_t len, const __FlashStringHelper **type_names){
   
   uint8_t i;
 
@@ -143,46 +165,26 @@ void *get_object(char *name, uint8_t len,
     debug(type_names[i]);
     if(cmp_str_flash(name, type_names[i])){
       edebug(type_names[i]);
-      return (void *)((uint8_t *)objarray + i*size);
+      return i;
     }
   }
   raise(ERR_INPUT);
 error:
-  return NULL;
+  return 0;
 }
 
 thread *get_thread(char *name){
-  return (thread *)get_object(name, TH__threads.index, UI__thread_names, TH__threads.array, sizeof(thread));
+  return get_thread(get_name_index(name, UI__thread_names));
 }
 
-UI_function *get_function(char *name){
-  return (UI_function *)get_object(name, UI__functions.index, UI__function_names, UI__functions.array, sizeof(UI_function));
+UI_function *get_function(char *name, uint8_t *index){
+  *index = get_name_index(name, UI__function_names);
+  return get_function(*index);
 }
 
-uint8_t get_index(UI_function *fun){
-  //sdebug((uint16_t)fun); cdebug(" "); edebug((uint16_t)UI__functions.array);
-  return ((uint8_t *)fun - (uint8_t *)UI__functions.array) / sizeof(UI_function);
-}
-
-uint8_t function_exists(UI_function *fun){
-  if(fun == NULL) return false;
-  uint32_t x = ((uint8_t *)fun - (uint8_t *)UI__functions.array);
-  if(x % sizeof(UI_function) != 0){
-    return false;
-  }
-  if(x / sizeof(UI_function) >= UI__functions.index){
-    return false;
-  }
-  return true;
-}
-
-UI_variable *get_variable(char *name){
-  return (UI_variable *)get_object(name, UI__variables.index, UI__variable_names, UI__variables.array, sizeof(UI_variable));
-}
-
-uint8_t get_index(UI_variable *var){
-  //sdebug((uint16_t)fun); cdebug(" "); edebug((uint16_t)UI__functions.array);
-  return ((uint8_t *)var - (uint8_t *)UI__variables.array) / sizeof(UI_variable);
+UI_variable *get_variable(char *name, uint8_t *index){
+  *index = get_name_index(name, UI__variable_names);
+  return get_variable(*index);
 }
 
 void put_inputs(pthread *pt, char *input){
@@ -227,21 +229,19 @@ void put_inputs(pthread *pt, char *input){
 uint8_t call_function(pthread *pt){
   // Can raise error
   uint8_t out = 0;
-  UI_function *fun;
+  UI_function fun;
   
   uint8_t type = pt->get_type_input(0);
-  if(type < vt_maxint) fun = get_function(pt->get_int_input(0));
-  else if(type == vt_str) fun = get_function(pt->get_str_input(0));
+  if(type < vt_maxint) fun = get_function(pt->get_int_input(0), &out);
+  else if(type == vt_str) fun = get_function(pt->get_str_input(0), &out);
   else assert(0);
   iferr_log_catch();
   
-  assert(function_exists(fun));
-  
   pt->del_input(0); // clear index 0, send rest to function
   
-  sdebug("CF:"); edebug(get_index(fun));
-  fun_calling = get_index(fun);
-  out = (*fun->fptr)(pt);
+  sdebug("CF:"); edebug(out);
+  fun_calling = out;
+  out = (fun->fptr)(pt);
   fun_calling = 255;
   
 error:
@@ -251,13 +251,13 @@ done:
 
 void schedule_thread(char *name, char *input){
   uint8_t el_num;
-  thread *th;
+  pthread *th;
   char *c;
   
   th = get_thread(name);
   assert_raise_return(th, ERR_INPUT);
   
-  put_inputs(&th->pt, input);
+  put_inputs(th, input);
   schedule_thread(th);
 }
 
@@ -345,7 +345,7 @@ void ui_pat_dog(){
 
 // helper function to get thread assuming it is in the first
 // input's value
-thread *UI_get_thread(pthread *pt){
+pthread *UI_get_thread(pthread *pt){
   thread *th;
   uint8_t i = pt->get_type_input(0);
   iferr_log_catch(); // index error
@@ -369,7 +369,7 @@ uint8_t UI_cmd_t(pthread *pt){
   uint8_t i;
   char *thname = NULL;
   uint8_t type;
-  thread *th = NULL;
+  pthread *th = NULL;
   debug("CmdT:");
   pt->print();
   
@@ -379,11 +379,11 @@ uint8_t UI_cmd_t(pthread *pt){
   assert(thread_exists(th));
   
   // Prepare thread
-  debug(th->pt.lc);
+  debug(th.lc);
   assert_raise_return(not is_active(th), ERR_VALUE, 0);
-  th->pt.clear_data();
+  th.clear_data();
   pt->del_input(0); // delete input for transfering
-  transfer_inputs(pt, &th->pt);
+  transfer_inputs(pt, th);
   
   debug(F("Sch Thread"));
   schedule_thread(th);
@@ -394,27 +394,26 @@ error:
 
 uint8_t UI_cmd_v(pthread *pt){
   // Printing variable from command
-  UI_variable *var;
+  UI_variable var;
   int32_t vint;
-  int8_t i = 0;
   uint8_t type;
   
   type = pt->get_type_input(0);
   iferr_log_catch();
   if(type < vt_maxint){
-    var = get_variable(pt->get_int_input(0));
+    var = get_variable(pt->get_int_input(0), &type);
   }
   else if(type == vt_str){
-    var = get_variable(pt->get_str_input(0));
+    var = get_variable(pt->get_str_input(0), &type);
   }
   else assert(0);
-  sdebug("v:"); edebug(get_index(var));
+  sdebug("v:"); edebug(type);
   
   iferr_log_catch();
   TRY(vint = pt->get_int_input(1));
   CATCH_ALL{}
   else{
-    assert(sizeof(vint) >= var->size);
+    assert(sizeof(vint) >= var.size);
 //      // this would be for large values first (big endian)
 //    for(i = 1; i <= var->size; i++){
 //      // move the values at the end onto the variable. Truncate rest.
@@ -422,10 +421,10 @@ uint8_t UI_cmd_v(pthread *pt){
 //    }
     
     // Little Endian
-    memcpy(var->vptr, &vint, var->size);
+    memcpy(var.vptr, &vint, var.size);
   }
   // always print the variable when done
-  print_variable(var);
+  print_variable(&var);
   return 1;
 error:
   return 0;
@@ -435,7 +434,7 @@ uint8_t UI_cmd_kill(pthread *pt){
   
   debug(F("UI_kill"));
   pt->print();
-  thread *th = UI_get_thread(pt);
+  pthread *th = UI_get_thread(pt);
   iferr_log_catch();
   
   kill_thread(th);
@@ -564,6 +563,4 @@ void UI__setup_std(){
   
   //ui_wdt_setup();
 }
-
-*/
 

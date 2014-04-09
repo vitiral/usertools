@@ -52,14 +52,16 @@ uint8_t UI_cmd_kill(pthread *pt);
 
 #define UI_F(F)   {&(F)}
 void UI__setup_functions(const UI_function *thfptrs);
-#define expose_functions(...)  PROGMEM const UI_function _TH__THREAD_FUNPTRS[] = \
+#define expose_functions(...)  PROGMEM const UI_function _UI__FUNCTIONS[] = \
     {__VA_ARGS__, UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
     UI_F(UI_cmd_kill), NULL}
 
+#define UI_V(V)   {&V, sizeof(V)}
 void UI__setup_variables(const UI_variable *vars);
 #define expose_variables(...)  const UI_function _TH__THREAD_FUNPTRS[] = \
-    {__VA_ARGS__, NULL}
+    {__VA_ARGS__, {NULL, 0}}
 
+ 
 
 
 #define expose_threads(...)  const TH_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}

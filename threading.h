@@ -30,7 +30,7 @@ extern pthread *TH__threads;
 extern uint8_t th_loop_index;
 
 typedef struct TH_thread_funptr{
-  TH_funptr fptr;
+  TH_funptr fptr;   // must always be first!
 };
 
 void TH__setup_threads(const TH_thread_funptr *thfptrs);
