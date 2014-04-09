@@ -12,6 +12,7 @@
 
 #include "usertools.h"
 
+/*
 #ifndef LOGLEVEL
 #ifndef DEBUG
   #define LOGLEVEL 30
@@ -21,6 +22,7 @@
 #if LOGLEVEL < 30
   #define LOGLEVEL 30
 #endif
+*/
 
 #include <Arduino.h>
 #include <stdlib.h>

@@ -126,7 +126,7 @@ uint8_t schedule_thread(pthread *th){
   TH_funptr tfun;
   sdebug(F("schT:")); edebug(get_index(th));
   assert(thread_exists(th));
-  assert_raise(not is_active(th), ERR_VALUE, 0);
+  assert_raise(not is_active(th), ERR_VALUE, th->lc);
   debug("Init");
   PT_INIT(th);
   tfun = get_thread_function(get_index(th));
