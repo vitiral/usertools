@@ -31,7 +31,6 @@ TH_funptr *TH_thread_funptrs = NULL;
 pthread *TH__threads = NULL;
 uint8_t TH__threads_len = 0;
 
-
 TH_funptr get_funptr(uint8_t index){
   return (TH_funptr)get_pointer((PGM_P) TH_thread_funptrs, index, sizeof(TH_funptr));
 }
@@ -44,8 +43,6 @@ uint8_t get_len_fptrs(){
   }
   return i;
 }
-
-
 
 void TH__setup_threads(const TH_funptr *thfptrs){
   debug((uint16_t) thfptrs[0]);
@@ -105,18 +102,22 @@ void set_thread_innactive(pthread *th){
 
 TH_funptr get_thread_function(uint8_t el_num){
   // returns NULL on error
-  TH_funptr fptr = get_funptr(el_num);
-  
-  uint32_t x = ((uint8_t *)fptr - (uint8_t *)TH_thread_funptrs);
-  assert(x % sizeof(TH_funptr) == 0);
-  debug(x);
-  debug(x / sizeof(TH_funptr));
-  assert(x / sizeof(TH_funptr) <= TH__threads_len);
+  TH_funptr fptr;
+  if(el_num >= TH__threads_len) {
+    sdebug(el_num); cdebug(' '); edebug(TH__threads_len);
+    return NULL;
+  } 
+  fptr = get_funptr(el_num);
+  debug((uint32_t) fptr);
+  // You can't do any of this -- the pointers are now locations in memory,
+  //   (not PROGMEM)
+  //uint32_t x = ((uint8_t *)fptr - (uint8_t *)TH_thread_funptrs);
+  //assert(x % sizeof(TH_funptr) == 0);
+  //debug(x);
+  //debug(x / sizeof(TH_funptr));
+  //assert(x / sizeof(TH_funptr) <= TH__threads_len);
   
   return fptr;
-error:
-  clrerr_log();
-  return NULL;
 }
 
 uint8_t schedule_thread(pthread *th){
