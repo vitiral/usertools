@@ -40,6 +40,7 @@
 
 void EH_void_fun(void *input);
 void EH_try_end();
+void EH_waitc();
 
 void EH_test();
 extern uint8_t errprint;
@@ -79,12 +80,13 @@ void seterr(uint8_t error);
   #define cdebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, Serial.print(M); EH_FLUSH();))
   #define edebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, Serial.println(M); EH_FLUSH();))
   #define debug(...) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH();))
-
+  #define waitc()    EH_DW(EH_start_debug(__FILE__, __LINE__); EH_waitc();)
 #else
   #define sdebug(M)
   #define cdebug(M)
   #define edebug(M)
-  #define debug(...) 
+  #define debug(...)
+  #define waitc() 
 #endif
 
 #if LOGLEVEL >= LOG_INFO

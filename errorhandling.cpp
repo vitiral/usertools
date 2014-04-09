@@ -37,7 +37,30 @@ void printmem(){
   L_print(freeMemory());
 #endif
 }
-  
+
+uint8_t EH_status = 0;
+#define EH_STATUS(status) EH_status bitand status
+#define EH_SET_STATUS(status) EH_status |= status
+enum EH_STATUSES{
+  NONE,
+  EH_WAITC,
+};
+
+void EH_waitc(){
+  char c;
+  L_println(F("Wt-c..."));
+  if(EH_STATUS(EH_WAITC)) return;
+  while(true){
+    while(not L_available());
+    c = L_read();
+    if(c == 'c') return;
+    else if(c == 'C'){
+      EH_SET_STATUS(EH_WAITC);
+      return;
+    }
+  }
+}
+
 void EH_printinfo(char *file, unsigned int line)
 {
   L_print(errno); 

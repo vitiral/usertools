@@ -104,11 +104,10 @@ TH_funptr get_thread_function(uint8_t el_num){
   // returns NULL on error
   TH_funptr fptr;
   if(el_num >= TH__threads_len) {
-    sdebug(el_num); cdebug(' '); edebug(TH__threads_len);
+//    sdebug(el_num); cdebug(' '); edebug(TH__threads_len);
     return NULL;
   } 
   fptr = get_funptr(el_num);
-  debug((uint32_t) fptr);
   // You can't do any of this -- the pointers are now locations in memory,
   //   (not PROGMEM)
   //uint32_t x = ((uint8_t *)fptr - (uint8_t *)TH_thread_funptrs);
@@ -183,6 +182,8 @@ uint8_t thread_loop(){
       assert(thfun);
       th = &TH__threads[th_loop_index];
       init_lc = th->lc;
+      //debug(init_lc);
+      //waitc();
       if(init_lc == PT_INNACTIVE) continue;
       
       fout = thfun(th);
