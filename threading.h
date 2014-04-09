@@ -27,6 +27,7 @@ typedef uint8_t (*TH_funptr)(pthread *pt);
 // #####################################################
 // ### Initialization Macros
 extern pthread *TH__threads;
+extern uint8_t TH__threads_len;
 extern uint8_t th_loop_index;
 
 typedef struct TH_thread_funptr{

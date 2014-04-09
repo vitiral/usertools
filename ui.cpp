@@ -55,8 +55,8 @@ const __FlashStringHelper **UI__function_names = NULL;
 const __FlashStringHelper **UI__variable_names = NULL;
 
 UI_function *UI__functions = NULL;
-uint8_t UI__functions_len = 0;
 uint8_t fun_calling = 255;
+uint8_t UI__functions_len = 0;
 
 UI_variable *UI__variables = NULL;
 uint8_t UI__variables_len = 0;
@@ -64,13 +64,14 @@ uint8_t UI__variables_len = 0;
 // *******************************
 // **** Macro Helpers
 
-TH_funptr get_function_ptr(uint8_t index){
-  return (TH_funptr)get_pointer((PGM_P) UI__functions, index, sizeof(UI_function));
+UI_function get_function_ptr_obj(uint8_t index){
+  //return (UI_function) pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function));
+  return *(UI_function *)pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function));
 }
 
 uint8_t get_len_functions(){
   uint16_t i;
-  for(i = 0; (void *)(get_function_ptr(i)) != NULL; i++)
+  for(i = 0; (get_function_ptr_obj(i).fptr) != NULL; i++)
   return i;
 }
 
@@ -79,7 +80,7 @@ void UI__setup_functions(const UI_function *funcs){
   int16_t i;
   debug(F("Fset:"));
   assert(funcs);
-  UI__functions = (UI_function *)thfptrs;
+  UI__functions = (UI_function *)funcs;
   i = get_len_functions();
   sdebug(F("len:")); edebug(i);
   assert(i <= MAX_FUNCTIONS);
@@ -94,9 +95,9 @@ UI_variable get_var_pgm(uint8_t index){
   // The data has to be copied from pgm to variable. You then access with the
   // vptr
   UI_variable var;
-  PGM_P s = ((PGM_P)UI_variables) + index*sizeof(UI_variable);
+  PGM_P s = ((PGM_P)UI__variables) + index*sizeof(UI_variable);
   for(uint8_t i = 0; i < sizeof(UI_variable); i++){
-    (uint8_t *)(&var)[i] = pgm_read_byte(s++);
+    ((uint8_t *)(&var))[i] = pgm_read_byte(s++);
   }
   return var;
 }
@@ -112,7 +113,7 @@ void UI__setup_variables(const UI_variable *vars){
   int16_t i;
   debug(F("Vset:"));
   assert(vars);
-  UI__functions = (UI_function *)thfptrs;
+  UI__variables = (UI_variable *)vars;
   i = get_len_variables();
   sdebug(F("len:")); edebug(i);
   assert(i <= MAX_VARIABLES);
@@ -128,25 +129,18 @@ error:
 // #####################################################
 // ## Helper functions
 
-typedef enum UI_TYPES{
-  UI_THREAD_TYPE,
-  UI_FUNCTION_TYPE,
-  UI_VARIABLE_TYPE
-};
-
-typedef void *(*GET_OBJECT)(uint8_t index);
-
 // Get from index
 UI_variable get_variable(uint8_t el_num){
   sdebug("Gv:"); edebug(el_num);
-  assert_raise_return(el_num < UI__variables_len, ERR_INDEX, NULL);
+  // TODO: RE-ADD THIS
+  //assert_raise_return(el_num < UI__variables_len, ERR_INDEX, NULL);
   return get_var_pgm(el_num);
 }
 
 UI_function get_function(uint8_t el_num){
   sdebug("Gf:"); edebug(el_num);
-  assert_raise_return(el_num < UI__functions_len, ERR_INDEX, NULL);
-  return (UI_function) get_function_ptr(el_num);
+  //assert_raise_return(el_num < UI__functions_len, ERR_INDEX, NULL);
+  return get_function_ptr_obj(el_num);
 }
 
 // Get from name
@@ -173,16 +167,20 @@ error:
   return 0;
 }
 
-thread *get_thread(char *name){
+uint8_t get_name_index(char *name, const __FlashStringHelper **type_names){
+  return get_name_index(name, strlen(name), type_names);
+}
+
+pthread *get_thread(char *name){
   return get_thread(get_name_index(name, UI__thread_names));
 }
 
-UI_function *get_function(char *name, uint8_t *index){
+UI_function get_function(char *name, uint8_t *index){
   *index = get_name_index(name, UI__function_names);
   return get_function(*index);
 }
 
-UI_variable *get_variable(char *name, uint8_t *index){
+UI_variable get_variable(char *name, uint8_t *index){
   *index = get_name_index(name, UI__variable_names);
   return get_variable(*index);
 }
@@ -232,7 +230,7 @@ uint8_t call_function(pthread *pt){
   UI_function fun;
   
   uint8_t type = pt->get_type_input(0);
-  if(type < vt_maxint) fun = get_function(pt->get_int_input(0), &out);
+  if(type < vt_maxint) fun = get_function(pt->get_int_input(0));
   else if(type == vt_str) fun = get_function(pt->get_str_input(0), &out);
   else assert(0);
   iferr_log_catch();
@@ -241,7 +239,7 @@ uint8_t call_function(pthread *pt){
   
   sdebug("CF:"); edebug(out);
   fun_calling = out;
-  out = (fun->fptr)(pt);
+  out = (fun.fptr)(pt);
   fun_calling = 255;
   
 error:
@@ -346,7 +344,7 @@ void ui_pat_dog(){
 // helper function to get thread assuming it is in the first
 // input's value
 pthread *UI_get_thread(pthread *pt){
-  thread *th;
+  pthread *th;
   uint8_t i = pt->get_type_input(0);
   iferr_log_catch(); // index error
   if(i <= vt_maxint){
@@ -379,9 +377,9 @@ uint8_t UI_cmd_t(pthread *pt){
   assert(thread_exists(th));
   
   // Prepare thread
-  debug(th.lc);
+  debug(th->lc);
   assert_raise_return(not is_active(th), ERR_VALUE, 0);
-  th.clear_data();
+  th->clear_data();
   pt->del_input(0); // delete input for transfering
   transfer_inputs(pt, th);
   
@@ -401,7 +399,7 @@ uint8_t UI_cmd_v(pthread *pt){
   type = pt->get_type_input(0);
   iferr_log_catch();
   if(type < vt_maxint){
-    var = get_variable(pt->get_int_input(0), &type);
+    var = get_variable(pt->get_int_input(0));
   }
   else if(type == vt_str){
     var = get_variable(pt->get_str_input(0), &type);
@@ -476,17 +474,17 @@ void ui_print_options(){
   uint8_t i = 0;
   L_repeat('#', 5); L_print(F(" M:")); L_println(freeMemory());
   print_option_name(F("f"));
-  for(i = 0; i < UI__functions.index; i++){
+  for(i = 0; i < UI__functions_len; i++){
     print_option_line(i, UI__function_names, PRINT_IGNORE);
   }
   
   print_option_name(F("t"));
-  for(i = 0; i < TH__threads.index; i++){
-    print_option_line(i, UI__thread_names, TH__threads.array[i].pt.lc);
+  for(i = 0; i < TH__threads_len; i++){
+    print_option_line(i, UI__thread_names, TH__threads[i].lc);
   }
   
   print_option_name(F("v"));
-  for(i = 0; i < UI__variables.index; i++){
+  for(i = 0; i < UI__variables_len; i++){
     print_option_line(i, UI__variable_names, PRINT_IGNORE);
   }
 }
@@ -550,15 +548,7 @@ void ui_std_greeting(){
 
 void UI__setup_std(){
   debug(F("UiS:"));
-  expose_schedule_thread(user_interface);  // user interface. REQUIRED
-  
-  //expose_thread(system_monitor); // system monitor
-  
-  expose_function(cmd_print_options);
-  expose_function(cmd_t);
-  expose_function(cmd_v);
-  expose_function(cmd_kill);
-  
+  schedule_thread(TH__threads_len - 1); // ui always guaranteed to be at the end
   cmd_print_options(NULL);
   
   //ui_wdt_setup();

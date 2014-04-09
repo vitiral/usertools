@@ -18,6 +18,7 @@
 #include "pt.h"
 #include "threading.h"
 #include "strtools.h"
+#include "flash_ptrs.h"
 
 
 // 6 bytes
@@ -31,74 +32,51 @@ typedef struct UI_function{
   TH_funptr      fptr;
 };
 
-typedef struct UI_VariableArray{
-  UI_variable *array;
-  uint8_t len;
-  uint16_t index;
-};
-
-typedef struct UI_FunctionArray{
-  UI_function *array;
-  uint8_t len;
-  uint16_t index;
-};
-
 // ####################################
 // ## GLOBALS
+
+// ## Threads
+#define UI_STD_NUM_TH 1
+PT_THREAD user_interface(pthread *pt);
+#define expose_threads(...)   PROGMEM const TH_thread_funptr _TH__THREAD_FUNPTRS[]  = {__VA_ARGS__, TH_T(user_interface), NULL}
+
+#define no_threads()          PROGMEM const TH_thread_funptr _TH__THREAD_FUNPTRS[] = {NULL}
+
+// ## Functions
 uint8_t UI_cmd_print_options(pthread *pt);
 uint8_t UI_cmd_t(pthread *pt);
 uint8_t UI_cmd_v(pthread *pt);
 uint8_t UI_cmd_kill(pthread *pt);
 
+#define UI_STD_NUM_FUN 4;
 #define UI_F(F)   {&(F)}
 void UI__setup_functions(const UI_function *thfptrs);
 #define expose_functions(...)  PROGMEM const UI_function _UI__FUNCTIONS[] = \
     {__VA_ARGS__, UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
     UI_F(UI_cmd_kill), NULL}
+    
+#define no_functions() PROGMEM const UI_function _UI__FUNCTIONS[] = \
+    {UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
+    UI_F(UI_cmd_kill), NULL}
 
+// ## Variables
 #define UI_V(V)   {&V, sizeof(V)}
 void UI__setup_variables(const UI_variable *vars);
-#define expose_variables(...)  const UI_function _TH__THREAD_FUNPTRS[] = \
+#define expose_variables(...)  const UI_variable _UI__VARIABLES[] = \
     {__VA_ARGS__, {NULL, 0}}
+    
+#define no_variables() PROGMEM const UI_variable _UI__VARIABLES[] = \
+    {{NULL, 0}}
 
- 
+// ## Standard Setup
+#define setup_ui()        do{   \
+    setup_threading();                      \
+    UI__setup_functions(_UI__FUNCTIONS);    \
+    UI__setup_variables(_UI__VARIABLES);    \
+  }while(0)
 
-
-#define expose_threads(...)  const TH_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}
-#define setup_threading() TH__setup_threads(_TH__THREAD_FUNPTRS)
-
-// for user interface, with names etc.
-#define thread_setup_ui(T, F, V) do{                                       \
-      static UI_variable UI__variable_array[V];                         \
-      UI__set_variable_array(UI__variable_array, V);                    \
-                                                                        \
-      static UI_function UI__function_array[F];                         \
-      UI__set_function_array(UI__function_array, F);                    \
-                                                                        \
-      static TH_fake_thread TH__thread_array[T];                       \
-      TH__set_thread_array((thread *) TH__thread_array, T);           \
-    }while(0)
-
-      
-// Expose Macros
-
-extern UI_VariableArray UI__variables;
-extern UI_FunctionArray UI__functions;
-
-UI_variable *UI__expose_variable(void *varptr, uint8_t varsize);
-#define expose_variable(var) UI__expose_variable((void *)&(var), sizeof(var)) 
-UI_function *expose_function(TH_funptr fptr);
-
-void UI__set_variable_array(UI_variable *vray, uint16_t len);
-void UI__set_function_array(UI_function *fray, uint16_t len);
-
-UI_variable *get_variable(uint8_t el_num);
-UI_function *get_function(uint8_t el_num);
-
-uint8_t call_function(UI_function *fun, char *input);
-uint8_t call_function(char *name, char *input);
-
-
+    
+// ## String Access
 #define UI_STR(N, D)    PROGMEM const prog_char (N)[] = D
 #define UI_NAMES(D)     PROGMEM const prog_char *names[]
 
@@ -121,12 +99,18 @@ extern const __FlashStringHelper **UI__function_names;
 extern const __FlashStringHelper **UI__variable_names;
 #define set_variable_names(...) static const __FlashStringHelper *UI__VARIABLE_NAMES[] = {__VA_ARGS__};     \
         UI__variable_names = UI__VARIABLE_NAMES
+        
 
-#define ui_setup_std(T, F, V) do{                             \
-    thread_setup_ui((T) + UI__MIN_T, (F) + UI__MIN_F, V);     \
-  }while(0)
+// Access Functions
 
-#define ui_end_setup() UI__setup_std();
+UI_variable get_variable(uint8_t el_num);
+UI_function get_function(uint8_t el_num);
+
+uint8_t call_function(UI_function *fun, char *input);
+uint8_t call_function(char *name, char *input);
+
+
+
 
 
 void UI__setup_std();
@@ -155,7 +139,6 @@ void ui_print_options();
 
 // #####################################################
 // ### Other Module Functions
-void user_interface();
 
 extern volatile uint8_t UI_volatile;
 
