@@ -177,7 +177,7 @@ uint8_t get_name_index(char *name, uint8_t len, const __FlashStringHelper **type
   
   uint8_t i;
 
-  sdebug(F("Gobj:")); edebug(name);
+  sdebug(F("Gobj:")); cdebug(name); cdebug(' '); edebug(len);
   clrerr();
   
   assert_raise(type_names, ERR_INPUT); // not null
@@ -195,21 +195,17 @@ error:
   return 0;
 }
 
-uint8_t get_name_index(char *name, const __FlashStringHelper **type_names){
-  return get_name_index(name, strlen(name), type_names);
-}
-
 pthread *get_thread(char *name){
-  return get_thread(get_name_index(name, UI__thread_names));
+  return get_thread(get_name_index(name, TH__threads_len, UI__thread_names));
 }
 
 UI_function get_function(char *name, uint8_t *index){
-  *index = get_name_index(name, UI__function_names);
+  *index = get_name_index(name, UI__functions_len, UI__function_names);
   return get_function(*index);
 }
 
 UI_variable get_variable(char *name, uint8_t *index){
-  *index = get_name_index(name, UI__variable_names);
+  *index = get_name_index(name, UI__variables_len, UI__variable_names);
   return get_variable(*index);
 }
 
@@ -273,18 +269,6 @@ uint8_t call_function(pthread *pt){
 error:
 done:
   return out;
-}
-
-void schedule_thread(char *name, char *input){
-  uint8_t el_num;
-  pthread *th;
-  char *c;
-  
-  th = get_thread(name);
-  assert_raise_return(th, ERR_INPUT);
-  
-  put_inputs(th, input);
-  schedule_thread(th);
 }
 
 uint8_t print_variable(UI_variable *var){

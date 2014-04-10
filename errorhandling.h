@@ -70,6 +70,7 @@ void seterr(uint8_t error);
 
 #define iferr_return(...)        EH_DW(if(errno) return __VA_ARGS__;)
 #define iferr_log_return(...)    EH_DW(if(errno) {log_err(); EH_FLUSH(); return __VA_ARGS__;})
+#define iferr_log()              EH_DW(if(errno) {log_err(); EH_FLUSH();})
 #define iferr_catch()            EH_DW(if(errno) goto error;)
 #define iferr_log_catch()        EH_DW(if(errno) {log_err(); EH_FLUSH(); goto error;})
 
