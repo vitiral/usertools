@@ -51,22 +51,30 @@ uint8_t UI_cmd_kill(pthread *pt);
 #define UI_STD_NUM_FUN 4;
 #define UI_F(F)   {&(F)}
 void UI__setup_functions(const UI_function *thfptrs);
-#define expose_functions(...)  PROGMEM const UI_function _UI__FUNCTIONS[] = \
+#define expose_functions(...)   PROGMEM const UI_function _UI__FUNCTIONS[] = \
     {__VA_ARGS__, UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
     UI_F(UI_cmd_kill), {NULL}}
     
-#define no_functions() PROGMEM const UI_function _UI__FUNCTIONS[] = \
-    {UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
+#define no_functions()          PROGMEM const UI_function _UI__FUNCTIONS[] = \
+    {             UI_F(UI_cmd_print_options), UI_F(UI_cmd_t), UI_F(UI_cmd_v), \
     UI_F(UI_cmd_kill), {NULL}}
 
 // ## Variables
-#define UI_V(V)   {&V, sizeof(V)}
-void UI__setup_variables(const UI_variable *vars);
-#define expose_variables(...)  const UI_variable _UI__VARIABLES[] = \
-    {__VA_ARGS__, {NULL, 0}}
-    
-#define no_variables() PROGMEM const UI_variable _UI__VARIABLES[] = \
-    {{NULL, 0}}
+#define UI_V(N, V)   PROGMEM const UI_variable N = {&(V), (uint8_t)sizeof(V)}
+#define UI_VA(V)  &(V)
+//void UI__setup_variables(const UI_variable *vars);
+void UI__setup_variables(const UI_variable **vars);
+
+#define expose_variables(...) PROGMEM const UI_variable _UI__VARIABLE_END = {NULL, (uint8_t) 0}; \
+                      PROGMEM const UI_variable *_UI__VARIABLES[] = {__VA_ARGS__, UI_VA(_UI__VARIABLE_END)};
+
+//#define expose_variables(...)  const UI_variable _UI__VARIABLES[] = \
+//    {__VA_ARGS__, {NULL, (uint8_t) 0}}
+
+#define no_variables() PROGMEM const UI_variable _UI__VARIABLE_END = {NULL, (uint8_t) 0}; \
+                      PROGMEM const UI_variable *_UI__VARIABLES[] = {UI_VA(_UI__VARIABLE_END)};
+
+//#define no_variables() PROGMEM const UI_variable _UI__VARIABLES[] = {{NULL, (uint8_t) 0}}
 
 void UI__setup_std();
 

@@ -68,11 +68,19 @@ uint8_t UI__variables_len = 0;
 
 UI_function get_function_ptr_obj(uint8_t index){
   //return (UI_function) pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function));
-  return *((UI_function *) pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function)));
+  
+  return (UI_function) {(TH_funptr) get_pointer((PGM_P) UI__functions, index, sizeof(UI_function))};
 }
+
+//TH_funptr get_function_ptr_obj(uint8_t index){
+  //return (UI_function) pgm_read_word((PGM_P) UI__functions + index * sizeof(UI_function));
+//  return (TH_funptr *) pgm_read_word(((PGM_P) UI__functions) + index * sizeof(UI_function));
+//}
+
 
 uint8_t get_len_functions(){
   uint16_t i;
+  
   for(i = 0; (get_function_ptr_obj(i).fptr) != NULL; i++);
   return i;
 }
@@ -96,31 +104,47 @@ error:
 UI_variable get_var_pgm(uint8_t index){
   // The data has to be copied from pgm to variable. You then access with the
   // vptr
-  UI_variable var;
-  PGM_P s = ((PGM_P)UI__variables) + index*sizeof(UI_variable);
-  for(uint8_t i = 0; i < sizeof(UI_variable); i++){
-    ((uint8_t *)(&var))[i] = pgm_read_byte(s++);
-  }
-  return var;
+  
+  const UI_variable *var_ptr = (const UI_variable *)get_pointer((PGM_P) UI__variables, index, sizeof(TH_funptr));
+  return (UI_variable) {(void *) pgm_read_word((PGM_P) var_ptr),
+    (uint8_t) pgm_read_byte(((PGM_P)var_ptr) + 2)};
+  
+  //return (UI_variable) {(void *) pgm_read_word((PGM_P) UI__variables + index * sizeof(UI_variable)),
+  //  (uint8_t) pgm_read_byte((PGM_P) UI__variables + index*sizeof(UI_variable) + 2)};
+  
+  //return (UI_variable) {(void *) pgm_read_word((PGM_P) UI__variables + index * sizeof(UI_variable)),
+  //  (uint8_t) pgm_read_byte((PGM_P) UI__variables + index*sizeof(UI_variable) + 2)};
+  
+  
+  //UI_variable var;
+  //PGM_P s = ((PGM_P)UI__variables) + index*sizeof(UI_variable);
+  //for(uint8_t i = 0; i < sizeof(UI_variable); i++){
+  //  ((uint8_t *)(&var))[i] = pgm_read_byte(s++);
+  //}
+  //return var;
 }
 
 uint8_t get_len_variables(){
   uint16_t i;
-  for(i = 0; get_var_pgm(i).vptr != NULL; i++);
+  UI_variable var;
+  for(i = 0; (var = get_var_pgm(i)).vptr != NULL; i++){
+    sdebug((uint16_t)var.vptr); cdebug(' '); edebug(var.size); 
+  }
   return i;
 }
 
-void UI__setup_variables(const UI_variable *vars){
-  debug((uint16_t) vars[0].vptr);
+void UI__setup_variables(const UI_variable **vars){
   int16_t i;
   debug(F("Vset:"));
   assert(vars);
   UI__variables = (UI_variable *)vars;
+  
   i = get_len_variables();
   sdebug(F("len:")); edebug(i);
   assert(i <= MAX_VARIABLES);
   UI__variables_len = i;
-  debug(F("FsetD"));
+  debug(F("VsetD"));
+  
   return;
 error:
   return;
