@@ -132,7 +132,7 @@ error:
 }
 
 void pthread::destroy_data(PT_data *pd, PT_data *prev){
-  if(pd == NULL) return; //assert(pd);
+  assert_return(pd); //if(pd == NULL) return; 
   if(prev == NULL)  data = pd->b.next;
   else              prev->b.next = pd->b.next;
   
@@ -229,7 +229,7 @@ error:
 
 void *pthread::put_temp(uint16_t temp){
   clear_temp();
-  if(put_data(&temp, TYPE_TEMP bitor vt_uint16, 0) == NULL){
+  if(put_data(&temp, TYPE_TEMP bitor vt_uint16) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
     raise_return(ERR_CRITICAL, NULL);
   }
@@ -237,7 +237,7 @@ void *pthread::put_temp(uint16_t temp){
 
 void *pthread::put_temp_pt(){
   clear_temp();
-  if(put_data(&pthread(), TYPE_TEMP bitor vt_pt, 0) == NULL){
+  if(put_data(&pthread(), TYPE_TEMP bitor vt_pt) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
     raise_return(ERR_CRITICAL, NULL);
   }
