@@ -52,9 +52,9 @@ uint8_t cmd_print_options(pthread *pt);
 #define MAX_VARIABLES 255
 #define MAX_STR_LEN 30
 
-const __FlashStringHelper **UI__thread_names = NULL;
-const __FlashStringHelper **UI__function_names = NULL;
-const __FlashStringHelper **UI__variable_names = NULL;
+const prog_char **UI__thread_names = NULL;
+const prog_char **UI__function_names = NULL;
+const prog_char **UI__variable_names = NULL;
 
 UI_function *UI__functions = NULL;
 uint8_t fun_calling = 255;
@@ -173,10 +173,10 @@ error:
 
 // Get from name
 
-uint8_t get_name_index(char *name, uint8_t len, const __FlashStringHelper **type_names){
+uint8_t get_name_index(char *name, uint8_t len, const prog_char **type_names){
   
   uint8_t i;
-
+  
   sdebug(F("Gobj:")); cdebug(name); cdebug(' '); edebug(len);
   clrerr();
   
@@ -185,7 +185,7 @@ uint8_t get_name_index(char *name, uint8_t len, const __FlashStringHelper **type
   for(i = 0; i < len; i++){
     sdebug("i="); edebug(i);
     debug(type_names[i]);
-    if(cmp_str_flash(name, type_names[i])){
+    if(cmp_str_flash(name, (FLASH) get_pointer((PGM_P) type_names, i, 2))) {
       edebug(type_names[i]);
       return i;
     }
@@ -464,11 +464,11 @@ void print_option_name(const __FlashStringHelper *name){
 
 #define PRINT_IGNORE PT_KILL_VALUE - 1
 
-void print_option_line(uint8_t i, const __FlashStringHelper **name_array, uint16_t pt_line){
+void print_option_line(uint8_t i, const prog_char **name_array, uint16_t pt_line){
   L_print(i);
   if(name_array){
     L_write('\t');
-    L_print(name_array[i]);
+    L_print((FLASH)get_pointer((PGM_P) name_array, i, 2));
   }
   if(pt_line != PRINT_IGNORE){
     L_repeat('\t', 2);

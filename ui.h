@@ -88,22 +88,51 @@ void UI__setup_std();
 
     
 // ## String Access
-#define UI_STR(N, D)    PROGMEM const prog_char (N)[] = D
-#define UI_NAMES(D)     PROGMEM const prog_char *names[]
+#define UI_STR(N, D)    PROGMEM const prog_char N[] = D
+//#define UI_NAMES(D)     PROGMEM const prog_char *names[] = D
 
 #define UI__MIN_T 1
 
 #define UI_STR(N, D)    PROGMEM const prog_char N[] = D
 
-#define set_thread_names(...)   UI_STR(UI__THREAD_NAMES_1, "ui");   \
-  PROGMEM const prog_char *UI__THREAD_NAMES[] = {__VA_ARGS__, UI__THREAD_NAMES_1};
-  
-extern const __FlashStringHelper **UI__thread_names;
-#define set_thread_names(...)  static const __FlashStringHelper *UI__THREAD_NAMES[] = {__VA_ARGS__, F("ui")};     \
-        UI__thread_names = UI__THREAD_NAMES
+#define UI__std_thread_names()  UI_STR(UI__THREAD_NAMES_1, "ui")
+#define set_thread_names(...)   UI__std_thread_names();   \
+  PROGMEM const prog_char *UI__THREAD_NAMES[] = {__VA_ARGS__, UI__THREAD_NAMES_1, NULL};
+//#define default_thread_names_only() 
 
 #define UI__MIN_F 4
-extern const __FlashStringHelper **UI__function_names;
+#define UI__std_function_names()    UI_STR(UI__FUNCTION_NAMES_1, "?");    \
+        UI_STR(UI__FUNCTION_NAMES_2, "t");    \
+        UI_STR(UI__FUNCTION_NAMES_3, "v");    \
+        UI_STR(UI__FUNCTION_NAMES_4, "k")    
+        
+#define set_function_names(...)      UI__std_function_names();                \
+        PROGMEM const prog_char *UI__FUNCTION_NAMES[] =                         \
+        {__VA_ARGS__, UI__FUNCTION_NAMES_1, UI__FUNCTION_NAMES_2,             \
+        UI__FUNCTION_NAMES_3, UI__FUNCTION_NAMES_4, NULL};
+
+#define default_function_names_only()   UI__std_function_names();             \
+        PROGMEM const prog_char *UI__FUNCTION_NAMES[] =                         \
+        {UI__FUNCTION_NAMES_1, UI__FUNCTION_NAMES_2,                          \
+        UI__FUNCTION_NAMES_3, UI__FUNCTION_NAMES_4, NULL};
+        
+#define set_variable_names(...) PROGMEM const prog_char *UI__VARIABLE_NAMES[] = {__VA_ARGS__, NULL};
+
+extern const prog_char **UI__thread_names;
+extern const prog_char **UI__function_names;
+extern const prog_char **UI__variable_names;
+
+#define expose_thread_names()     UI__thread_names = UI__THREAD_NAMES
+#define expose_function_names()   UI__function_names = UI__FUNCTION_NAMES
+#define expose_variable_names()   UI__variable_names = UI__VARIABLE_NAMES
+#define expose_all_names() do{expose_thread_names(); expose_function_names(); expose_variable_names();}while(0)
+
+/*
+#define set_variable_names(...)    PROGMEM const prog_char *UI__VARIABLE_NAMES[] = {__VA_ARGS__, NULL}
+
+#define set_thread_names(...)  static const __FlashStringHelper *UI__THREAD_NAMES[] = {__VA_ARGS__, F("ui")};     \
+        UI__thread_names = UI__THREAD_NAME
+
 #define set_function_names(...) static const __FlashStringHelper *UI__FUNCTION_NAMES[] = \
         {__VA_ARGS__, F("?"), F("t"), F("v"), F("k")};            \
         UI__function_names = UI__FUNCTION_NAMES
@@ -115,7 +144,7 @@ extern const __FlashStringHelper **UI__function_names;
 extern const __FlashStringHelper **UI__variable_names;
 #define set_variable_names(...) static const __FlashStringHelper *UI__VARIABLE_NAMES[] = {__VA_ARGS__};     \
         UI__variable_names = UI__VARIABLE_NAMES
-        
+*/
 
 // Access Functions
 
