@@ -93,6 +93,11 @@ void UI__setup_std();
 
 #define UI__MIN_T 1
 
+#define UI_STR(N, D)    PROGMEM const prog_char N[] = D
+
+#define set_thread_names(...)   UI_STR(UI__THREAD_NAMES_1, "ui");   \
+  PROGMEM const prog_char *UI__THREAD_NAMES[] = {__VA_ARGS__, UI__THREAD_NAMES_1};
+  
 extern const __FlashStringHelper **UI__thread_names;
 #define set_thread_names(...)  static const __FlashStringHelper *UI__THREAD_NAMES[] = {__VA_ARGS__, F("ui")};     \
         UI__thread_names = UI__THREAD_NAMES
