@@ -12,8 +12,12 @@
 
 #include "ReMem.h"
 #include "usertools.h"
-#include "errorhandling.h"
 
+#ifdef DEBUG
+#undef DEBUG
+#endif
+
+#include "errorhandling.h"
 // data_available is an 16 bit value with the following representations:
 //   AA   BBB   CC   D | DD EEE FFF
 //   AA - num available > 8 bytes
