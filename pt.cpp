@@ -231,9 +231,9 @@ error:
 
 void *pthread::put_temp(uint16_t temp){
   // speeds up putting and getting integers
-  debug("put int");
+  //1debug("put int");
   if(data->b.type == (TYPE_TEMP bitor vt_uint16)){
-    debug("using old temp");
+    //1debug("using old temp");
     ((PT_data_int16 *)data)->data = (int16_t) temp;
   }
   
