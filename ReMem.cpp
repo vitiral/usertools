@@ -45,15 +45,16 @@
 
 #define SIZE(ptr)     (*((int8_t *)ptr - 1))
 #define DATA_LEFT     (((uint16_t)data_end - (uint16_t)data_put))
-
-ReMem::ReMem(uint16_t size){
+#define TOTAL_SIZE    (((uint16_t)data_end - (uint16_t)data))
+//ReMem::ReMem(uint16_t size){
+ReMem::ReMem(void){
   data_available = 0;
-  int8_t data[size];
-  data_put = NULL;
-  data_end = NULL;
 }
 
 void ReMem::init(uint16_t size){
+  data = (int8_t *) malloc(size);
+  debug((uint16_t)data);
+  // do error checking
   data_end = data + size;
   data_put = data; // points to the size character of the last data
 }
@@ -86,7 +87,8 @@ void ReMem::using_size(int16_t size){
 void ReMem::freed_size(int16_t size){
   size = get_id(size);
   // add 1 to the value
-  uint16_t temp_avail = data_available + DA_TV(size, DA_1MATRIX);
+  uint16_t temp_avail = data_available + (uint16_t)DA_TV(size, DA_1MATRIX);
+  debug(temp_avail, BIN);
   if(DA_TV(size, data_available)){
     if(DA_TV(size, temp_avail)){
       data_available = temp_avail;
@@ -103,25 +105,27 @@ int8_t *ReMem::get_used(uint8_t size){
   // go through the whole list looking for the correct size
   // data larger than 8 bits returns the first slot that works
   // returns NULL if there are no matches
-  sdebug("Gu:"); edebug(size);
+  //sdebug("Gu:"); edebug(size);
   if(not DA_TV(get_id(size), data_available)) return NULL;
   
   int8_t *front = data;
   if(size <= 8){
     while(front < data_put){
-      debug((uint16_t) front);
+      //debug((uint16_t) front);
       if(-(*front) == size){
         using_size(size);
+        *front = -(*front);
         return front + 1;
       }
-      debug(*front);
+      //debug(*front);
       front += abs(*front) + 1;
     }
   }
   else{
-    debug((uint16_t) front);
+    //debug((uint16_t) front);
     while(front < data_put){
       if(-(*front) <= size){
+        *front = -(*front);
         return front + 1;
       }
       front += abs(*front) + 1;
@@ -130,16 +134,16 @@ int8_t *ReMem::get_used(uint8_t size){
   return NULL;
 }
 
-void *ReMem::malloc(uint8_t size){
+void *ReMem::rmalloc(uint8_t size){
   int8_t *put;
-  debug(F("MAL:"));
+  
   assert_raise(size < DM_MAX_DATA, ERR_MEMORY);
   put = get_used(size);
   
   if(put == NULL){
     // allocate new memory space
     put = data_put;
-    debug((uint16_t) put);
+    //debug((uint16_t) put);
     
     // make sure there is enough space.
     assert_raise(DATA_LEFT > size + 1, ERR_MEMORY);
@@ -151,25 +155,25 @@ void *ReMem::malloc(uint8_t size){
     
     //debug((uint16_t)(put + 1));
     
-    debug(size);
+    //debug(size);
     put[0] = size;
-    debug(put[0]);
+    //debug(put[0]);
     put++;
   }
-  debug((uint16_t) put);
-  debug(SIZE(put));
+  sdebug(F("MAL:")); edebug((uint16_t) put);
+  //debug(SIZE(put));
   return (void *)put;
 error:
   return NULL;
 }
 
 void ReMem::free(void *ptr){
-  sdebug(F("F:")); edebug(SIZE(ptr));
-  debug((uint16_t) ptr);
+  sdebug(F("F:")); cdebug('\t'); cdebug((uint16_t) ptr); cdebug('\t');
+  cdebug(SIZE(ptr)); cdebug('\t');
   int8_t size = SIZE(ptr);
   assert_return(size > 0);
   SIZE(ptr) = -size;
-  debug(SIZE(ptr));
+  edebug(SIZE(ptr));
   freed_size(size);
 }
 
@@ -191,8 +195,25 @@ void ReMem::print(){
   L_print(F("\tD:")); L_print((uint16_t) data);
   L_print(F("\tP:")); L_print((uint16_t) data_put); 
   L_print(F("\tE:")); L_println((uint16_t) data_end);
-  for(uint8_t i = 0; i < 20; i++){
-    L_print("\t"); L_print((int8_t)data[i]);
-  }
+  
   L_println();
+}
+
+void ReMem::print_data(){
+  uint8_t i;
+  int8_t *front = data;
+  while(front < data_put) {
+    L_print(*front); L_write('\t');
+    for(i = 1; i < abs(*front) + 1; i++){
+      L_write(' '); L_print(front[i]);
+    }
+    if(abs(*front) > 8){
+      L_println(); L_write('\t');
+      for(i = 1; i < abs(*front) + 1; i++){
+        L_write((char)front[i]);
+      }
+    }
+    front += abs(*front) + 1;
+    L_println();
+  }
 }

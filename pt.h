@@ -53,8 +53,13 @@
 #include "usertools.h"
 #include "errorhandling.h"
 #include "logging.h"
+#include "ReMem.h"
 
 #include "lc.h"
+
+extern ReMem PT__RM;
+
+#define setup_pt(M)   PT__RM.init(M)
 
 enum PTVALUES {
   PT_WAITING    ,
@@ -352,7 +357,6 @@ void transfer_inputs(pthread *from, pthread *to);
   (pt)->put_temp((uint16_t)millis());                                 \
   PT_WAIT_UNTIL(pt, ((uint16_t)millis()) - (uint16_t)(pt)->get_int_temp() \
     > ms);                                                            \
-  (pt)->clear_temp();                                                 \
   } while(0)
 
 /**

@@ -17,6 +17,8 @@
 // *****************************************************
 // **** Private Class Helpers
 
+ReMem PT__RM = ReMem();
+
 void init_PT_data(void *pd){
   ((PT_data *)pd)->b.next = NULL;
 }
@@ -52,29 +54,29 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
     //case(vt_int8):
     case(vt_uint8):
       //1debug("ti8");
-      put = (PT_data *)malloc(sizeof(PT_data_int8));
+      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_int8));
       break;
     case(vt_int16):
     case(vt_uint16):
       //1debug("ti16");
-      put = (PT_data *)malloc(sizeof(PT_data_int16));
+      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_int16));
       break;
 
 /* Cant seem to get this one to work
     case(vt_int32):
       //1debug("ti32");
-      put = (PT_data *)malloc(sizeof(PT_data_int32));
+      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_int32));
       break;
 */
     case(vt_str):
       //1debug("tstr");
       if(len == 0) len = strlen((char *) putdata) + 1;
       assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
-      put = (PT_data *)malloc(sizeof(PT_data_str) + len);
+      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_str) + len);
       break;
       
     case(vt_pt):
-      put = (PT_data *) malloc(sizeof(PT_data_pt));
+      put = (PT_data *) PT__RM.rmalloc(sizeof(PT_data_pt));
       break;
     
     default:
@@ -142,7 +144,7 @@ void pthread::destroy_data(PT_data *pd, PT_data *prev){
       break;
   }
   
-  free(pd);
+  PT__RM.free(pd);
   return;
 }
 
@@ -228,6 +230,13 @@ error:
 }
 
 void *pthread::put_temp(uint16_t temp){
+  // speeds up putting and getting integers
+  debug("put int");
+  if(data->b.type == (TYPE_TEMP bitor vt_uint16)){
+    debug("using old temp");
+    ((PT_data_int16 *)data)->data = (int16_t) temp;
+  }
+  
   clear_temp();
   if(put_data(&temp, TYPE_TEMP bitor vt_uint16) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
