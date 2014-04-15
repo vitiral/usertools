@@ -82,12 +82,14 @@ void seterr(uint8_t error);
   #define edebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, Serial.println(M); EH_FLUSH();))
   #define debug(...) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH();))
   #define waitc()    EH_DW(EH_start_debug(__FILE__, __LINE__); EH_waitc();)
+  #define debug_code(C)   EH_DW(C)
 #else
   #define sdebug(M)
   #define cdebug(M)
   #define edebug(M)
   #define debug(...)
   #define waitc() 
+  #define debug_code(C)   
 #endif
 
 #if LOGLEVEL >= LOG_INFO

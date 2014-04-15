@@ -14,12 +14,6 @@
 #include "usertools.h"
 #include "errorhandling.h"
 
-#define _DM_FRONT ((char *)data + (data_index) * sizeof(IO_indexer))
-#define _DM_BACK ((char *)data + data_max)
-#define _DM_DATA_FRONT (_DM_BACK - data_taken)
-
-#define _DM_INDEX ((IO_indexer *)data)
-
 // data_available is an 16 bit value with the following representations:
 //   AA   BBB   CC   D | DD EEE FFF
 //   AA - num available > 8 bytes
@@ -45,22 +39,29 @@
 #define DA_ET_1_SH      0
 
 #define DA_1MATRIX      0b0100101001001001    // for adding and subtracting
-#define DA_TV(DA, D)    ((DA) bitand (D))     // Used for trust testing and
+//#define DA_TV(DA, D)    ((uint16_t)((DA) bitand (D)))    // Used for trust testing and
+#define DA_TV(DA, D)    (((uint16_t)(DA) bitand (uint16_t)(D)))    // Used for trust testing and
 
 
-#define VERY_END  ((void *)((int8_t *)data_last + abs(*(int8_t *)data_last) + 1))
 #define SIZE(ptr)     (*((int8_t *)ptr - 1))
+#define DATA_LEFT     (((uint16_t)data_end - (uint16_t)data_put))
 
 ReMem::ReMem(uint16_t size){
   data_available = 0;
-  uint8_t data[size];
-  data_end = (void *)((char *)data + size)
-  data_last = (void *)data; // points to the size character of the last data
+  int8_t data[size];
+  data_put = NULL;
+  data_end = NULL;
 }
 
-uint8_t get_id(uint8_t size){
-  uint16_t id;
+void ReMem::init(uint16_t size){
+  data_end = data + size;
+  data_put = data; // points to the size character of the last data
+}
+
+int16_t get_id(uint8_t size){
   switch(size){
+    case 0:
+      assert_return(0, 0);
     case 1:
       return DA_ET_1;
     case 2:
@@ -77,18 +78,17 @@ uint8_t get_id(uint8_t size){
   }
 }
 
-void ReMem::using_size(uint8_t size){
-  uint16_t size = get_id(size);
+void ReMem::using_size(int16_t size){
+  size = get_id(size);
   data_available = data_available - DA_TV(size, DA_1MATRIX);
 }
 
-void ReMem::freed_size(uint8_t size){
-  uint16_t size = get_id(size);
-  uint16_t temp_avail = data_available;
+void ReMem::freed_size(int16_t size){
+  size = get_id(size);
   // add 1 to the value
-  temp_avail = temp_available + DA_TV(size, DA_1MATRIX);
-  if(DA_TV(data_available)){
-    if(DA_TV(temp_avail)){
+  uint16_t temp_avail = data_available + DA_TV(size, DA_1MATRIX);
+  if(DA_TV(size, data_available)){
+    if(DA_TV(size, temp_avail)){
       data_available = temp_avail;
     }
     // else{}  // temp_avail used to exist, now it is 0 -- overflow
@@ -99,66 +99,100 @@ void ReMem::freed_size(uint8_t size){
 }
 
 
-void *ReMem::get_used(uint8_t size){
+int8_t *ReMem::get_used(uint8_t size){
   // go through the whole list looking for the correct size
   // data larger than 8 bits returns the first slot that works
   // returns NULL if there are no matches
-  if not(DA_TV(get_id(size), size)) return NULL;
+  sdebug("Gu:"); edebug(size);
+  if(not DA_TV(get_id(size), data_available)) return NULL;
   
   int8_t *front = data;
   if(size <= 8){
-    while(front <= data_last){
+    while(front < data_put){
+      debug((uint16_t) front);
       if(-(*front) == size){
         using_size(size);
-        return (void *)(front + 1)
+        return front + 1;
       }
-      front += abs(*front) + 1
+      debug(*front);
+      front += abs(*front) + 1;
     }
   }
   else{
-    while(front <= data_last){
+    debug((uint16_t) front);
+    while(front < data_put){
       if(-(*front) <= size){
-        return (void *)(front + 1)
+        return front + 1;
       }
-      front += abs(*front) + 1
+      front += abs(*front) + 1;
     }
   }
   return NULL;
 }
 
 void *ReMem::malloc(uint8_t size){
+  int8_t *put;
+  debug(F("MAL:"));
   assert_raise(size < DM_MAX_DATA, ERR_MEMORY);
-  void *put_data = get_used(size);
-  if(put_data == NULL){
+  put = get_used(size);
+  
+  if(put == NULL){
     // allocate new memory space
-    put_data = VERY_END;
+    put = data_put;
+    debug((uint16_t) put);
+    
     // make sure there is enough space.
-    assert_raise((char *)data_end - (char *)put_data > size + 1, ERR_MEMORY);
+    assert_raise(DATA_LEFT > size + 1, ERR_MEMORY);
     
-    data_last = put_data;
+    data_put = put + size + 1;
+    //debug(size);
+    //debug((uint16_t) put);
+    //debug((uint16_t) data_put);
     
-    *(int8_t *)put_data = size;
-    (int8_t *)put_data ++;
+    //debug((uint16_t)(put + 1));
+    
+    debug(size);
+    put[0] = size;
+    debug(put[0]);
+    put++;
   }
-  return put_data;
+  debug((uint16_t) put);
+  debug(SIZE(put));
+  return (void *)put;
 error:
-  return NULL
+  return NULL;
 }
 
 void ReMem::free(void *ptr){
+  sdebug(F("F:")); edebug(SIZE(ptr));
+  debug((uint16_t) ptr);
   int8_t size = SIZE(ptr);
-  assert(size > 0);
+  assert_return(size > 0);
   SIZE(ptr) = -size;
+  debug(SIZE(ptr));
   freed_size(size);
 }
 
 void ReMem::defrag(){
   data_available = 0;
   int8_t *front = data;
-  while(front <= data_last){
+  while(front < data_put){
     if((*front) < 0){
       freed_size(abs(*front));
     }
-    front += abs(*front) + 1
+    front += abs(*front) + 1;
   }
+}
+
+void ReMem::print(){
+  L_print(F("ReMem:"));
+  L_print(DATA_LEFT); 
+  L_print(F("\t0b")); L_print(data_available, BIN); 
+  L_print(F("\tD:")); L_print((uint16_t) data);
+  L_print(F("\tP:")); L_print((uint16_t) data_put); 
+  L_print(F("\tE:")); L_println((uint16_t) data_end);
+  for(uint8_t i = 0; i < 20; i++){
+    L_print("\t"); L_print((int8_t)data[i]);
+  }
+  L_println();
 }

@@ -7,21 +7,21 @@
 
 #define DM_MAX_DATA 127
 
-typedef uint8_t DM_index;
-
 class ReMem{
   uint16_t data_available;
-  void *data_last;
-  void *data_end;
-  uint8_t data[];
-  void using_size(uint8_t size);
-  void freed_size(uint8_t size);
-  void *get_used(uint8_t size);
+  int8_t *data_put;
+  int8_t *data_end;
+  int8_t *data;
+  void using_size(int16_t size);
+  void freed_size(int16_t size);
+  int8_t *get_used(uint8_t size);
   
 public:
   ReMem(uint16_t size);
+  void init(uint16_t size);
   void *malloc(uint8_t size);
-  void free(DM_index index);
+  void free(void *ptr);
   void defrag();
+  void print();
 };
 #endif
