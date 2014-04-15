@@ -560,6 +560,7 @@ void ui_std_greeting(){
 
 void UI__setup_std(){
   debug(F("UiS:"));
+  waitc();
   schedule_thread(TH__threads_len - 1); // ui always guaranteed to be at the end
   ui_print_options();
   

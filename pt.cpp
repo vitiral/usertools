@@ -138,13 +138,19 @@ void pthread::destroy_data(PT_data *pd, PT_data *prev){
   if(prev == NULL)  data = pd->b.next;
   else              prev->b.next = pd->b.next;
   
+  //debug((uint16_t) pd);
+  //debug((uint16_t) pd->b.next);
+  //debug((uint16_t) prev);
+  
   switch(VTYPE(pd->b.type)){
     case vt_pt:
+      //debug(F("Dest pt"));
       ((PT_data_pt *)pd)->data.clear_data();
       break;
   }
   
   PT__RM.free(pd);
+  //waitc();
   return;
 }
 

@@ -15,9 +15,13 @@
 
 #ifdef DEBUG
 #undef DEBUG
+#define MYDEBUG
 #endif
 
+#define LOGLEVEL 1
 #include "errorhandling.h"
+
+
 // data_available is an 16 bit value with the following representations:
 //   AA   BBB   CC   D | DD EEE FFF
 //   AA - num available > 8 bytes

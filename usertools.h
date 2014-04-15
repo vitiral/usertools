@@ -26,7 +26,6 @@ Memproblem:
 #define DEBUG
 //#define LOGLEVEL 40
 //#define LOGLEVEL 30
-
 /*
 #include "threading.h"
 #include "errorhandling.h"

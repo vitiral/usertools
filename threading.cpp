@@ -56,10 +56,13 @@ void TH__setup_threads(const TH_thread_funptr *thfptrs){
   sdebug(F("len:")); edebug(i);
   assert(i <= MAX_THREADS);
   TH__threads = (pthread *)malloc(sizeof(pthread) * i);
+  debug((uint16_t) TH__threads);
   memcheck(TH__threads);
   for(n = 0; n < i; n++){
     //PT_INIT(&TH__threads[n]);
-    set_thread_innactive(&TH__threads[n]);
+    //set_thread_innactive(&TH__threads[n]);
+    TH__threads[n].lc = PT_INNACTIVE;
+    TH__threads[n].data = NULL;
   }
   TH__threads_len = i;
   debug(F("TsetD"));

@@ -79,8 +79,8 @@ void UI__setup_variables(const UI_variable **vars);
 void UI__setup_std();
 
 // ## Standard Setup
-#define setup_ui()        do{   \
-    setup_threading();                      \
+#define setup_ui(MEM_SIZE)        do{       \
+    setup_threading(MEM_SIZE);              \
     UI__setup_functions(_UI__FUNCTIONS);    \
     UI__setup_variables(_UI__VARIABLES);    \
     UI__setup_std();                        \
