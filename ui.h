@@ -96,7 +96,7 @@ void UI__setup_std();
 #define UI_STR(N, D)    PROGMEM const prog_char N[] = D
 
 #define UI__std_thread_names()  UI_STR(UI__THREAD_NAMES_1, "ui")
-#define set_thread_names(...)   UI__std_thread_names();   \
+#define expose_thread_names(...)   UI__std_thread_names();   \
   PROGMEM const prog_char *UI__THREAD_NAMES[] = {__VA_ARGS__, UI__THREAD_NAMES_1, NULL};
 //#define default_thread_names_only() 
 
@@ -106,26 +106,26 @@ void UI__setup_std();
         UI_STR(UI__FUNCTION_NAMES_3, "v");    \
         UI_STR(UI__FUNCTION_NAMES_4, "k")    
         
-#define set_function_names(...)      UI__std_function_names();                \
+#define expose_function_names(...)      UI__std_function_names();                \
         PROGMEM const prog_char *UI__FUNCTION_NAMES[] =                         \
         {__VA_ARGS__, UI__FUNCTION_NAMES_1, UI__FUNCTION_NAMES_2,             \
         UI__FUNCTION_NAMES_3, UI__FUNCTION_NAMES_4, NULL};
 
-#define default_function_names_only()   UI__std_function_names();             \
+#define expose_default_function_names()   UI__std_function_names();             \
         PROGMEM const prog_char *UI__FUNCTION_NAMES[] =                         \
         {UI__FUNCTION_NAMES_1, UI__FUNCTION_NAMES_2,                          \
         UI__FUNCTION_NAMES_3, UI__FUNCTION_NAMES_4, NULL};
         
-#define set_variable_names(...) PROGMEM const prog_char *UI__VARIABLE_NAMES[] = {__VA_ARGS__, NULL};
+#define expose_variable_names(...) PROGMEM const prog_char *UI__VARIABLE_NAMES[] = {__VA_ARGS__, NULL};
 
 extern const prog_char **UI__thread_names;
 extern const prog_char **UI__function_names;
 extern const prog_char **UI__variable_names;
 
-#define expose_thread_names()     UI__thread_names = UI__THREAD_NAMES
-#define expose_function_names()   UI__function_names = UI__FUNCTION_NAMES
-#define expose_variable_names()   UI__variable_names = UI__VARIABLE_NAMES
-#define expose_all_names() do{expose_thread_names(); expose_function_names(); expose_variable_names();}while(0)
+#define set_thread_names()     UI__thread_names = UI__THREAD_NAMES
+#define set_function_names()   UI__function_names = UI__FUNCTION_NAMES
+#define set_variable_names()   UI__variable_names = UI__VARIABLE_NAMES
+#define set_all_names() do{set_thread_names(); set_function_names(); set_variable_names();}while(0)
 
 /*
 #define set_variable_names(...)    PROGMEM const prog_char *UI__VARIABLE_NAMES[] = {__VA_ARGS__, NULL}

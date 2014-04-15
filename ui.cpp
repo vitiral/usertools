@@ -12,17 +12,17 @@
 
 #include "usertools.h"
 
-/*
+#define UI_DEFAULT_LOGLEVEL 1
+
 #ifndef LOGLEVEL
 #ifndef DEBUG
-  #define LOGLEVEL 30
+  #define LOGLEVEL UI_DEFAULT_LOGLEVEL
 #endif
 #endif
 
-#if LOGLEVEL < 30
-  #define LOGLEVEL 30
+#if LOGLEVEL < UI_DEFAULT_LOGLEVEL
+  #define LOGLEVEL UI_DEFAULT_LOGLEVEL
 #endif
-*/
 
 #include <Arduino.h>
 #include <stdlib.h>
