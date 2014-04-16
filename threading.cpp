@@ -138,7 +138,7 @@ uint8_t schedule_thread(pthread *th){
   if(out >= PT_EXITED){
     set_thread_innactive(th);
     out = true;
-    sdebug("Tns:"); edebug(get_index(th));
+    sdebug("Ts:"); edebug(get_index(th));
   }
   else{
     sdebug("Ts:"); edebug(get_index(th));

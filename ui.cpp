@@ -14,6 +14,8 @@
 
 #define UI_DEFAULT_LOGLEVEL 1
 
+// This is not correct -- figure out how to do this.
+/*
 #ifndef LOGLEVEL
 #ifndef DEBUG
   #define LOGLEVEL UI_DEFAULT_LOGLEVEL
@@ -23,7 +25,7 @@
 #if LOGLEVEL < UI_DEFAULT_LOGLEVEL
   #define LOGLEVEL UI_DEFAULT_LOGLEVEL
 #endif
-
+*/
 
 #include <Arduino.h>
 #include <stdlib.h>
@@ -225,7 +227,7 @@ void put_inputs(pthread *pt, char *input){
     TRY(word = get_word(input));
     CATCH_ALL{
       // no more words left
-      edebug('D');
+      edebug(F("Done"));
       return;
     }
     edebug(word);
@@ -241,6 +243,7 @@ void put_inputs(pthread *pt, char *input){
       cdebug(F("Pi:")); cdebug(myint); edebug();
       pt->put_input(myint);
     }
+    iferr_log_return();
   }
 }
 
@@ -253,6 +256,7 @@ uint8_t call_function(pthread *pt){
   if(type < vt_maxint) fun = get_function(pt->get_int_input(0));
   else if(type == vt_str) fun = get_function(pt->get_str_input(0), &out);
   else{
+    debug(F("UnkT"));
     pt->print();
     debug(type);
     waitc();
@@ -302,7 +306,10 @@ void ui_process_command(char *input, uint8_t endi){
   debug_code(PT__RM.print(););
   
   put_inputs(&pt, input);
-
+  
+  debug('P');
+  pt.print();
+  
   iferr_log_catch();
   call_function(&pt);
 error:

@@ -54,8 +54,8 @@
 
 
 #define SIZE(ptr)     (*((int8_t *)ptr - 1))
-#define DATA_LEFT     (((uint16_t)data_end - (uint16_t)data_put))
-#define TOTAL_SIZE    (((uint16_t)data_end - (uint16_t)data))
+#define DATA_REMAINING     (((uint16_t)data_end - (uint16_t)data_put))
+#define TOTAL_SIZE         (((uint16_t)data_end - (uint16_t)data))
 //ReMem::ReMem(uint16_t size){
 ReMem::ReMem(void){
   data_available = 0;
@@ -156,7 +156,7 @@ void *ReMem::rmalloc(uint8_t size){
     //debug((uint16_t) put);
     
     // make sure there is enough space.
-    assert_raise(DATA_LEFT > size + 1, ERR_MEMORY);
+    assert_raise(DATA_REMAINING > size + 1, ERR_MEMORY);
     
     data_put = put + size + 1;
     //debug(size);
@@ -200,7 +200,7 @@ void ReMem::defrag(){
 
 void ReMem::print(){
   L_print(F("ReMem:"));
-  L_print(DATA_LEFT); 
+  L_print(DATA_REMAINING); 
   L_print(F("\t0b")); L_print(data_available, BIN); 
   L_print(F("\tD:")); L_print((uint16_t) data);
   L_print(F("\tP:")); L_print((uint16_t) data_put); 
