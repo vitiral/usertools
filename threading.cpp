@@ -200,6 +200,15 @@ uint8_t thread_loop(){
         }
         set_thread_innactive(th);
       }
+      debug_code(
+      if(TH__threads_len != get_len_fptrs()){
+        debug(F("L!"));
+        debug(TH__threads_len);
+        debug(get_index(th));
+        waitc();
+      }
+      );
+      
 error:
       clrerr();
       PT_YIELD((ptsmall *)(&pt));

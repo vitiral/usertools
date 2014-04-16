@@ -24,6 +24,7 @@
   #define LOGLEVEL UI_DEFAULT_LOGLEVEL
 #endif
 
+
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
@@ -220,32 +221,27 @@ void put_inputs(pthread *pt, char *input){
   while(true){
     clrerr();
     
-    sdebug("gw:");
-    word = get_word(input);
-    edebug(word);
-    
-    if(errno) {
+    sdebug(F("gw:"));
+    TRY(word = get_word(input));
+    CATCH_ALL{
       // no more words left
-      clrerr();
-      edebug();
+      edebug('D');
       return;
     }
-    
+    edebug(word);
     //myfloat = get_float(word);
     //AND DO ERROR CHECKING
     
     TRY(myint = get_int(word));
-    CATCH_ALL{} // clear errors
-    else{
-      cdebug("Pi:"); cdebug(myint); edebug("\t\t");
-      pt->put_input(myint);
-      continue;
+    CATCH_ALL{
+      cdebug(F("Pw:")); cdebug(word); edebug();
+      pt->put_input(word);
     }
-    
-    cdebug("Pw:"); cdebug(word); edebug("\t\t");
-    pt->put_input(word);
+    else{
+      cdebug(F("Pi:")); cdebug(myint); edebug();
+      pt->put_input(myint);
+    }
   }
-  edebug("None");
 }
 
 uint8_t call_function(pthread *pt){
@@ -256,7 +252,12 @@ uint8_t call_function(pthread *pt){
   uint8_t type = pt->get_type_input(0);
   if(type < vt_maxint) fun = get_function(pt->get_int_input(0));
   else if(type == vt_str) fun = get_function(pt->get_str_input(0), &out);
-  else assert(0);
+  else{
+    pt->print();
+    debug(type);
+    waitc();
+    assert(type, 0);
+  }
   iferr_log_catch();
   
   pt->del_input(0); // clear index 0, send rest to function
@@ -285,10 +286,23 @@ uint8_t print_variable(UI_variable *var){
 
 void ui_process_command(char *input, uint8_t endi){
   pthread pt;
-  assert(pt.data == NULL);
+  pt.data = NULL;
+  pt.lc = PT_INNACTIVE;
+  /*
+  if(pt.data != NULL){
+    seterr(ERR_CRITICAL);
+    log_err();
+    return;
+  }
+   * */
+  
   input = strip(input, endi);
   sdebug(F("Parse CMD:")); edebug(input);
+  
+  debug_code(PT__RM.print(););
+  
   put_inputs(&pt, input);
+
   iferr_log_catch();
   call_function(&pt);
 error:
@@ -486,6 +500,7 @@ void ui_print_options(){
   }
   
   print_option_name(F("t"));
+  debug(TH__threads_len);
   for(i = 0; i < TH__threads_len; i++){
     print_option_line(i, UI__thread_names, TH__threads[i].lc);
   }
@@ -560,7 +575,6 @@ void ui_std_greeting(){
 
 void UI__setup_std(){
   debug(F("UiS:"));
-  waitc();
   schedule_thread(TH__threads_len - 1); // ui always guaranteed to be at the end
   ui_print_options();
   

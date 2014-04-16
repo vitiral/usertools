@@ -101,6 +101,8 @@ enum vtype{
   vt_str,       // storing character arrays
   
   vt_pt,        // storing protothreads
+  
+  vt_errtype = 0x3F
 };
 
 typedef uint8_t ptindex;

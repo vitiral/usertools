@@ -13,12 +13,14 @@
 #include "ReMem.h"
 #include "usertools.h"
 
+/*
 #ifdef DEBUG
 #undef DEBUG
 #define MYDEBUG
 #endif
 
 #define LOGLEVEL 1
+*/
 #include "errorhandling.h"
 
 
@@ -37,7 +39,7 @@
 #define DA_ET_4         0b0000000111000000
 #define DA_ET_2         0b0000000000111000
 #define DA_ET_1         0b0000000000000111
-
+//                       0b101000000000000
 // Shift values
 #define DA_GT_8_SH      14
 #define DA_LT_8_ODD_SH  11

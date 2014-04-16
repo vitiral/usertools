@@ -54,29 +54,29 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
     //case(vt_int8):
     case(vt_uint8):
       //1debug("ti8");
-      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_int8));
+      put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_int8)));
       break;
     case(vt_int16):
     case(vt_uint16):
       //1debug("ti16");
-      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_int16));
+      put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_int16)));
       break;
 
 /* Cant seem to get this one to work
     case(vt_int32):
       //1debug("ti32");
-      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_int32));
+      put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_int32)));
       break;
 */
     case(vt_str):
       //1debug("tstr");
       if(len == 0) len = strlen((char *) putdata) + 1;
       assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
-      put = (PT_data *)PT__RM.rmalloc(sizeof(PT_data_str) + len);
+      put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_str) + len));
       break;
       
     case(vt_pt):
-      put = (PT_data *) PT__RM.rmalloc(sizeof(PT_data_pt));
+      put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_pt)));
       break;
     
     default:
@@ -224,7 +224,9 @@ error:
 
 uint8_t pthread::get_type_type(ptindex index, uint8_t ptype){
   //debug(get_type(index, ptype)->b.type);
-  return VTYPE(get_type(index, ptype)->b.type);
+  PT_data *mydata = get_type(index, ptype);
+  iferr_log_return(vt_errtype);
+  return VTYPE(mydata->b.type);
 }
 
 PT_data *pthread::get_temp(uint8_t type){
