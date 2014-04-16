@@ -15,7 +15,7 @@
 #define UI_DEFAULT_LOGLEVEL 1
 
 // This is not correct -- figure out how to do this.
-/*
+
 #ifndef LOGLEVEL
 #ifndef DEBUG
   #define LOGLEVEL UI_DEFAULT_LOGLEVEL
@@ -25,7 +25,7 @@
 #if LOGLEVEL < UI_DEFAULT_LOGLEVEL
   #define LOGLEVEL UI_DEFAULT_LOGLEVEL
 #endif
-*/
+
 
 #include <Arduino.h>
 #include <stdlib.h>
@@ -257,7 +257,9 @@ uint8_t call_function(pthread *pt){
   else if(type == vt_str) fun = get_function(pt->get_str_input(0), &out);
   else{
     debug(F("UnkT"));
-    pt->print();
+    debug_code(
+      pt->print();
+    );
     debug(type);
 //    waitc();
     assert(type, 0);
@@ -288,38 +290,31 @@ uint8_t print_variable(UI_variable *var){
   return true;
 }
 
-pthread ui_pc_pt;
-
 void ui_process_command(char *input, uint8_t endi){
-  //pthread pt;
-  ui_pc_pt.data = NULL;
-  ui_pc_pt.lc = PT_INNACTIVE;
+  pthread pt;
+  pt.data = NULL;
   
-  /*
-  if(ui_pc_pt.data != NULL){
-    seterr(ERR_CRITICAL);
-    log_err();
-    return;
-  }
-   * */
+  assert_return(pt.data == NULL);
   
   input = strip(input, endi);
   sdebug(F("Parse CMD:")); edebug(input);
   
   debug_code(
-    ui_pc_pt.print();
+    pt.print();
     PT__RM.print();
   );
   
-  put_inputs(&ui_pc_pt, input);
+  put_inputs(&pt, input);
   iferr_log_catch();
   
   debug('P');
-  ui_pc_pt.print();
+  debug_code(
+    pt.print();
+  );
   
-  call_function(&ui_pc_pt);
+  call_function(&pt);
 error:
-  ui_pc_pt.clear_data();
+  pt.clear_data();
 }
 
 // for debugging
@@ -408,8 +403,9 @@ uint8_t UI_cmd_t(pthread *pt){
   uint8_t type;
   pthread *th = NULL;
   debug("CmdT:");
-  pt->print();
-  
+  debug_code(
+    pt->print();
+  );
   th = UI_get_thread(pt);
   iferr_log_catch();
   cdebug("th:"); edebug(get_index(th));
@@ -470,12 +466,14 @@ error:
 uint8_t UI_cmd_kill(pthread *pt){
   
   debug(F("UI_kill"));
-  pt->print();
+  debug_code(
+    pt->print();
+  );
   pthread *th = UI_get_thread(pt);
   iferr_log_catch();
   
   kill_thread(th);
-  L_print(F("Killed:")); L_println(get_index(th));
+  L_print(F("Kd:")); L_println(get_index(th));
   return 1;
 error:
   return 0;
@@ -547,12 +545,12 @@ PT_THREAD user_interface(pthread *pt){
       buffer[i] = c;
       if(i > MAX_STR_LEN){
         while(L_available()) L_read();
-        raise(ERR_COM, F("SIZE"));
+        raise(ERR_COM);
       }
       else if(buffer[i] == UI_CMD_END_CHAR){
         sdebug(F("Bp:")); edebug((uint16_t)buffer);
         buffer[i] = 0;
-        sdebug(F("Command:"));
+        sdebug(F("Cmd:"));
         edebug(buffer);
         delay(10);
         ui_process_command(buffer, i);
@@ -581,9 +579,6 @@ void ui_loop(){
 
 // #####################################################
 // ### Setup
-void ui_std_greeting(){
-  L_println(F("!!!Make sure you are sending NL + CR\n?=help\n"));
-}
 
 void UI__setup_std(){
   debug(F("UiS:"));

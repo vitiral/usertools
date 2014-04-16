@@ -38,7 +38,7 @@ void TH__setup_threads(const TH_thread_funptr *thfptrs);
 
 #define TH_T(T)   {&T}
 #define expose_threads(...)  PROGMEM const TH_thread_funptr _TH__THREAD_FUNPTRS[] = {__VA_ARGS__, NULL}
-#define setup_threading(MEM_SIZE) do{setup_pt(MEM_SIZE); PT__RM.print(); TH__setup_threads(_TH__THREAD_FUNPTRS);}while(0)
+#define setup_threading(MEM_SIZE) do{setup_pt(MEM_SIZE); TH__setup_threads(_TH__THREAD_FUNPTRS);}while(0)
 
 // Eventually I want to use this method:
 // 

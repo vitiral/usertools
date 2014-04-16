@@ -77,9 +77,9 @@ void seterr(uint8_t error);
 // Only log at the proper level.
 #if LOGLEVEL >= LOG_DEBUG
   void EH_start_debug(char *file, unsigned int line);
-  #define sdebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); Serial.print(M); EH_FLUSH();))
-  #define cdebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, Serial.print(M); EH_FLUSH();))
-  #define edebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, Serial.println(M); EH_FLUSH();))
+  #define sdebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); L_print(M); EH_FLUSH();))
+  #define cdebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, L_print(M); EH_FLUSH();))
+  #define edebug(M) EH_DW(LOG_IFLL(LOG_DEBUG, L_println(M); EH_FLUSH();))
   #define debug(...) EH_DW(LOG_IFLL(LOG_DEBUG, EH_start_debug(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH();))
   #define waitc()    EH_DW(EH_start_debug(__FILE__, __LINE__); EH_waitc();)
   #define debug_code(C)   EH_DW(C)
@@ -94,9 +94,9 @@ void seterr(uint8_t error);
 
 #if LOGLEVEL >= LOG_INFO
 void EH_start_info(char *file, unsigned int line);
-  #define slog_info(M) EH_DW(LOG_IFLL(LOG_INFO, EH_start_info(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
-  #define clog_info(M) EH_DW(LOG_IFLL(LOG_INFO, Serial.print(M); EH_FLUSH();))
-  #define elog_info(M) EH_DW(LOG_IFLL(LOG_INFO, Serial.println(M); EH_FLUSH();))
+  #define slog_info(M) EH_DW(LOG_IFLL(LOG_INFO, EH_start_info(__FILE__, __LINE__); L_print(M); EH_FLUSH(); ))
+  #define clog_info(M) EH_DW(LOG_IFLL(LOG_INFO, L_print(M); EH_FLUSH();))
+  #define elog_info(M) EH_DW(LOG_IFLL(LOG_INFO, L_println(M); EH_FLUSH();))
   
   #define log_info(...) EH_DW(LOG_IFLL(LOG_INFO, EH_start_info(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH(); ))
 #else
@@ -116,9 +116,9 @@ void EH_start_info(char *file, unsigned int line);
 #if LOGLEVEL >= LOG_ERROR
   //#define TRY(stuff)               EH_DW(L_silent += 1; EH_void_fun((void *) (stuff)); L_silent -= 1;)
   void EH_log_err(char *file, unsigned int line);
-  #define slog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); Serial.print(M); EH_FLUSH(); ))
-  #define clog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, Serial.print(M); EH_FLUSH();))
-  #define elog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, Serial.println(M); EH_FLUSH();))
+  #define slog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); L_print(M); EH_FLUSH(); ))
+  #define clog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, L_print(M); EH_FLUSH();))
+  #define elog_err(M)              EH_DW(LOG_IFLL(LOG_ERROR, L_println(M); EH_FLUSH();))
   #define log_err(...)            EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH(); ))
   #define EH_ST_raisem(E, ...)    seterr(E); EH_DW(LOG_IFLL(LOG_ERROR, EH_log_err(__FILE__, __LINE__); L_println(__VA_ARGS__); EH_FLUSH(); ))
   #define clrerr_log()            EH_DW(LOG_IFLL(LOG_ERROR, seterr(ERR_CLEARED); log_err(); EH_FLUSH(); clrerr();))

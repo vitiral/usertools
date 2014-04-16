@@ -137,7 +137,6 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
     sdebug(F("E:")); edebug((uint16_t) get_end());
     get_end()->b.next = (PT_data *)put;
   }
-  print();
   return put;
   
 error:
@@ -459,12 +458,12 @@ void pthread::print(){
     }
     L_write('\t');
     if(VTYPE(cdata->b.type) < vt_maxint){
-      L_print("0x"); L_print(cdata->b.type, HEX); L_write(' ');
-      L_print(F("INT\t="));
+      L_print('x'); L_print(cdata->b.type, HEX); L_write(' ');
+      L_print(F("I\t="));
       L_print(get_int((PT_data_int32 *)cdata));
     }
     else if(VTYPE(cdata->b.type) == vt_str){
-      L_print(F("STR\t="));
+      L_print(F("S\t="));
       L_print(((PT_data_str *)cdata)->data);
     }
     else{

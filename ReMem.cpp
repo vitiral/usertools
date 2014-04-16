@@ -113,7 +113,7 @@ void ReMem::freed_size(int16_t size){
 
 int8_t *ReMem::get_used(uint8_t size){
   // go through the whole list looking for the correct size
-  // data larger than 8 bits returns the first slot that works
+  // data larger than 8 bits goes into any slot <= 1.5 times it's size
   // returns NULL if there are no matches
   //sdebug("Gu:"); edebug(size);
   if(not DA_TV(get_id(size), data_available)) return NULL;
@@ -134,9 +134,12 @@ int8_t *ReMem::get_used(uint8_t size){
   else{
     //debug((uint16_t) front);
     while(front < data_put){
-      if(-(*front) <= size){
-        *front = -(*front);
-        return front + 1;
+      if(size <= -(*front)){ // must be able to fit
+        if(size + size/2 >= -(*front)){  // shouldn't take up a slot MUCH bigger than it
+          using_size(size);
+          *front = -(*front);
+          return front + 1;
+        }
       }
       front += abs(*front) + 1;
     }
@@ -180,7 +183,7 @@ error:
 void ReMem::free(void *ptr){
   sdebug(F("F:")); cdebug('\t'); cdebug((uint16_t) ptr); cdebug('\t');
   edebug(SIZE(ptr));
-  assert_return((data < ptr) and (ptr < data_put), ERR_MEMORY);
+  assert_raise_return((data < ptr) and (ptr < data_put), ERR_MEMORY);
   
   int8_t size = SIZE(ptr);
   assert_return(size > 0);

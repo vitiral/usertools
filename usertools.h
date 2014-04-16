@@ -23,10 +23,11 @@ Memproblem:
 //#define UT_USE_SOFTSERIAL
 
 //#define DEBUG_FLUSH
-#define DEBUG
+//#define DEBUG
+#define LOGLEVEL 1
 //#define LOGLEVEL 40
 //#define LOGLEVEL 30
-//#define LOGLEVEL 1
+
 /*
 #include "threading.h"
 #include "errorhandling.h"
