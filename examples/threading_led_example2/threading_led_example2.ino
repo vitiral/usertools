@@ -8,8 +8,8 @@
  */
 
 
-#include <MemoryFree.h>
-#include <threading.h>           // include protothread library
+#include <MemoryFree.h>   // demonstrates how lightweight this is
+#include <threading.h>    // main modules
 
 #define LEDPIN 13  // LEDPIN is a constant 
 
@@ -32,38 +32,43 @@ PT_THREAD blinky_thread(pthread *pt) {
   PT_END(pt);
 }
 
+
+// This is where you declare which functions are threads.
+// Here we use the same function twice (we will configure
+// Them differently below).
+expose_threads(TH_T(blinky_thread), TH_T(blinky_thread));
+
+// We use enum to keep track of threads.
 enum MYTHREADS{
   LED1, 
-  LED2, 
-  NUM_THREADS
+  LED2
 };
 
 void setup() {
-
   pinMode(LEDPIN, OUTPUT); // LED init
   Serial.begin(57600);
-
-  thread_setup(NUM_THREADS); // it is important that you include the correct number of threads
   
-  // Expose the functions we want to schedule as threads
-  // Make sure you expose things in the correct order.
-  thread *led1 = expose_thread(blinky_thread); //LED1
-  thread *led2 = expose_thread(blinky_thread); //LED2
-
-  // All threads have an attached protothread (pt).
-  //   They have member functions. This lets us
-  //   store inputs on a linked list. (slow access but
-  //   takes up very little memory)
-  led1->pt.put_input(1000);
-  led2->pt.put_input(900);
-
-  // Show that the inputs have been gotten
-  Serial.println(F("Inputs:"));
-  Serial.println(led1->pt.get_int_input(0));
-  Serial.println(led2->pt.get_int_input(0));
-  schedule_thread(LED1); 
-  schedule_thread(LED2);
+  Serial.println("MEM");
   Serial.println(freeMemory()); // prints out the amount of memory that is free. It is light weight!
+  
+  // Call this before you call any other threading operations.
+  setup_threading(50);  // 50 == amount of dynamically alocated memory that pt uses. 
+                        // Every time you put data into a pthread, it uses this memory block.
+                        // See UserGuide_ReMem for more details
+  
+  Serial.println(freeMemory()); // prints out the amount of memory that is free. It is light weight!
+
+  // You can get the protothread component from any thread and put data into it as shown.
+  pthread *th;
+  th = get_thread(LED1);
+  th->put_input(1000);
+  th = get_thread(LED2);
+  th->put_input(900);
+
+  // Scheduling the thread means it will run.
+  schedule_thread(LED1);
+  schedule_thread(LED2);
+  
 }
 
 void loop() {

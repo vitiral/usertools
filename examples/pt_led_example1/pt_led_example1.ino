@@ -21,10 +21,11 @@
 
 #define LEDPIN 13  // LEDPIN is a constant 
 
-static pthread pt1, pt2; // each protothread needs one of these
+static pthread pt1, pt2; // creating each pthread object
 
 void setup() {
   pinMode(LEDPIN, OUTPUT); // LED init
+  setup_pt(0);  // declares the maximum amount of memory the pthreads will use (these don't use any).
   PT_INIT(&pt1);  // initialise the two
   PT_INIT(&pt2);  // protothread variables
 }

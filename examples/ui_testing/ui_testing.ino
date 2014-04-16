@@ -12,6 +12,7 @@
 
 #include <SoftwareSerial.h>
 #include <errorhandling.h>
+
 #include <ByteBuffer.h>
 #include <logging.h>
 #include <MemoryFree.h>
@@ -30,19 +31,11 @@ void print_functions(){
   L_println(UI__function_names[1]);
   L_println(UI__function_names[2]);
 }
+
 enum THREADS{
   TH_SET_X1,
   TH_SET_X2,
-  TH_MAIN,
-  TH_NUM
-};
-
-enum FUNCTIONS{
-  FUN_NUM
-};
-
-enum VARIABLES{
-  VAR_NUM
+  TH_MAIN
 };
 
 uint8_t x = 0;
@@ -102,6 +95,7 @@ PT_THREAD main_test(pthread *pt){
   PT_YIELD(pt);
   x = 5; // there should be no more setX threads running
   PT_YIELD(pt); 
+  debug("hi");
   test_assert(x == 5);
 
   flash_to_str(F("t setX1 12"), txt);
@@ -114,7 +108,8 @@ PT_THREAD main_test(pthread *pt){
   test_assert(x == 12);
   flash_to_str(F("k setX1"), txt);
   ui_process_command(txt);
-
+  
+  debug("here");
   PT_YIELD(pt);
   debug("testing ?");
   flash_to_str(F("?"), txt);
@@ -137,10 +132,14 @@ PT_THREAD main_test(pthread *pt){
   ui_process_command(txt);
   PT_YIELD(pt);
   
+  debug("some test");
   flash_to_str(F("t setX1 100\r\n"), txt);
+  //waitc();
   ui_process_command(txt);
   
-
+  //waitc();
+  
+  debug("done?");
   while(true){
     L_println("Main running");
     PT_WAIT_MS(pt, 2000);
@@ -153,31 +152,30 @@ end:
 }
 
 
+expose_threads(TH_T(set_x), TH_T(set_x), TH_T(main_test));
+no_functions();
+no_variables();
+
+UI_STR(tn1, "setX1");
+UI_STR(tn2, "setX2");
+UI_STR(tn3, "Main");
+expose_thread_names(tn1, tn2, tn3);
+expose_default_function_names();
+
 void setup(){
-  thread *th;
+  pthread *th;
   failbuffer.init(100);
   Serial.begin(57600);
   Serial.println(F("*** SETUP BEGINS ***"));
+  
+  set_thread_names();
+  set_function_names();
 
-  ui_setup_std(TH_NUM, FUN_NUM, VAR_NUM);
-
-
-  set_thread_names(F("setX1"), 
-  F("setX2"), 
-  F("Main"));
-
-  default_function_names_only();
-
-  //set_function_names();
-  th = expose_thread(set_x);
-  th->pt.put_input(1);
-  th = expose_thread(set_x);
-  th->pt.put_input(2);
-
-  expose_schedule_thread(main_test);
-
-  debug("ending setup");
-  ui_end_setup();
+  setup_ui(400);
+  
+  get_thread(TH_SET_X1)->put_input(1);
+  get_thread(TH_SET_X2)->put_input(2);
+  schedule_thread(TH_MAIN);
 
   ui_process_command("?");
 
@@ -195,6 +193,7 @@ void loop(){
     Logger.flush();
     Logger.print(F("Testcase:"));
     Logger.println(n);
+    PT__RM.print();
 
     clrerr();
     testerr = 0;

@@ -12,10 +12,8 @@
  *  "t led1 600" -- If you just killed led1, this will restart led1 with a period of 600ms
  */
 
-
 #include <ui.h>           // include protothread library
 #include <MemoryFree.h>
-#include <errorhandling.h>
 
 #define LEDPIN 13  // LEDPIN is a constant 
 
@@ -42,47 +40,48 @@ PT_THREAD blinky_thread(pthread *pt) {
 enum MYTHREADS{
   LED1, 
   LED2, 
-  NUM_THREADS
 };
+
+// This exposes the threads so we can use them. For the user interface, you have to
+//  explicitly declare that you won't be using any functions or variables
+expose_threads(TH_T(blinky_thread), TH_T(blinky_thread)); // make sure to wrap each thread in TH_T
+no_functions();  // if you are not using any functions you have to explicitly declare that
+no_variables();  // same for variables
+
+// This declares what our threads will be called. We will now be able to access thread 0 as
+// "led1" and thread 1 as "led2". The odd way we have to declare these is because of how
+// PROGMEM works.
+UI_STR(tn1, "led1");
+UI_STR(tn2, "led2");
+expose_thread_names(tn1, tn2);
+expose_defulat_function_names();    // exposes only the default function names (i.e. ?, k, t, v)
+
 
 void setup() {
   pinMode(LEDPIN, OUTPUT); // LED init
   Serial.begin(57600);
-  
+
   Serial.println("\n\n#########################  Start Setup");
-  EH_test();
   
-  // You must always begin the setup with this call. The inputs are
-  // the numbers of exposed:
-  // threads, functions, variables
-  ui_setup_std(NUM_THREADS, 0, 0);
+  // This must be called in your setup function for all exposed names.
+  set_thread_names();
+  set_function_names();
   
-  // This sets the thread names so that you can access them more easily over the terminal.
-  // You can abstain from doing this (it will save some space in program memory) BUT if you call them, you need to have the right number.
-  // For instance, it would be bad if I only made an name for "led1".
-  set_thread_names(F("led1"), F("led2")); //LED1, LED2
-  default_function_names_only();  // this lets us use the default user interface to schedule threads, kill threads, etc. USE ONLY IF YOU HAVE NO FUNCTIONS
+  // This must be called before any threading
+  setup_ui(200);  // 200 == the amount of dynamic memory our threads can use. 
+                  // I recommend at least 100, more if you use alot of strings
   
-  // Expose the things we want to access.
-  // Make sure you expose things in the correct order.
-  expose_thread(blinky_thread); //LED1
-  expose_thread(blinky_thread); //LED2
-  
-  thread *th;
+  pthread *th;
   
   // See example pt_led_example2
   th = get_thread(LED1);
-  th->pt.put_input(1000);
+  th->put_input(1000);
   th = get_thread(LED2);
-  th->pt.put_input(900);
+  th->put_input(900);
   
   schedule_thread(LED1);
   schedule_thread(LED2);
-  
-  // You must always end the setup with this call
-  ui_end_setup();
   Serial.println(freeMemory());
-  
 }
 
 

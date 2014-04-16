@@ -25,6 +25,7 @@ ByteBuffer failbuffer;
 void setup(){
   failbuffer.init(100);
   Serial.begin(57600);
+  setup_pt(200);
   log_info(F("setup"));
 }
 
@@ -50,12 +51,26 @@ PT_THREAD test_wait_ms(pthread *pt, uint8_t value){
 
 PT_THREAD test_spawn(pthread *pt){
   static uint32_t time;
+  static uint32_t time1;
+  static uint32_t time2;
+  static uint32_t time3;
   PT_BEGIN(pt);
   time = millis();
-  PT_SPAWN(pt, test_wait_ms, 250);
-  time = millis() - time;
+  //PT_SPAWN(pt, test_wait_ms, 250);
+  (pt)->put_temp_pt();
+  time1 = millis();
+  PT_WAIT_THREAD(pt, test_wait_ms((pt)->get_pt_temp(), 250));
+  time2 = millis();
+  pt->clear_temp();
+  time3 = millis();
+  sdebug(F("putting temp:")); edebug(time1 - time);
+  sdebug(F("clearing temp:")); edebug(time3 - time2);
+  sdebug(F("Act Waiting:")); edebug(time2 - time1);
+  
+  sdebug(F("Waited:")); edebug(time3 - time);
+  
+  time = time3 - time;
   assert_return(245 < time and time < 255, PT_ERROR);
-  sdebug(F("Waited:")); edebug(time);
   PT_END(pt);
 }
 
@@ -66,6 +81,7 @@ PT_THREAD test1(pthread *pt_l, unsigned short tp){
   uint16_t value;
   int32_t test;
   uint16_t mem = freeMemory();
+  Serial.print("M:"); Serial.println(mem);
   switch(tp){
   case 0:
     // test simple threading.
@@ -93,8 +109,8 @@ PT_THREAD test1(pthread *pt_l, unsigned short tp){
     value = ((uint16_t)millis()) - value;
     debug(value);
     assert(245 < value and value < 255);
-    pt->get_int_temp();
-    assert(errno == ERR_INDEX);
+    //TRY(pt->get_int_temp());
+    //assert(errno == ERR_INDEX);
     clrerr();
     break;
 
@@ -170,6 +186,7 @@ void loop(){
     Logger.flush();
     Logger.print(F("Testcase:"));
     Logger.println(n);
+    PT__RM.print();
 
     clrerr();
     test1(&gpt, n);

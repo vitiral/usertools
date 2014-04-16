@@ -34,18 +34,15 @@ uint8_t testerr = 0;
 void main_test(uint8_t place);
 
 enum THREADS{
-  TH_SETX,
-  TH_NUM
+  TH_SETX
 };
 
 enum FUNCTIONS{
-  FUN_SETX,
-  FUN_NUM
+  FUN_SETX
 };
 
 enum VARIABLES{
-  VAR_X,
-  VAR_NUM
+  VAR_X
 };
 
 uint8_t x = 0;
@@ -58,31 +55,39 @@ uint8_t set_x(pthread *pt){
   return PT_YIELDED;
 }
 
+
+expose_threads(TH_T(set_x));
+expose_functions(UI_F(set_x));
+UI_V(v1, x);
+expose_variables(UI_VA(v1));
+//no_variables();
+
+UI_STR(tn1, "setX");
+expose_thread_names(tn1);
+
+UI_STR(fn1, "setX");
+expose_function_names(fn1);
+
+UI_STR(vn1, "x");
+expose_variable_names(vn1);
+
 void setup(){
-  thread *th;
+  pthread *th;
   failbuffer.init(100);
   Serial.begin(57600);
   Serial.println(F("\n\n\n*** SETUP BEGINS ***"));
-
-  ui_setup_std(TH_NUM, FUN_NUM, VAR_NUM);
-  set_thread_names(F("setX"));
-  set_function_names(F("setX"));
-  set_variable_names(F("x"));
   
-  expose_thread(set_x);
-  expose_function(set_x);
-  expose_variable(x);
+  set_all_names();
+  
+  
+  setup_ui(300);
 
-  ui_end_setup();
   log_info(F("all setup"));
-  if(1, 0){
-    Serial.println("IT WORKS");
-  }
 }
 
 void main_test(uint8_t place){
   pthread pt;
-  thread *th;
+  pthread *th;
   char txt[30];
   switch(place){
   case 0:
@@ -108,14 +113,14 @@ void main_test(uint8_t place){
   case 2:
      debug("Start Threads");
      th = get_thread(TH_SETX);
-     th->pt.clear_data();
-     th->pt.put_input(42);
+     th->clear_data();
+     th->put_input(42);
      schedule_thread(TH_SETX);
      debug(x);
      test_assert(x == 42);
      
      set_thread_innactive(th);
-     test_assert(th->pt.lc == PT_INNACTIVE);
+     test_assert(th->lc == PT_INNACTIVE);
      break;
      
    case 3:
@@ -126,16 +131,16 @@ void main_test(uint8_t place){
      test_assert(x == 45);
      debug("killing");
      set_thread_innactive(th);
-     test_assert(th->pt.lc == PT_INNACTIVE);
+     test_assert(th->lc == PT_INNACTIVE);
      
-     debug(th->pt.lc);
+     debug(th->lc);
      debug(get_index(th));
      flash_to_str(F("t setX 55"), txt);
      ui_process_command(txt);
      test_assert(x == 55);
      debug("killing");
      set_thread_innactive(th);
-     test_assert(th->pt.lc == PT_INNACTIVE);
+     test_assert(th->lc == PT_INNACTIVE);
   
   case 4:
     // '?' is failing alot

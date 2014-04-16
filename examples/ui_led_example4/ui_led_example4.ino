@@ -17,8 +17,8 @@
  *  "reinit"         -- reinitializes everything.
  */
 
-
 #include <ui.h>           // include protothread library
+#include <MemoryFree.h>
 
 #define LEDPIN 13  // LEDPIN is a constant 
 
@@ -33,36 +33,34 @@ void toggleLED() {
 /* This function toggles the LED after 'interval' ms passed */
 PT_THREAD blinky_thread(pthread *pt) {
   // Notice that this function doesn't require any static integers. Everything
-  // is stored inside of pt.
+  // is stored inside of th
   PT_BEGIN(pt);
   while(1) {
     //* Use PT_WAIT_MS instead of the timestamp, etc.
     PT_WAIT_MS(pt, pt->get_int_input(0) - sub_time); // macro to do "wait for milliseconds"
-    toggleLED();
+    iferr_log();
+    toggleLED();  
   }
   PT_END(pt);
 }
 
 enum MYTHREADS{
   LED1, 
-  LED2, 
-  NUM_THREADS
+  LED2
 };
 
 enum MYFUNCS{
-  REINIT,
-  NUM_FUNCS
+  REINIT
 };
 
 enum MYVARS{
-  SUB_TIME,
-  NUM_VARS
+  SUB_TIME
 };
 
 // This function can be called form the command line as "reinit"
 // It resets all the settings.
 uint8_t reinit(pthread *pt){
-  thread *th;
+  pthread *th;
   // First we try to kill the threads.
   // Note: TRY simply silences any error outputs. You still have to clear errors
   // afterwards (if you don't clear errors, it can effect the next funciton call)
@@ -81,13 +79,37 @@ uint8_t reinit(pthread *pt){
   //   store inputs on a linked list. (slow access
   //   takes up very little memory)
   th = get_thread(LED1);
-  th->pt.put_input(1000);
+  th->put_input(1000);
+  iferr_log_return(0);
   th = get_thread(LED2);
-  th->pt.put_input(900);
+  th->put_input(900);
+  iferr_log_return(0);
   
   schedule_thread(LED1);
   schedule_thread(LED2);
 }
+
+// Expose the things we want to access.
+// Threads always need to be exposed if you want to schedule them
+// Note: the order is important!
+  
+expose_threads(TH_T(blinky_thread), TH_T(blinky_thread));  // wrap threads in TH_T
+expose_functions(UI_F(reinit));    // Wrap functions in UI_F
+UI_V(v1, sub_time);              // Variables have to be declared specially. Declare variable names first with UI_V
+//UI_V(v2, othervar) -- if you had more variables, continue in this way
+expose_variables(UI_VA(v1));     // Then wrap the variable names in UI_VA. Alot of things have to be done to take up
+                                 // zero RAM!
+
+// The names have to be done similarily to variables
+UI_STR(tn1, "led1");
+UI_STR(tn2, "led2");
+expose_thread_names(tn1, tn2);  // no wrapping required here.
+
+UI_STR(fn1, "reinit");
+expose_function_names(fn1);
+
+UI_STR(vn1, "sub");
+expose_variable_names(vn1);
 
 void setup() {
   pinMode(LEDPIN, OUTPUT); // LED init
@@ -95,36 +117,30 @@ void setup() {
   
   Serial.println("\n\n#########################  Start Setup");
   
-  // You must always begin the setup with this call. The inputs are
-  // the numbers of exposed: threads, functions, variables
-  ui_setup_std(NUM_THREADS, NUM_FUNCS, NUM_VARS);
+  // This makes the names actually accessible to the threading module.
+  set_thread_names();
+  set_function_names();
+  set_variable_names();
   
-  // This is used to set the thread names, so they can be more
-  // easily accessed in the terminal.
-  set_thread_names(F("led1"), F("led2"));
-  set_function_names(F("reinit"));
-  set_variable_names(F("sub"));
-  
-  // Expose the things we want to access.
-  // Threads always need to be exposed if you want to schedule them
-  // Note: the order is important!
-  expose_thread(blinky_thread); // TH_LED1
-  expose_thread(blinky_thread); // TH_LED2
-  
-  // we can also expose functions and variables to be called from the command line
-  expose_function(reinit);  // REINIT
-  expose_variable(sub_time);  // SUB_TIME
+  // this must be called before any threading (except setting names)
+  setup_ui(200);  // 200 == the amount of dynamic memory our threads can use. 
+                  // I recommend at least 100, more if you use alot of strings
   
   // This has two purposes: it initilizes the values during setup, and it can be called
   // by the user to reinitilize the values.
   reinit(NULL); // Note: NULL is only used because the function doesn't actually use it's pthread input.
   
-  // You must always end the setup with this call
-  ui_end_setup();
 }
 
 void loop() {
+  static uint32_t time;
   ui_loop();
+  
+  if(millis() - time > 2000){
+    Serial.print("fM:"); Serial.println(freeMemory());
+    time = millis();
+  }
+  
 }
 
 
