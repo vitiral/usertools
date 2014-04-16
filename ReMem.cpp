@@ -21,6 +21,7 @@
 
 #define LOGLEVEL 1
 */
+
 #include "errorhandling.h"
 
 
@@ -218,15 +219,13 @@ void ReMem::print_data(){
   uint8_t i;
   int8_t *front = data;
   while(front < data_put) {
-    L_print(*front); L_write('\t');
+    L_print(*front); L_print(F("\tx"));
     for(i = 1; i < abs(*front) + 1; i++){
-      L_write(' '); L_print(front[i]);
+      L_write(' '); L_print(front[i], HEX);
     }
     if(abs(*front) > 8){
       L_println(); L_write('\t');
-      for(i = 1; i < abs(*front) + 1; i++){
-        L_write((char)front[i]);
-      }
+      L_print((char *)(front + 1));
     }
     front += abs(*front) + 1;
     L_println();

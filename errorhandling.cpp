@@ -72,9 +72,11 @@ void EH_printinfo(char *file, unsigned int line)
 
 void EH_printerrp(){
   L_write('(');
-  L_print(errprint);
+  L_print((uint8_t)errprint);
   L_write(':');
+  L_write((char) errprint);
   
+  /*    // This takes up way too much memory
   switch(errprint){
   case ERR_NOERR:
     L_print(F("No")); break;
@@ -93,6 +95,7 @@ void EH_printerrp(){
     L_print(F("Assert")); break;
   case ERR_INDEX:
     L_print(F("Index")); break;
+  case ERR_MEMORY:
     L_print(F("Mem")); break;
   case ERR_CRITICAL:
     L_print(F("CRIT")); break;
@@ -106,6 +109,7 @@ void EH_printerrp(){
     L_print(F("Unknown")); break;
   }
   L_print(F("Err"));
+   */
   L_write(')');
 }
 

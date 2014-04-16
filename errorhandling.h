@@ -20,20 +20,20 @@
 #include "logging.h"
 
 #define ERR_NOERR         0 // NoErr -- no error has occured
-#define ERR_TIMEOUT       2 // TimeoutErr
-#define ERR_COM           3 // ComErr
-#define ERR_INPUT         4 // InputErr
+#define ERR_TIMEOUT       '#' // TimeoutErr
+#define ERR_COM           '>' // ComErr
+#define ERR_INPUT         '<' // InputErr
 
-#define ERR_TYPE          50 // TypeErr
-#define ERR_VALUE         51 // ValueErr
-#define ERR_ASSERT        52 // AssertErr
-#define ERR_INDEX         53 // IndexErr
-#define ERR_MEMORY        54 // MemErr
-#define ERR_CRITICAL      55 // CRITErr
+#define ERR_TYPE          'T' // TypeErr
+#define ERR_VALUE         'V' // ValueErr
+#define ERR_ASSERT        'A' // AssertErr
+#define ERR_INDEX         'i' // IndexErr
+#define ERR_MEMORY        'M' // MemErr
+#define ERR_CRITICAL      '!' // CRITErr
 
-#define ERR_CLEARED       253 // "Cleared Error" used by clrerr_log and is then cleared
-#define ERR_NONEW         254 // NoNew -- error already printed
-#define ERR_UNKNOWN       255 // unknown error
+#define ERR_CLEARED       '-' // "Cleared Error" used by clrerr_log and is then cleared
+#define ERR_NONEW         '*' // NoNew -- error already printed
+#define ERR_UNKNOWN       '?' // unknown error
 
 #define EH_config_std            L_config_std()
 #define EH_config_soft(soft)     L_config_soft(&soft)
