@@ -259,7 +259,7 @@ uint8_t call_function(pthread *pt){
     debug(F("UnkT"));
     pt->print();
     debug(type);
-    waitc();
+//    waitc();
     assert(type, 0);
   }
   iferr_log_catch();
@@ -288,12 +288,15 @@ uint8_t print_variable(UI_variable *var){
   return true;
 }
 
+pthread ui_pc_pt;
+
 void ui_process_command(char *input, uint8_t endi){
-  pthread pt;
-  pt.data = NULL;
-  pt.lc = PT_INNACTIVE;
+  //pthread pt;
+  ui_pc_pt.data = NULL;
+  ui_pc_pt.lc = PT_INNACTIVE;
+  
   /*
-  if(pt.data != NULL){
+  if(ui_pc_pt.data != NULL){
     seterr(ERR_CRITICAL);
     log_err();
     return;
@@ -303,17 +306,20 @@ void ui_process_command(char *input, uint8_t endi){
   input = strip(input, endi);
   sdebug(F("Parse CMD:")); edebug(input);
   
-  debug_code(PT__RM.print(););
+  debug_code(
+    ui_pc_pt.print();
+    PT__RM.print();
+  );
   
-  put_inputs(&pt, input);
+  put_inputs(&ui_pc_pt, input);
+  iferr_log_catch();
   
   debug('P');
-  pt.print();
+  ui_pc_pt.print();
   
-  iferr_log_catch();
-  call_function(&pt);
+  call_function(&ui_pc_pt);
 error:
-  pt.clear_data();
+  ui_pc_pt.clear_data();
 }
 
 // for debugging
@@ -469,8 +475,7 @@ uint8_t UI_cmd_kill(pthread *pt){
   iferr_log_catch();
   
   kill_thread(th);
-  L_print(F("Killed:"));
-  L_println(get_index(th));
+  L_print(F("Killed:")); L_println(get_index(th));
   return 1;
 error:
   return 0;

@@ -33,9 +33,11 @@ pthread::~pthread(){
 }
 
 PT_data *pthread::get_end(){
-  //if(data == NULL) return NULL;
+  assert_return(data != NULL, NULL);
   PT_data *next = data;
   while(true){
+    debug((uint16_t) next);
+    debug((uint16_t) next->b.next);
     if(next->b.next == NULL) return next;
     next = next->b.next;
   }
@@ -47,7 +49,6 @@ void *pthread::put_data(void *putdata, uint8_t type){
   
 void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
   PT_data *put = NULL;
-  void *pdata = NULL;
   
   // Allocate correct amount of space
   switch(VTYPE(type)){
@@ -71,8 +72,15 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
     case(vt_str):
       //1debug("tstr");
       if(len == 0) len = strlen((char *) putdata) + 1;
+      debug(sizeof(PT_data_str));
+      debug(len);
+      debug((char *) putdata);
       assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
-      put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_str) + len));
+      
+      // The +1 below doesn't make sense to me -- but the code doesn't work without it (writes into 
+      put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_str) + len + 1));
+      //put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_str) + len));
+      
       break;
       
     case(vt_pt):
@@ -112,24 +120,30 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
   }
   
   init_PT_data(put);
+  debug(type, BIN);
   put->b.type = type;
   if(data == NULL){
+    debug('F');
     data = (PT_data *)put;
   }
   else if(PTYPE(type) == TYPE_TEMP){
     // temp always goes in front, can only have one temp data
+    debug('T');
     assert_raise(PTYPE(data->b.type) != TYPE_TEMP, ERR_INDEX);
     put->b.next = data;
     data = (PT_data *)put;
   }
   else{
+    sdebug(F("E:")); edebug((uint16_t) get_end());
     get_end()->b.next = (PT_data *)put;
   }
+  print();
   return put;
   
 error:
-  memclr(put);
-  memclr(pdata);
+  debug(F("PT_ERR"));
+  if(put) PT__RM.free(put);
+  
   return NULL;
 }
 
@@ -169,7 +183,7 @@ int32_t pthread::get_int(PT_data_int32 *pint){
     //  return (int32_t)(pint->data);
 
     default:
-      raise(ERR_TYPE, pint->b.type, HEX);
+      raise(ERR_TYPE, pint->b.type, BIN);
   }
 error:
  return 0;
@@ -426,24 +440,24 @@ void pthread::clear_type(uint8_t type, ptindex index){
 }
   
 void pthread::print(){
-  PT_data *cdata;
-  cdata  = data;
+  PT_data *cdata = data;
+  L_print(F("pt:")); L_println((uint16_t) &lc);
   while(cdata){
-    L_print((uint16_t) cdata); L_write('\t');
+    L_print((uint16_t) cdata); L_write('\t'); L_print(cdata->b.type, BIN); L_write('\t');
     switch(PTYPE(cdata->b.type)){
       case TYPE_TEMP:
-        L_print(F("Temp"));
+        L_print(F("T"));
         break;
       case TYPE_OUTPUT:
-        L_print(F("Out"));
+        L_print(F("O"));
         break;
       case TYPE_INPUT:
-        L_print(F("In"));
+        L_print(F("I"));
         break;
       default:
-        L_print(F("T_ERR"));
+        L_print(F("ERR"));
     }
-    L_print(F("\t"));
+    L_write('\t');
     if(VTYPE(cdata->b.type) < vt_maxint){
       L_print("0x"); L_print(cdata->b.type, HEX); L_write(' ');
       L_print(F("INT\t="));

@@ -170,7 +170,7 @@ void *ReMem::rmalloc(uint8_t size){
     //debug(put[0]);
     put++;
   }
-  sdebug(F("MAL:")); edebug((uint16_t) put);
+  sdebug(F("MAL:")); cdebug(size); cdebug(F("\tp:")); edebug((uint16_t) put);
   //debug(SIZE(put));
   return (void *)put;
 error:
@@ -179,11 +179,13 @@ error:
 
 void ReMem::free(void *ptr){
   sdebug(F("F:")); cdebug('\t'); cdebug((uint16_t) ptr); cdebug('\t');
-  cdebug(SIZE(ptr)); cdebug('\t');
+  edebug(SIZE(ptr));
+  assert_return((data < ptr) and (ptr < data_put), ERR_MEMORY);
+  
   int8_t size = SIZE(ptr);
   assert_return(size > 0);
+  
   SIZE(ptr) = -size;
-  edebug(SIZE(ptr));
   freed_size(size);
 }
 
