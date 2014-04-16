@@ -21,7 +21,7 @@ public:
   ReMem(void);
   void init(uint16_t size);
   void *rmalloc(uint8_t size);
-  void free(void *ptr);
+  uint8_t free(void *ptr);
   void defrag();
   void print();
   void print_data();

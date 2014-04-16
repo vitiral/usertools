@@ -74,9 +74,9 @@ void EH_printerrp(){
   L_write('(');
   L_print((uint8_t)errprint);
   L_write(':');
+#ifndef ERROR_VERBOSE
   L_write((char) errprint);
-  
-  /*    // This takes up way too much memory
+#else
   switch(errprint){
   case ERR_NOERR:
     L_print(F("No")); break;
@@ -109,7 +109,7 @@ void EH_printerrp(){
     L_print(F("Unknown")); break;
   }
   L_print(F("Err"));
-   */
+#endif
   L_write(')');
 }
 

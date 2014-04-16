@@ -178,19 +178,23 @@ void *ReMem::rmalloc(uint8_t size){
   //debug(SIZE(put));
   return (void *)put;
 error:
+  clrerr();
   return NULL;
 }
 
-void ReMem::free(void *ptr){
+uint8_t ReMem::free(void *ptr){
+  // returns 1 on success, 0 on failure
   sdebug(F("F:")); cdebug('\t'); cdebug((uint16_t) ptr); cdebug('\t');
   edebug(SIZE(ptr));
-  assert_raise_return((data < ptr) and (ptr < data_put), ERR_MEMORY);
+  if(not ((data < ptr) and (ptr < data_put))) return 0;
+  assert_raise_return((data < ptr) and (ptr < data_put), ERR_MEMORY, 0);
   
   int8_t size = SIZE(ptr);
-  assert_return(size > 0);
+  assert_return(size > 0, 0);
   
   SIZE(ptr) = -size;
   freed_size(size);
+  return 1;
 }
 
 void ReMem::defrag(){
