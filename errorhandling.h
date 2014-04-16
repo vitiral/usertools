@@ -21,8 +21,8 @@
 
 #define ERR_NOERR         0 // NoErr -- no error has occured
 #define ERR_TIMEOUT       '#' // TimeoutErr
-#define ERR_COM           '>' // ComErr
-#define ERR_INPUT         '<' // InputErr
+#define ERR_COM           '<' // ComErr
+#define ERR_INPUT         '>' // InputErr
 
 #define ERR_TYPE          'T' // TypeErr
 #define ERR_VALUE         'V' // ValueErr
@@ -110,8 +110,10 @@ void EH_start_info(char *file, unsigned int line);
 #define CATCH_ALL                if(clrerr())
 #define CATCH(E)                 if(clrerr_if(E))
 #define CATCH_N(E)               if(clrerr_ifn(E))
+#define ELSE_CATCH_ALL           else if(clrerr())
 #define ELSE_CATCH(E)            else if(clrerr_if(E))
 #define ELSE_CATCH_N(E)          else if(clrerr_ifn(E))
+
 
 #if LOGLEVEL >= LOG_ERROR
   //#define TRY(stuff)               EH_DW(L_silent += 1; EH_void_fun((void *) (stuff)); L_silent -= 1;)

@@ -217,7 +217,7 @@ Then I came across the protothreads library (included in this folder as
 pt.h
 \series default
 ) and everything was better...
- or was it.
+ or was it?
 \end_layout
 
 \begin_layout Standard
@@ -246,16 +246,16 @@ ui.h
 \end_layout
 
 \begin_layout Itemize
-Create threads easily -- a thread is a function that will be called frequently,
- who's status can be observed externally, and who can be killed by the implement
-ed task manager.
+Create threads easily -- a thread is a function that will be called every
+ loop, who's status can be observed externally, and who can be killed by
+ the implemented task manager.
  Threads are easy to create and much easier to maintain than doing similar
  things any other way.
 \end_layout
 
 \begin_layout Itemize
-Access variables easily : expose_variable(variable) and you can access it
- with 
+Access variables easily : after exposing a variable, you can access it with
+ 
 \begin_inset Quotes eld
 \end_inset
 
@@ -278,8 +278,14 @@ v myvar value
 Call functions: same as exposing variables.
 \end_layout
 
+\begin_layout Itemize
+Functions and variables take up zero SRAM, and threads only take up 4 bytes
+ each! This allows you to easily construct a very large user interface through
+ exposed functions and variables without worrying about SRAM usage.
+\end_layout
+
 \begin_layout Section*
-Overview
+Tutorial
 \end_layout
 
 \begin_layout Standard
@@ -455,6 +461,22 @@ The following terminal commands are supported:
 \begin_layout Itemize
 
 \series bold
+? :: 
+\series default
+print all options for threads, variables and function calls.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+t (exposed thread) [input] :: 
+\series default
+calls an exposed thread, sends it input.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
 v
 \series default
  ::VARNAME
@@ -467,17 +489,9 @@ v
 \begin_layout Itemize
 
 \series bold
-? :: 
-\series default
-print all options for threads, variables and function calls.
-\end_layout
-
-\begin_layout Itemize
-
-\series bold
 k [process name] :: 
 \series default
-kills the indicated process name
+kills the indicated process name (integer or exposed name)
 \end_layout
 
 \begin_layout Itemize
@@ -489,12 +503,311 @@ calls a function that you have exposed.
  Sends it input
 \end_layout
 
+\end_deeper
+\begin_layout Section*
+Overview
+\end_layout
+
+\begin_layout Standard
+The ui module is almost exactly the same as the threading module.
+ The only difference is that you can also expose variables and functions.
+ After you have exposed things, you will be able to see them (by typing
+ ?) as well as interract with them (threads can be killed and scheduled,
+ functions can be called with inputs, variables can be viewed and set)
+\end_layout
+
 \begin_layout Itemize
 
 \series bold
-t (exposed thread) [input] :: 
+setup_ui(Mem_Amount) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Must be called after expose_threads, expose_functions, expose_variables.
+\end_layout
+
+\begin_layout Itemize
+If one of these is not exposed, 
+\series bold
+no_NAME()
 \series default
-calls an exposed thread, sends it input
+ must be called.
+ i.e.
+ if you are not using any functions, call 
+\series bold
+no_functions()
+\end_layout
+
+\begin_layout Itemize
+Mem_Amount == the maximum amount of dynamic memory that your program will
+ use.
+ See 
+\series bold
+UserGuide_ReMem
+\series default
+ for more details
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+expose_functions(...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+exactly the same as exposing threads (even the funciton type is the same),
+ except you must wrap each value in 
+\series bold
+UI_F
+\series default
+ instead of 
+\series bold
+TH_T
+\series default
+.
+ See 
+\series bold
+expose_threads
+\series default
+ in 
+\series bold
+UserGuide_threading
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+expose_variables(...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Exposing variables is slightly different.
+ This is because the compiler can't store this type directly into PROGMEM.
+ To expose variables, you must first create pointers to them using 
+\series bold
+UI_V(pointer, value)
+\series default
+ and then expose them, wrapping their pointers with 
+\series bold
+UI_VA
+\series default
+:
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+// variables we will be exposing
+\end_layout
+
+\begin_layout Plain Layout
+
+uint8_t myint;
+\end_layout
+
+\begin_layout Plain Layout
+
+float myfloat;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+// This creates pointers v1 and v2 to each variable
+\end_layout
+
+\begin_layout Plain Layout
+
+UI_V(v1, myint);
+\end_layout
+
+\begin_layout Plain Layout
+
+UI_V(v2, myfloat);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+// put pointers into exposed array
+\end_layout
+
+\begin_layout Plain Layout
+
+expose_variables(UI_VA(v1), UI_VA(v2));
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+expose_thread_names(...), expose_function_names(...), expose_variable_names(...)
+ ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Used to access via terminal
+\end_layout
+
+\begin_layout Itemize
+If you use these, make sure to name every exposed thread/function/variable.
+ For instance, if you have two threads then include exactly two names (order
+ is important)
+\end_layout
+
+\begin_layout Itemize
+Must be exposed in a similar way to variables:
+\end_layout
+
+\begin_layout Itemize
+Must call associated 
+\series bold
+set_NAME_names() 
+\series default
+in the setup function.
+ See below.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+UI_STR(tn1, mythread);
+\end_layout
+
+\begin_layout Plain Layout
+
+expose_thread_names(tn1);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+UI_STR(fn1, myfunc1);
+\end_layout
+
+\begin_layout Plain Layout
+
+UI_STR(fn2, myfunc2);
+\end_layout
+
+\begin_layout Plain Layout
+
+expose_function_names(fn1, fn2);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+UI_STR(vn1, myvar);
+\end_layout
+
+\begin_layout Plain Layout
+
+expose_variable_names(vn1);
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+expose_default_thread_names()
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Only use if you are not exposing ANY threads
+\end_layout
+
+\begin_layout Itemize
+Allows you to see the default thread 
+\series bold
+ui
+\series default
+ -- or the user interface, and kill it with 
+\series bold
+kill ui
+\end_layout
+
+\begin_layout Itemize
+This function is not all that useful
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+expose_default_function_names() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Only use if you are not exposing ANY functions
+\end_layout
+
+\begin_layout Itemize
+Allows you to see and call the default functions by name: 
+\series bold
+?, t, v, k
+\end_layout
+
+\begin_layout Itemize
+Useful if you are not using any functions
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+set_thread_names(), set_function_names(), set_variable_names() ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Must be called in the setup function if names are exposed.
+\end_layout
+
+\begin_layout Itemize
+Can also call 
+\series bold
+set_all_names() 
+\series default
+to do all of them at once.
 \end_layout
 
 \end_deeper

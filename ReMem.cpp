@@ -34,22 +34,14 @@
 //   EEE - num available == 2 bytes
 //   FFF - num available == 1 byte
 
-#define DA_GT_8         0b1100000000000000
-#define DA_LT_8_ODD     0b0011100000000000
-#define DA_ET_8         0b0000011000000000
-#define DA_ET_4         0b0000000111000000
+#define DA_DEFRAG       0b1000000000000000    // indicates that data needs to be defraged
+#define DA_GT_8         0b0110000000000000
+#define DA_LT_8_ODD     0b0001110000000000
+#define DA_ET_8         0b0000001100000000
+#define DA_ET_4         0b0000000011000000
 #define DA_ET_2         0b0000000000111000
 #define DA_ET_1         0b0000000000000111
-//                       0b101000000000000
-// Shift values
-#define DA_GT_8_SH      14
-#define DA_LT_8_ODD_SH  11
-#define DA_ET_9_SH      9
-#define DA_ET_4_SH      6
-#define DA_ET_2_SH      3
-#define DA_ET_1_SH      0
-
-#define DA_1MATRIX      0b0100101001001001    // for adding and subtracting
+#define DA_1MATRIX      0b0010010101001001    // for adding and subtracting
 //#define DA_TV(DA, D)    ((uint16_t)((DA) bitand (D)))    // Used for trust testing and
 #define DA_TV(DA, D)    (((uint16_t)(DA) bitand (uint16_t)(D)))    // Used for trust testing and
 
@@ -95,23 +87,6 @@ void ReMem::using_size(int16_t size){
   data_available = data_available - DA_TV(size, DA_1MATRIX);
 }
 
-void ReMem::freed_size(int16_t size){
-  size = get_id(size);
-  // add 1 to the value
-  uint16_t temp_avail = data_available + (uint16_t)DA_TV(size, DA_1MATRIX);
-  debug(temp_avail, BIN);
-  if(DA_TV(size, data_available)){
-    if(DA_TV(size, temp_avail)){
-      data_available = temp_avail;
-    }
-    // else{}  // temp_avail used to exist, now it is 0 -- overflow
-  }
-  else{
-    data_available = temp_avail;
-  }
-}
-
-
 int8_t *ReMem::get_used(uint8_t size){
   // go through the whole list looking for the correct size
   // data larger than 8 bits goes into any slot <= 1.5 times it's size
@@ -145,6 +120,8 @@ int8_t *ReMem::get_used(uint8_t size){
       front += abs(*front) + 1;
     }
   }
+  
+  //TODO: canibilize large sizes
   return NULL;
 }
 
@@ -182,6 +159,24 @@ error:
   return NULL;
 }
 
+void ReMem::freed_size(int16_t size){
+  size = get_id(size);
+  // add 1 to the value
+  uint16_t temp_avail = data_available + (uint16_t)DA_TV(size, DA_1MATRIX);
+  debug(temp_avail, BIN);
+  if(DA_TV(size, data_available)){
+    if(DA_TV(size, temp_avail)){
+      data_available = temp_avail;
+    }
+    else{ // temp_avail used to exist, now it is 0 -- overflow
+      data_available |= DA_DEFRAG;
+    }
+  }
+  else{
+    data_available = temp_avail;
+  }
+}
+
 uint8_t ReMem::free(void *ptr){
   // returns 1 on success, 0 on failure
   sdebug(F("F:")); cdebug('\t'); cdebug((uint16_t) ptr); cdebug('\t');
@@ -198,6 +193,8 @@ uint8_t ReMem::free(void *ptr){
 }
 
 void ReMem::defrag(){
+  if(not DA_TV(data_available, DA_DEFRAG)) return;
+  
   data_available = 0;
   int8_t *front = data;
   while(front < data_put){

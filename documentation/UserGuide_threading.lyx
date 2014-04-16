@@ -149,7 +149,62 @@ Overview
 \begin_layout Itemize
 
 \series bold
-thread_setup(num_threads) ::
+expose_threads(...) ::
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+This is how you expose threads.
+ Each argument must be a function that takes a single variable of type 
+\series bold
+(pthread *) 
+\series default
+and returns a variable of type 
+\series bold
+uint8_t
+\series default
+.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+uint8_t mythread(pthread *pt){
+\end_layout
+
+\begin_layout Plain Layout
+
+  // stuff
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+expose_threads(TH_T(mythread));
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+setup_threading() ::
 \end_layout
 
 \begin_deeper
@@ -162,48 +217,16 @@ setup
 \begin_inset space ~
 \end_inset
 
-function, before any threads are exposed or called.
- You must keep track of the number of variables, functions, and threads
- you use and input them.
- See 
-\begin_inset Quotes eld
-\end_inset
-
-pt_led_example2
-\begin_inset Quotes erd
-\end_inset
-
- for an example.
- The number can be higher than what you actually use (but uses more memory).
+function, before any threads are scheduled or used.
+ You must have already exposed the threads.
 \end_layout
 
 \begin_layout Itemize
 If you are using the ui.h module, use 
 \series bold
-ui_setup(T, F, V) 
+setup_ui() 
 \series default
 instead
-\end_layout
-
-\end_deeper
-\begin_layout Itemize
-
-\series bold
-expose_thread(thread_function) ::
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-This exposes a thread and lets you schedule it later.
-\end_layout
-
-\begin_layout Itemize
-The function must be of type: uint8_t thfun(pthread *pt);
-\end_layout
-
-\begin_layout Itemize
-You must pay attention to the order that you expose threads, and not expose
- more than the value you gave to thread_setup.
 \end_layout
 
 \end_deeper

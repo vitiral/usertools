@@ -108,7 +108,7 @@ UI_variable get_var_pgm(uint8_t index){
   // The data has to be copied from pgm to variable. You then access with the
   // vptr
   
-  const UI_variable *var_ptr = (const UI_variable *)get_pointer((PGM_P) UI__variables, index, sizeof(TH_funptr));
+  const UI_variable *var_ptr = (const UI_variable *)get_pointer((PGM_P) UI__variables, index, 2);
   return (UI_variable) {(void *) pgm_read_word((PGM_P) var_ptr),
     (uint8_t) pgm_read_byte(((PGM_P)var_ptr) + 2)};
   

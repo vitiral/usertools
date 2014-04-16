@@ -213,6 +213,7 @@ error:
       clrerr();
       PT_YIELD((ptsmall *)(&pt));
     }
+    PT__RM.defrag();
   }
   PT_END((ptsmall *)(&pt));
 }
