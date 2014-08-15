@@ -4,12 +4,12 @@
 
 #define TYPE_BITSHIFT 6
 #define TYPE_ERROR    0 << TYPE_BITSHIFT
-#define TYPE_INPUT    1 << TYPE_BITSHIFT 
-#define TYPE_OUTPUT   2 << TYPE_BITSHIFT 
-#define TYPE_TEMP     3 << TYPE_BITSHIFT 
+#define TYPE_INPUT    1 << TYPE_BITSHIFT
+#define TYPE_OUTPUT   2 << TYPE_BITSHIFT
+#define TYPE_TEMP     3 << TYPE_BITSHIFT
 
-#define PTYPE_MASK 0b11 << TYPE_BITSHIFT 
-#define PTYPE(D) (PTYPE_MASK bitand (D))  
+#define PTYPE_MASK 0b11 << TYPE_BITSHIFT
+#define PTYPE(D) (PTYPE_MASK bitand (D))
 
 #define VTYPE_MASK 0b111111
 #define VTYPE(D) (VTYPE_MASK bitand (D))
@@ -46,10 +46,10 @@ PT_data *pthread::get_end(){
 void *pthread::put_data(void *putdata, uint8_t type){
   return put_data(putdata, type, 0);
 }
-  
+
 void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
   PT_data *put = NULL;
-  
+
   // Allocate correct amount of space
   switch(VTYPE(type)){
     //case(vt_int8):
@@ -76,23 +76,23 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
       debug(len);
       debug((char *) putdata);
       assert_raise(((char *)putdata)[len - 1] == 0, ERR_VALUE); //non valid string
-      
-      // The +1 below doesn't make sense to me -- but the code doesn't work without it (writes into 
+
+      // The +1 below doesn't make sense to me -- but the code doesn't work without it (writes into
       put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_str) + len + 1));
       //put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_str) + len));
-      
+
       break;
-      
+
     case(vt_pt):
       put = (PT_data *)(PT__RM.rmalloc(sizeof(PT_data_pt)));
       break;
-    
+
     default:
       assert(0);
   }
-  
+
   memcheck(put);
-  
+
   switch(VTYPE(type)){
     //case(vt_int8):
     case(vt_uint8):
@@ -110,15 +110,15 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
     case(vt_str):
       memcpy(((PT_data_str *)put)->data, putdata, len);
       break;
-    
+
     case(vt_pt):
       ((PT_data_pt *)put)->data = *((pthread *)putdata);
       break;
-      
+
     default:
       assert(0);
   }
-  
+
   init_PT_data(put);
   debug(type, BIN);
   put->b.type = type;
@@ -138,30 +138,30 @@ void *pthread::put_data(void *putdata, uint8_t type, uint16_t len){
     get_end()->b.next = (PT_data *)put;
   }
   return put;
-  
+
 error:
   debug(F("PT_ERR"));
   if(put) PT__RM.free(put);
-  
+
   return NULL;
 }
 
 void pthread::destroy_data(PT_data *pd, PT_data *prev){
-  assert_return(pd); //if(pd == NULL) return; 
+  assert_return(pd); //if(pd == NULL) return;
   if(prev == NULL)  data = pd->b.next;
   else              prev->b.next = pd->b.next;
-  
+
   //debug((uint16_t) pd);
   //debug((uint16_t) pd->b.next);
   //debug((uint16_t) prev);
-  
+
   switch(VTYPE(pd->b.type)){
     case vt_pt:
       //debug(F("Dest pt"));
       ((PT_data_pt *)pd)->data.clear_data();
       break;
   }
-  
+
   PT__RM.free(pd);
   //waitc();
   return;
@@ -172,12 +172,12 @@ int32_t pthread::get_int(PT_data_int32 *pint){
   switch(VTYPE(pint->b.type)){
     case(vt_uint8):
       return (uint8_t) pint->data;
-      
+
     case(vt_int16):
       return (int16_t)((uint16_t)pint->data);
     case(vt_uint16):
       return (uint16_t)pint->data;
-      
+
     //case(vt_int32):
     //  return (int32_t)(pint->data);
 
@@ -219,7 +219,7 @@ PT_data *pthread::get_type(ptindex index, uint8_t ptype){
   assert_raise(data, ERR_INDEX);
   cdata  = data;
   //sdebug("PT_DATA="); edebug((uint16_t) data);
-  
+
   while(true){
     if(PTYPE(cdata->b.type) == ptype) {
       if(index == cur_index){
@@ -257,7 +257,7 @@ void *pthread::put_temp(uint16_t temp){
     //1debug("using old temp");
     ((PT_data_int16 *)data)->data = (int16_t) temp;
   }
-  
+
   clear_temp();
   if(put_data(&temp, TYPE_TEMP bitor vt_uint16) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
@@ -266,8 +266,9 @@ void *pthread::put_temp(uint16_t temp){
 }
 
 void *pthread::put_temp_pt(){
+  pthread temp_pthread = pthread();
   clear_temp();
-  if(put_data(&pthread(), TYPE_TEMP bitor vt_pt) == NULL){
+  if(put_data(&temp_pthread, TYPE_TEMP bitor vt_pt) == NULL){
     //asm volatile ("  jmp 0"); // could cause undefined behavior
     raise_return(ERR_CRITICAL, NULL);
   }
@@ -412,7 +413,7 @@ void pthread::clear_type(uint8_t type, ptindex index){
   PT_data *prevdata = NULL;
   PT_data *cdata;
   cdata  = data;
-  
+
   while(cdata){
     if(PTYPE(cdata->b.type) == type) {
       if(index == PT_INDEX_NULL){
@@ -437,7 +438,7 @@ void pthread::clear_type(uint8_t type, ptindex index){
     raise_return(ERR_INDEX);
   }
 }
-  
+
 void pthread::print(){
   PT_data *cdata = data;
   L_print(F("pt:")); L_println((uint16_t) &lc);
@@ -470,7 +471,7 @@ void pthread::print(){
       L_print(F("NK"));
     }
     L_println();
-    
+
     cdata = cdata->b.next;
   }
 }
