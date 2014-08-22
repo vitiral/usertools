@@ -39,7 +39,7 @@ public:
  *
  * \hideinitializer
  */
-#define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_output();} while(0)
+#define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_output();} while(1)
 //#define PT_INIT(pt)   LC_INIT((pt)->lc)
 
 /** @} */

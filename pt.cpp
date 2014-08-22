@@ -477,16 +477,6 @@ void pthread::print(){
 }
 
 // *****************************************************
-// **** ptsmall (small protothread)
-
-ptsmall::ptsmall(){
-  lc = 0;
-}
-
-//void ptsmall::clear_data(){}
-void ptsmall::clear_output(){}
-
-// *****************************************************
 // **** protothread helper
 
 void transfer_inputs(pthread *from, pthread *to){
