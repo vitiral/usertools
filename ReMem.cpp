@@ -1,17 +1,16 @@
 
 
-/* 
+/*
  * Notes:
  *  - [(Data Indexers --->       <---- Data Pointers}]
- *  - create data indexers by mallocing a data pointer (data_taken) and 
+ *  - create data indexers by mallocing a data pointer (data_taken) and
  *      incrememing data_index
  *  - delete data by setting it's data pointer = NULL
  *  - durring defrag only pointers set to non NULL will be moved left and preserved
- * 
+ *
  * */
 
 #include "ReMem.h"
-#include "usertools.h"
 
 /*
 #ifdef DEBUG
@@ -93,7 +92,7 @@ int8_t *ReMem::get_used(uint8_t size){
   // returns NULL if there are no matches
   //sdebug("Gu:"); edebug(size);
   if(not DA_TV(get_id(size), data_available)) return NULL;
-  
+
   int8_t *front = data;
   if(size <= 8){
     while(front < data_put){
@@ -120,32 +119,32 @@ int8_t *ReMem::get_used(uint8_t size){
       front += abs(*front) + 1;
     }
   }
-  
+
   //TODO: canibilize large sizes
   return NULL;
 }
 
 void *ReMem::rmalloc(uint8_t size){
   int8_t *put;
-  
+
   assert_raise(size < DM_MAX_DATA, ERR_MEMORY);
   put = get_used(size);
-  
+
   if(put == NULL){
     // allocate new memory space
     put = data_put;
     //debug((uint16_t) put);
-    
+
     // make sure there is enough space.
     assert_raise(DATA_REMAINING > size + 1, ERR_MEMORY);
-    
+
     data_put = put + size + 1;
     //debug(size);
     //debug((uint16_t) put);
     //debug((uint16_t) data_put);
-    
+
     //debug((uint16_t)(put + 1));
-    
+
     //debug(size);
     put[0] = size;
     //debug(put[0]);
@@ -183,10 +182,10 @@ uint8_t ReMem::free(void *ptr){
   edebug(SIZE(ptr));
   if(not ((data < ptr) and (ptr < data_put))) return 0;
   assert_raise_return((data < ptr) and (ptr < data_put), ERR_MEMORY, 0);
-  
+
   int8_t size = SIZE(ptr);
   assert_return(size > 0, 0);
-  
+
   SIZE(ptr) = -size;
   freed_size(size);
   return 1;
@@ -194,7 +193,7 @@ uint8_t ReMem::free(void *ptr){
 
 void ReMem::defrag(){
   if(not DA_TV(data_available, DA_DEFRAG)) return;
-  
+
   data_available = 0;
   int8_t *front = data;
   while(front < data_put){
@@ -207,12 +206,12 @@ void ReMem::defrag(){
 
 void ReMem::print(){
   L_print(F("ReMem:"));
-  L_print(DATA_REMAINING); 
-  L_print(F("\t0b")); L_print(data_available, BIN); 
+  L_print(DATA_REMAINING);
+  L_print(F("\t0b")); L_print(data_available, BIN);
   L_print(F("\tD:")); L_print((uint16_t) data);
-  L_print(F("\tP:")); L_print((uint16_t) data_put); 
+  L_print(F("\tP:")); L_print((uint16_t) data_put);
   L_print(F("\tE:")); L_println((uint16_t) data_end);
-  
+
   L_println();
 }
 

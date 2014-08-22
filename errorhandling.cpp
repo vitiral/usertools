@@ -1,12 +1,12 @@
 /* Copyright (c) 2014, Garrett Berg <garrett@cloudformdesign.com>, cloudformdesign.com
  * This library is released under the FreeBSD License, if you need
  * a copy go to: http://www.freebsd.org/copyright/freebsd-license.html
- * 
+ *
  * SUMMARY:
  * Library to help with debugging. See user guide in documentation.
  */
- 
-#include <Arduino.h>
+
+#include "usertools.h"
 
 #define LOGLEVEL 1
 #include "errorhandling.h"
@@ -63,10 +63,10 @@ void EH_waitc(){
 
 void EH_printinfo(char *file, unsigned int line)
 {
-  L_print(errno); 
-  L_write(' '); 
-  L_print(file); 
-  L_write(':'); 
+  L_print(errno);
+  L_write(' ');
+  L_print(file);
+  L_write(':');
   L_print(line);
 }
 
@@ -86,7 +86,7 @@ void EH_printerrp(){
     L_print(F("Com")); break;
   case ERR_INPUT:
     L_print(F("Input")); break;
-  
+
   case ERR_TYPE:
     L_print(F("Type")); break;
   case ERR_VALUE:
@@ -99,7 +99,7 @@ void EH_printerrp(){
     L_print(F("Mem")); break;
   case ERR_CRITICAL:
     L_print(F("CRIT")); break;
-  
+
   case ERR_CLEARED:
     L_print(F("Clred")); break;
   case ERR_NONEW:
@@ -117,8 +117,8 @@ void EH_start_debug(char *file, unsigned int line){
   L_print(EH_GEN_ST_MSG);
   L_print(F("[DBG]:"));
   printmem();
-  L_print(F("(")); 
-  EH_printinfo(file, line); 
+  L_print(F("("));
+  EH_printinfo(file, line);
   L_print(EH_GEN_END_MSG);
 }
 
@@ -132,17 +132,17 @@ void EH_start_info(char *file, unsigned int line){
 void EH_log_err(char *file, unsigned int line){
   if(L_silent) return;  // Used so that TRY statements don't trigger the error being logged
   L_print(EH_GEN_ST_MSG);
-  L_print(F("[ERR](")); 
+  L_print(F("[ERR]("));
   EH_printinfo(file, line);
-  L_print(EH_GEN_END_MSG); 
+  L_print(EH_GEN_END_MSG);
   EH_printerrp();
   if(errprint) errprint = ERR_NONEW;
 }
 
 uint8_t clrerr(){
   uint8_t err = errno;
-  errno = 0; 
-  errprint = 0; 
+  errno = 0;
+  errprint = 0;
   return err;
 }
 

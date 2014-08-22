@@ -1,7 +1,7 @@
 #ifndef _ReMem_h
 #define _ReMem_h
 
-#include <Arduino.h>
+#include "usertools.h"
 #include <inttypes.h>
 #include <stdlib.h>
 
@@ -15,7 +15,7 @@ class ReMem{
   void using_size(int16_t size);
   void freed_size(int16_t size);
   int8_t *get_used(uint8_t size);
-  
+
 public:
   //ReMem(uint16_t size);
   ReMem(void);
