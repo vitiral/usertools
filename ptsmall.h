@@ -124,6 +124,15 @@ public:
     }						\
   } while(0)
 
+/**
+ * Given a pt object, the time you want to wait and a millisecond variable, wait that many milliseconds
+ * ms_variable needs to be type uint16_t (unsigned int)
+ **/
+#define PT_WAIT_MS(pt, ms, ms_variable) \
+    do { \
+        ms_variable = (uint16_t)millis(); \
+        PT_WAIT_UNTIL(pt, (((uint16_t)millis()) - ms_variable) > ms); \
+    } while(0)
 
 /**
  * Block and wait while condition is true.
