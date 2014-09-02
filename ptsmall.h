@@ -9,6 +9,16 @@
 #include <inttypes.h>
 #include "lc.h"
 
+enum PTVALUES {
+  PT_WAITING    ,
+  PT_YIELDED    ,
+  PT_ERROR      ,
+  PT_EXITED     ,
+  PT_ENDED      ,
+  PT_KILLED     ,
+  PT_CRITICAL
+};
+
 struct PTsmall {
   lc_t lc;
 };
@@ -39,7 +49,7 @@ public:
  *
  * \hideinitializer
  */
-#define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_output();} while(1)
+#define PT_INIT(pt)   do{LC_INIT((pt)->lc); (pt)->clear_output();} while(0)
 //#define PT_INIT(pt)   LC_INIT((pt)->lc)
 
 /** @} */
@@ -105,24 +115,22 @@ public:
  * @{
  */
 
-/**
- * Block and wait until condition is true.
+/** Block and wait until condition is true.
  *
- * This macro blocks the protothread until the specified condition is
- * true.
+ * This macro blocks the protothread until the specified condition is true.
  *
- * \param pt A pointer to the protothread control structure.
- * \param condition The condition.
+ * \param pt A pointer to the protothread control structure. \param condition
+ * The condition.
  *
  * \hideinitializer
  */
 #define PT_WAIT_UNTIL(pt, condition)	        \
-  do {						\
-    LC_SET((pt)->lc);				\
-    if(!(condition)) {				\
-      return PT_WAITING;			\
-    }						\
-  } while(0)
+    do {						\
+        LC_SET((pt)->lc);				\
+        if(!(condition)) {				\
+            return PT_WAITING;			\
+        }						\
+    } while(0)
 
 /**
  * Given a pt object, the time you want to wait and a millisecond variable, wait that many milliseconds
@@ -130,8 +138,8 @@ public:
  **/
 #define PT_WAIT_MS(pt, ms, ms_variable) \
     do { \
-        ms_variable = (uint16_t)millis(); \
-        PT_WAIT_UNTIL(pt, (((uint16_t)millis()) - ms_variable) > ms); \
+        ms_variable = millis(); \
+        PT_WAIT_UNTIL((pt), (uint16_t)(millis() - (ms_variable)) > (ms)); \
     } while(0)
 
 /**

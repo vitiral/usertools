@@ -1,7 +1,7 @@
 /* Copyright (c) 2014, Garrett Berg <garrett@cloudformdesign.com>, cloudformdesign.com
  * This library is released under the FreeBSD License, if you need
  * a copy go to: http://www.freebsd.org/copyright/freebsd-license.html
- * 
+ *
  * SUMMARY:
  * String tools, mostly to help with F() strings
  */
@@ -146,7 +146,7 @@ long int get_int(char *c){
 
 double get_float(char *c){
   uint8_t subt = 0;
-  if(c[0] == '0' and c[1] == 'f' and 
+  if(c[0] == '0' and c[1] == 'f' and
      ((c[2] >= '0' and c[2] <= '9') or
      (c[2] == '-' or c[2] == '+'))
     ){
@@ -156,6 +156,40 @@ double get_float(char *c){
   raise_return(ERR_VALUE, 0);
 }
 
+/**
+ * Better strncpy
+ * Example code:
+ * char buf[100];
+ * uint16_t len = 100;
+ * char *place = buf;
+ * len = bstrncpy(&place, "hello\n", len);
+ * len = bstrncpy(&place, "another hi\n", len);
+ * input:
+ *   char **destination -- pointer to the buffer where you want the text.
+ *     The location WILL be altered to the end of the character array.
+ *  char *source -- character array to copy to destination
+ *  len -- length of the array (remaining)
+ *
+ * This function ensures that the last character is a 0 -- no matter what.
+ *
+ * returns the remaining length of the array (based on the input len)
+ **/
+uint16_t bstrncpy(char **destination, const char *source, uint16_t len){
+    uint16_t n;
+    for(n = 0; (n < len - 1) and (source[n] != 0); n++){
+        (*destination)[n] = source[n];
+    }
+    (*destination)[n] = 0;
+    (*destination) += n;
+    return n;
+}
+
+char *d2strf (double val, signed char width, unsigned char prec, char *sout) {
+  char fmt[20];
+  sprintf(fmt, "%%%d.%df", width, prec);
+  sprintf(sout, fmt, val);
+  return sout;
+}
 
 /*
 void showString (PGM_P s) {
@@ -197,16 +231,16 @@ void print_mystrnames(){
   Serial.println("in mystrnames");
   Serial.println((uint32_t)mystrnames);
   Serial.println((uint32_t)mystrnames[0]);
-  
+
   showString(mystrnames[0]);
   Serial.println();
   Serial.println((const __FlashStringHelper *)mystrnames[0]);
   Serial.println((const __FlashStringHelper *)mystrnames[1]);
-  
+
   Serial.println("read bytes names:");
   Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)mystrnames, 0));
   Serial.println((const __FlashStringHelper *)get_pointer((PGM_P)mystrnames, 1));
-  
+
 }
 
  * */
