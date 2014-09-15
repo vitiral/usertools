@@ -61,16 +61,6 @@ extern ReMem PT__RM;
 
 #define setup_pt(M)   PT__RM.init(M)
 
-enum PTVALUES {
-  PT_WAITING    ,
-  PT_YIELDED    ,
-  PT_ERROR      ,
-  PT_EXITED     ,
-  PT_ENDED      ,
-  PT_KILLED     ,
-  PT_CRITICAL
-};
-
 
 // commented = not supported, but may in future
 enum vtype{

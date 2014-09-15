@@ -37,7 +37,7 @@
 
 #define RUN_ONLY_EVERY(time) \
     static uint16_t start = millis(); \
-    if(((uint16_t)millis()) - start < time) \
+    if(TIME_SINCE(start) < time) \
         return; \
     start = millis();
 
