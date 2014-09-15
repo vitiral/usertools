@@ -42,4 +42,8 @@
         return; \
     start = millis();
 
+extern char* itoa(int a, char* buffer, unsigned char radix);
+
+uint16_t bstrncpy(char **destination, const char *source, uint16_t len);
+
 #endif
