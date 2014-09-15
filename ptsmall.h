@@ -8,6 +8,17 @@
 
 #include <inttypes.h>
 #include "lc.h"
+#include "allduino.h"
+
+enum PTVALUES {
+  PT_WAITING    ,
+  PT_YIELDED    ,
+  PT_ERROR      ,
+  PT_EXITED     ,
+  PT_ENDED      ,
+  PT_KILLED     ,
+  PT_CRITICAL
+};
 
 struct PTsmall {
   lc_t lc;
@@ -124,6 +135,11 @@ public:
     }						\
   } while(0)
 
+#define PT_WAIT_MS_VAL(pt, ms, val) \
+    do{ \
+    val = millis(); \
+    PT_WAIT_UNTIL((pt), TIME_SINCE(val) > ms); \
+    } while(0)
 
 /**
  * Block and wait while condition is true.

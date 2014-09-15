@@ -15,25 +15,24 @@
 #endif
 
 #ifdef SPARK
- #define ANALOGUE_MAX 4095
+ #define ANALOG_MAX 4095
  #define LED_PIN 7
 #else
- #define ANALOGUE_MAX 1023
+ #define ANALOG_MAX 1023
  #define LED_PIN 13
 #endif
 
 #define TIME_SINCE(time) ((uint16_t)(millis() - (time)))
 
 #define HEARTBEAT() \
-    static uint16_t _heartbeat = millis(); \
-    static uint8_t _hb_led = 2; \
-    if(TIME_SINCE(_heartbeat) > 1000){ \
-        if(_hb_led == 2){ \
-            pinMode(LED_PIN, OUTPUT); \
-            _hb_led = 0; \
-        } \
-        digitalWrite(LED_PIN, _hb_led); \
-        _hb_led = 1 - _hb_led; \
+    static uint8_t  _HB_led = 2; \
+    static uint16_t _HB_start = millis() - ((1000) + 10); \
+    if((uint16_t)(millis() - _HB_start) > (1000)) { \
+        if(_HB_led == 2){_HB_led=1;pinMode(LED_PIN, OUTPUT);} \
+        if(TIME_SINCE(_HB_start) > 2005) System.reset(); \
+        _HB_start = millis(); \
+        digitalWrite(LED_PIN, _HB_led); \
+        _HB_led = 1 - _HB_led; \
     }
 
 #define RUN_ONLY_EVERY(time) \
@@ -43,6 +42,7 @@
     start = millis();
 
 extern char* itoa(int a, char* buffer, unsigned char radix);
+extern char *dtostrf (double val, signed char width, unsigned char prec, char *sout);
 
 uint16_t bstrncpy(char **destination, const char *source, uint16_t len);
 
