@@ -35,6 +35,17 @@
         _HB_led = 1 - _HB_led; \
     }
 
+#define HEARTBEAT_WATCHDOG() \
+    static uint8_t  _HB_led = 2; \
+    static uint16_t _HB_start = millis() - ((1000) + 10); \
+    if((uint16_t)(millis() - _HB_start) > (1000)) { \
+        if(_HB_led == 2){_HB_led=1;pinMode(LED_PIN, OUTPUT);} \
+        if(TIME_SINCE(_HB_start) > 2005) System.reset(); \
+        _HB_start = millis(); \
+        digitalWrite(LED_PIN, _HB_led); \
+        _HB_led = 1 - _HB_led; \
+    }
+
 #define RUN_ONLY_EVERY(time) \
     static uint16_t start = millis(); \
     if(TIME_SINCE(start) < time) \
